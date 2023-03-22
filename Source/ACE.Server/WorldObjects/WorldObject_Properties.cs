@@ -3529,6 +3529,12 @@ namespace ACE.Server.WorldObjects
             set { if (!value.HasValue) RemoveProperty(PropertyFloat.AttacksCauseBleedChance); else SetProperty(PropertyFloat.AttacksCauseBleedChance, value.Value); }
         }
 
+        public int? SlayerAdded
+        {
+            get => GetProperty(PropertyInt.SlayerAdded);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.SlayerAdded); else SetProperty(PropertyInt.SlayerAdded, value.Value); }
+        }
+
         public double? NSCoordinates
         {
             get => GetProperty(PropertyFloat.NSCoordinates);
