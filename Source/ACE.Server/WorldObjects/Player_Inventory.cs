@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using ACE.Common;
 using System.Threading;
 
 using ACE.Database;
@@ -4020,6 +4021,28 @@ namespace ACE.Server.WorldObjects
 
             if (!(giver.GetProperty(PropertyBool.NpcInteractsSilently) ?? false))
             {
+                var modChance = ThreadSafeRandom.Next(0.00f, 1.00f);
+                var checkForExtra = ThreadSafeRandom.Next(0.00f, 1.00f);
+                var checkForExtra2 = ThreadSafeRandom.Next(0.00f, 1.00f);
+                var checkForExtra3 = ThreadSafeRandom.Next(0.00f, 1.00f);
+
+                if (modChance <= 1.00f)
+                    itemBeingGiven = ModifyQuestItem(itemBeingGiven, 1, 5, false);
+
+                if (checkForExtra <= 0.15f && RerollForSlayer(itemBeingGiven) && itemBeingGiven.ItemType == ItemType.MeleeWeapon ||
+                    checkForExtra <= 0.15f && RerollForSlayer(itemBeingGiven) && itemBeingGiven.ItemType == ItemType.MissileWeapon ||
+                    checkForExtra <= 0.15f && RerollForSlayer(itemBeingGiven) && itemBeingGiven.ItemType == ItemType.Caster)
+                    GiveSlayer(itemBeingGiven);
+
+                if (checkForExtra2 <= 0.15f && RerollForRend(itemBeingGiven) && itemBeingGiven.ItemType == ItemType.MeleeWeapon ||
+                    checkForExtra2 <= 0.15f && RerollForRend(itemBeingGiven) && itemBeingGiven.ItemType == ItemType.MissileWeapon ||
+                    checkForExtra2 <= 0.15f && RerollForRend(itemBeingGiven) && itemBeingGiven.ItemType == ItemType.Caster)
+                    GiveRend(itemBeingGiven);
+
+                if (checkForExtra3 <= 0.15f && RerollForSet(itemBeingGiven) && itemBeingGiven.ItemType == ItemType.Armor ||
+                    checkForExtra3 <= 0.15f && RerollForSet(itemBeingGiven) && itemBeingGiven.ItemType == ItemType.Clothing)
+                    GiveSet(itemBeingGiven);
+
                 var msg = new GameMessageSystemChat($"{giver.Name} gives you {(itemBeingGiven.StackSize > 1 ? $"{itemBeingGiven.StackSize} " : "")}{itemBeingGiven.GetNameWithMaterial(itemBeingGiven.StackSize)}.", ChatMessageType.Broadcast);
                 Session.Network.EnqueueSend(msg);
 

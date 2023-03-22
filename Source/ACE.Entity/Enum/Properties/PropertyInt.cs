@@ -629,6 +629,9 @@ namespace ACE.Entity.Enum.Properties
         /// </summary>
         [ServerOnly]
         InventoryOrder                          = 9015,
+        //Questmutation
+        [ServerOnly]
+        SlayerAdded                             = 9023,
 
         // CustomDM
         [ServerOnly]
