@@ -57,7 +57,7 @@ namespace ACE.Server.WorldObjects
 
             //Make sure the item is not on the mutation blacklist
             if (QuestItemMutations.IsQuestItemMutationDisallowed(this.WeenieClassId))
-            return "This item cannot be mutated!";
+                return "This item cannot be mutated!";
 
             StringBuilder resultMessage = new StringBuilder();
             var mutationTier = QuestItemMutations.GetMutationTierOverride(this.WeenieClassId) ?? GetMutationTier();
@@ -102,13 +102,13 @@ namespace ACE.Server.WorldObjects
 
             for(int i = 0; i < mutationCount; i++)
             {
-                int mutationType = rand.Next(1, 5);
+                int mutationType = rand.Next(1, 6);
 
                 //For Slayers, Rends, Sets and Steel Tinks, don't allow those to be added more than once, reroll if already added
                 int rerollAttempts = 0; //just a fail-safe to avoid an infinite loop, even tho it shouldn't be possible
                 while ((mutationType == 1 || mutationType == 5) && mutationTypes.Contains(mutationType) && rerollAttempts < 20)
                 {
-                    mutationType = rand.Next(1, 5);
+                    mutationType = rand.Next(1, 6);
                     rerollAttempts++;
                 }
 
@@ -329,7 +329,7 @@ namespace ACE.Server.WorldObjects
         {
             string resultMsg = "";
 
-            var selectSkill = ThreadSafeRandom.Next(1, 14);
+            var selectSkill = ThreadSafeRandom.Next(1, 18);            
 
             switch (selectSkill)
             {
@@ -343,82 +343,82 @@ namespace ACE.Server.WorldObjects
                     resultMsg = "Added Major Magic Resistance to the quest item!";
                     break;
 
-                case 4:
+                case 3:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLIFEMAGICAPTITUDE2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Life Magic to the quest item!";
                     break;
 
-                case 6:
+                case 4:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPARCANEPROWESS2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Arcane Lore to the quest item!";
                     break;
 
-                case 7:
+                case 5:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMANACONVERSIONPROWESS2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Mana Conversion to the quest item!";
                     break;
 
-                case 10:
+                case 6:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPWARMAGICAPTITUDE2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major War Magic to the quest item!";
                     break;
 
-                case 11:
+                case 7:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEALINGPROWESS2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Healing to the quest item!";
                     break;
 
-                case 12:
+                case 8:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPJUMPINGPROWESS2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Jump to the quest item!";
                     break;
 
-                case 13:
+                case 9:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSPRINT2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Run to the quest item!";
                     break;
 
-                case 14:
+                case 10:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CantripDualWieldAptitude2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Dual Wield to the quest item!";
                     break;
 
-                case 18:
+                case 11:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPDECEPTIONPROWESS2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Deception to the quest item!";
                     break;
 
-                case 19:
+                case 12:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLEADERSHIP2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Leadership to the quest item!";
                     break;
 
-                case 20:
+                case 13:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSneakingAptitude2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Sneaking Aptitude to the quest item!";
                     break;
 
-                case 21:
+                case 14:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPFLETCHINGPROWESS2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Fletching to the quest item!";
                     break;
 
-                case 22:
+                case 15:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLIGHTWEAPONSAPTITUDE1, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Axe Aptitude to the quest item!";
                     break;
 
-                case 23:
+                case 16:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEAVYWEAPONSAPTITUDE2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Sword Aptitude to the quest item!";
                     break;
 
-                case 24:
+                case 17:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPFINESSEWEAPONSAPTITUDE2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Dagger Aptitude to the quest item!";
                     break;
 
-                case 25:
+                case 18:
                     this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMISSILEWEAPONSAPTITUDE2, this.BiotaDatabaseLock, out _);
                     resultMsg = "Added Major Bow Aptitude to the quest item!";
                     break;                
@@ -433,7 +433,7 @@ namespace ACE.Server.WorldObjects
         {
             string resultMsg = "";
 
-            var selectItemSpell = ThreadSafeRandom.Next(1, 6);
+            var selectItemSpell = ThreadSafeRandom.Next(1, 3);
 
             switch (selectItemSpell)
             {
@@ -556,7 +556,7 @@ namespace ACE.Server.WorldObjects
 
         private string QuestItem_ApplyArmorLevelMutation()
         {
-            var numSteelTinksAdded = new Random().Next(1, 10);
+            var numSteelTinksAdded = new Random().Next(1, 11);
             this.ArmorLevel += 20 * numSteelTinksAdded;
             this.NumTimesTinkered += numSteelTinksAdded;
             string tinkerLog = "64";
@@ -571,11 +571,11 @@ namespace ACE.Server.WorldObjects
 
         private string QuestItem_ApplyEquipmentSetMutation()
         {
-            var roll = new Random().Next(13, 29);
+            var roll = new Random().Next(13, 30);
             int tries = 0;
             while (roll == 17 && tries < 20)
             {
-                roll = new Random().Next(13, 29);
+                roll = new Random().Next(13, 30);
                 tries++;
             }
 
