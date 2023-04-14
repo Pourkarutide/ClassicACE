@@ -23,7 +23,7 @@ namespace ACE.Server.WorldObjects
             None = 0,
             Slayer = 1,
             AttributeCantrip = 2,
-            SkillCantrip = 3,            
+            SkillCantrip = 3,
             ItemCantrip = 4,
             Rend = 5
         }
@@ -35,7 +35,7 @@ namespace ACE.Server.WorldObjects
             SkillCantrip = 3,
             Rating = 4,
             EquipmentSet = 5
-            
+
         }
 
         public string MutateQuestItem()
@@ -57,7 +57,7 @@ namespace ACE.Server.WorldObjects
 
             //Make sure the item is not on the mutation blacklist
             if (QuestItemMutations.IsQuestItemMutationDisallowed(this.WeenieClassId))
-                return "";
+            return "This item cannot be mutated!";
 
             StringBuilder resultMessage = new StringBuilder();
             var mutationTier = QuestItemMutations.GetMutationTierOverride(this.WeenieClassId) ?? GetMutationTier();
@@ -73,15 +73,15 @@ namespace ACE.Server.WorldObjects
             //TODO should make the chances configurable?
             roll = rand.NextDouble();
             int mutationCount = 0;
-            if(roll < 0.01)
+            if(roll < 0.3)
             {
                 mutationCount = 3;
             }
-            else if (roll < 0.15)
+            else if (roll < 0.5)
             {
                 mutationCount = 2;
             }
-            else if (roll < .5)
+            else if (roll < .85)
             {
                 mutationCount = 1;
             }
@@ -116,9 +116,9 @@ namespace ACE.Server.WorldObjects
             }
 
             //Apply the mutations
-            foreach(int mutationType in mutationTypes)
+            foreach (int mutationType in mutationTypes)
             {
-                if(this.ItemType == ItemType.MeleeWeapon || this.ItemType == ItemType.MissileWeapon || this.ItemType == ItemType.Caster)
+                if (this.ItemType == ItemType.MeleeWeapon || this.ItemType == ItemType.MissileWeapon || this.ItemType == ItemType.Caster)
                 {
                     switch (mutationType)
                     {

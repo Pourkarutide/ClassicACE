@@ -18,6 +18,17 @@ namespace ACE.Server.Entity
                     _mutationWeenieBlackList = new List<uint>();
                     // add your list of WeenieIDs for quest items you don't want to allow to mutate
                     // ex: _mutationWeenieBlackList.Add(12345);
+                    _mutationWeenieBlackList.Add(12754);
+                    _mutationWeenieBlackList.Add(12760);
+                    _mutationWeenieBlackList.Add(12759);
+                    _mutationWeenieBlackList.Add(12758);
+                    _mutationWeenieBlackList.Add(12757);
+                    _mutationWeenieBlackList.Add(12756);
+                    _mutationWeenieBlackList.Add(12755);
+                    _mutationWeenieBlackList.Add(12750);
+                    _mutationWeenieBlackList.Add(12753);
+                    _mutationWeenieBlackList.Add(12751);
+                    _mutationWeenieBlackList.Add(12752);
                 }
 
                 return _mutationWeenieBlackList;

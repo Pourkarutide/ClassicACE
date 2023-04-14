@@ -4028,7 +4028,7 @@ namespace ACE.Server.WorldObjects
 
                 if (!string.IsNullOrEmpty(mutationResult))
                 {
-                    msg = new GameMessageSystemChat(mutationResult, ChatMessageType.Broadcast);
+                    msg = new GameMessageSystemChat(mutationResult, ChatMessageType.System);
                     Session.Network.EnqueueSend(msg);
                 }
 
