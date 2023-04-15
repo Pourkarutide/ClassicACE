@@ -1214,7 +1214,8 @@ namespace ACE.Server.Managers
                     player.Session.Network.EnqueueSend(new GameMessageSystemChat(mutationResult, ChatMessageType.System));
             }
 
-            result.MutateQuestItem();
+            if (result != null)
+                result.MutateQuestItem();
 
             // broadcast different messages based on recipe type
             if (!recipe.IsTinkering())
