@@ -37,6 +37,13 @@ namespace ACE.Server.WorldObjects
             EquipmentSet = 5
 
         }
+        private enum QuestItemJewelryMutationType
+        {
+            None = 0,
+            AttributeCantrip = 1,
+            SkillCantrip = 2,
+
+        }
 
         public string MutateQuestItem()
         {
@@ -47,7 +54,8 @@ namespace ACE.Server.WorldObjects
                 this.ItemType != ItemType.MeleeWeapon &&
                 this.ItemType != ItemType.MissileWeapon &&
                 this.ItemType != ItemType.Armor &&
-                this.ItemType != ItemType.Clothing) ||
+                this.ItemType != ItemType.Clothing &&
+                this.ItemType != ItemType.Jewelry) ||
                (this.Workmanship.HasValue &&
                 this.Workmanship.Value > 0)
             )
@@ -159,9 +167,20 @@ namespace ACE.Server.WorldObjects
                             resultMessage.Append(QuestItem_ApplyEquipmentSetMutation() + "\n");
                             break;
                     }
-                }                
+                }
+                else if (this.ItemType == ItemType.Jewelry)
+                {
+                    switch (mutationType)
+                    {
+                        case 1: //AttributeCantrip
+                            resultMessage.Append(QuestItem_ApplyAttributeCantripMutation() + "\n");
+                            break;
+                        case 2: //SkillCantrip
+                            resultMessage.Append(QuestItem_ApplySkillCantripMutation() + "\n");
+                            break;
+                    }
+                }
             }
-
             return resultMessage.ToString();
         }
 
