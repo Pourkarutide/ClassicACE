@@ -29,6 +29,10 @@ namespace ACE.Server.Entity
                     _mutationWeenieBlackList.Add(12753);
                     _mutationWeenieBlackList.Add(12751);
                     _mutationWeenieBlackList.Add(12752);
+                    _mutationWeenieBlackList.Add(10995);
+                    _mutationWeenieBlackList.Add(10996);
+                    _mutationWeenieBlackList.Add(10997);
+                    _mutationWeenieBlackList.Add(27592);
                 }
 
                 return _mutationWeenieBlackList;
