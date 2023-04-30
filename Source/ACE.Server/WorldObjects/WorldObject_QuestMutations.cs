@@ -575,7 +575,7 @@ namespace ACE.Server.WorldObjects
 
         private string QuestItem_ApplyArmorLevelMutation()
         {
-            var numSteelTinksAdded = new Random().Next(1, 11);
+            var numSteelTinksAdded = new Random().Next(1, 4);
             this.ArmorLevel += 20 * numSteelTinksAdded;
             this.NumTimesTinkered += numSteelTinksAdded;
             string tinkerLog = "64";
