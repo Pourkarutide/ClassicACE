@@ -48,6 +48,7 @@ namespace ACE.Server.WorldObjects
         public string MutateQuestItem()
         {
             //Validate this is not a loot gen item, and that its a caster, weapon, armor or clothing
+            // Morosity - adding Ammo check here
             if
             (
                (this.ItemType != ItemType.Caster &&
@@ -57,7 +58,8 @@ namespace ACE.Server.WorldObjects
                 this.ItemType != ItemType.Clothing &&
                 this.ItemType != ItemType.Jewelry) ||
                (this.Workmanship.HasValue &&
-                this.Workmanship.Value > 0)
+                this.Workmanship.Value > 0) ||
+                this is Ammunition 
             )
             {
                 return "";

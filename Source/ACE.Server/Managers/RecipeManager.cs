@@ -1206,7 +1206,8 @@ namespace ACE.Server.Managers
             }
 
             var modified = ModifyItem(player, recipe, source, target, result, success);
-            if (result != null && !(result is Ammunition))
+            // New method need for tracking tool and type
+            if (result != null && QuestItemMutations.IsToolValidForQuestMutation(source.WeenieClassId))
             {
                 var mutationResult = result.MutateQuestItem();
 

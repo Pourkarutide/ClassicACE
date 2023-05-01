@@ -66,5 +66,24 @@ namespace ACE.Server.Entity
             return MutationTierOverrides.ContainsKey(weenieID) ? MutationTierOverrides[weenieID] : null;
         }
 
+
+        // Morosity - adding check for tool valid.  Blocks all stone tool type recipes and such
+        private static List<uint> _mutationToolBlackList = null;
+
+        private static List<uint> MutationToolBlackList =>
+            _mutationToolBlackList ?? (_mutationToolBlackList = new List<uint>
+            {
+                // add your list of WeenieIDs for tools items you don't want to allow to mutate
+                6127, // Stone tool
+                20023 // Isparian Weapons Modifying Tool
+            });
+
+        public static bool IsToolValidForQuestMutation(uint wcid)
+        {
+            return !MutationToolBlackList.Contains(wcid);
+        }
+
+
+
     }    
 }
