@@ -1206,11 +1206,11 @@ namespace ACE.Server.Managers
             }
 
             var modified = ModifyItem(player, recipe, source, target, result, success);
-            if (result != null)
+            if (result != null && !(result is Ammunition))
             {
                 var mutationResult = result.MutateQuestItem();
 
-                if(!string.IsNullOrEmpty(mutationResult))
+                if (!string.IsNullOrEmpty(mutationResult))
                     player.Session.Network.EnqueueSend(new GameMessageSystemChat(mutationResult, ChatMessageType.System));
             }
 
