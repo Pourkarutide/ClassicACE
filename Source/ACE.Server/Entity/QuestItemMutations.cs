@@ -13,26 +13,20 @@ namespace ACE.Server.Entity
         {
             get
             {
-                if(_mutationWeenieBlackList == null)
+                if (_mutationWeenieBlackList == null)
                 {
-                    _mutationWeenieBlackList = new List<uint>();
-                    // add your list of WeenieIDs for quest items you don't want to allow to mutate
-                    // ex: _mutationWeenieBlackList.Add(12345);
-                    _mutationWeenieBlackList.Add(12754);
-                    _mutationWeenieBlackList.Add(12760);
-                    _mutationWeenieBlackList.Add(12759);
-                    _mutationWeenieBlackList.Add(12758);
-                    _mutationWeenieBlackList.Add(12757);
-                    _mutationWeenieBlackList.Add(12756);
-                    _mutationWeenieBlackList.Add(12755);
-                    _mutationWeenieBlackList.Add(12750);
-                    _mutationWeenieBlackList.Add(12753);
-                    _mutationWeenieBlackList.Add(12751);
-                    _mutationWeenieBlackList.Add(12752);
-                    _mutationWeenieBlackList.Add(10995);
-                    _mutationWeenieBlackList.Add(10996);
-                    _mutationWeenieBlackList.Add(10997);
-                    _mutationWeenieBlackList.Add(27592);
+                    _mutationWeenieBlackList = new List<uint>
+            {
+                    12754, 12760, 12759, 12758, 12757, 12756, 12755,
+                    12750, 12753, 12751, 12752, 10995, 10996, 10997,
+                    27592, 24890, 24892, 24894, 24896, 24898, 24900,
+                    24902, 24904, 24906, 25550, 24616, 24618, 24620,
+                    24622, 24624, 24626, 24628, 24630, 24632, 25549,
+                    24615, 24617, 24619, 24621, 24623, 24625, 24627,
+                    24629, 24631, 25548, 24889, 24891, 24893, 24895,
+                    24897, 24899, 24901, 24903, 24905, 25547
+
+            };
                 }
 
                 return _mutationWeenieBlackList;
@@ -43,7 +37,7 @@ namespace ACE.Server.Entity
         {
             return MutationWeenieBlackList.Contains(weenieID);
         }
-      
+
         private static Dictionary<uint, uint> _mutationTierOverrides = null;
         public static Dictionary<uint, uint> MutationTierOverrides
         {

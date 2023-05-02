@@ -83,15 +83,15 @@ namespace ACE.Server.WorldObjects
             //TODO should make the chances configurable?
             roll = rand.NextDouble();
             int mutationCount = 0;
-            if(roll < 0.3)
+            if(roll < 0.10)
             {
                 mutationCount = 3;
             }
-            else if (roll < 0.5)
+            else if (roll < 0.35)
             {
                 mutationCount = 2;
             }
-            else if (roll < .85)
+            else if (roll < .50)
             {
                 mutationCount = 1;
             }
