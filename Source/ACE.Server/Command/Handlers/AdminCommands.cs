@@ -2443,6 +2443,8 @@ namespace ACE.Server.Command.Handlers
                 var dist = Math.Max(2, obj.UseRadius ?? 2);
 
                 obj.Location = session.Player.Location.InFrontOf(dist);
+
+                obj.MutateQuestItem();
             }
 
             obj.Location.LandblockId = new LandblockId(obj.Location.GetCell());
