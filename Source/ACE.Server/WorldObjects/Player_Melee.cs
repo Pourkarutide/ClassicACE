@@ -431,7 +431,7 @@ namespace ACE.Server.WorldObjects
                 Attacking = false;
 
                 // powerbar refill timing
-                float refillMod;
+                float refillMod = 1.0f;
                 if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                     refillMod = IsDualWieldAttack ? 0.8f : 1.0f;     // dual wield swing animation 20% faster
                 else
@@ -449,10 +449,20 @@ namespace ACE.Server.WorldObjects
 
                     if (refillWeapon != null && refillWeapon.WeaponSkill == Skill.Dagger && refillWeapon.W_AttackType.IsMultiStrike())
                         refillMod = 0.33f;
-                    else if (GetEquippedOffHand() == null && !TwoHandedCombat)
-                        refillMod = 0.8f;
                     else
-                        refillMod = 1.0f;
+                    {
+                        if (PropertyManager.GetBool("dekaru_dual_wield_speed_mod").Item)
+                        {
+                            if (GetEquippedOffHand() == null && !TwoHandedCombat)
+                                refillMod = 0.8f;
+                            else
+                                refillMod = 1.0f;
+                        }
+                        else
+                        {
+                            refillMod = IsDualWieldAttack ? 0.8f : 1.0f;     // dual wield swing animation 20% faster
+                        }
+                    }
                 }
 
                 PowerLevel = AttackQueue.Fetch();
@@ -493,7 +503,7 @@ namespace ACE.Server.WorldObjects
             // get the proper animation speed for this attack,
             // based on weapon speed and player quickness
             var baseSpeed = GetAnimSpeed();
-            float animSpeedMod;
+            float animSpeedMod = 1.0f;
             if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                 animSpeedMod = IsDualWieldAttack ? 1.2f : 1.0f;     // dual wield swing animation 20% faster
             else
@@ -501,10 +511,20 @@ namespace ACE.Server.WorldObjects
                 var weapon = GetEquippedMeleeWeapon();
                 if (weapon != null && weapon.WeaponSkill == Skill.Dagger && weapon.W_AttackType.IsMultiStrike())
                     animSpeedMod = 1.8f;
-                else if (GetEquippedOffHand() == null && !TwoHandedCombat)
-                    animSpeedMod = 1.2f;
                 else
-                    animSpeedMod = 1.0f;
+                {
+                    if (PropertyManager.GetBool("dekaru_dual_wield_speed_mod").Item)
+                    {
+                        if (GetEquippedOffHand() == null && !TwoHandedCombat)
+                            animSpeedMod = 1.2f;
+                        else
+                            animSpeedMod = 1.0f;
+                    }
+                    else
+                    {
+                        animSpeedMod = IsDualWieldAttack ? 1.2f : 1.0f;     // dual wield swing animation 20% faster
+                    }
+                }
             }
 
             var animSpeed = baseSpeed * animSpeedMod;

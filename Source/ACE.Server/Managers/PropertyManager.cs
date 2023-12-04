@@ -679,7 +679,10 @@ namespace ACE.Server.Managers
                 ("enforce_player_movement_kick", new Property<bool>(false, "enable this to kick players that fail movement verification too frenquently")),
                 ("useable_gems", new Property<bool>(true, "Allows loot generated gems to be used to cast their spells")),
                 ("allow_PKs_to_go_NPK", new Property<bool>(true, "Allows PKs to go back to being NPKs by using the appropriate altar")),
-                ("show_discord_chat_ingame", new Property<bool>(false, "Display messages posted to Discord in general chat"))
+                ("show_discord_chat_ingame", new Property<bool>(false, "Display messages posted to Discord in general chat")),
+
+                ("dekaru_dual_wield_speed_mod", new Property<bool>(true, "Toggles whether Dekaru's dual wield speed changes (other than for dagger) are enabled"))
+
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<long>> DefaultLongProperties =
