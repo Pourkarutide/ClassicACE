@@ -168,7 +168,7 @@ namespace ACE.Server.WorldObjects
                 HandleActionTargetedMeleeAttack_Inner(target, attackSequence);
         }
 
-        public const float MeleeDistance  = 0.6f;
+        public const float MeleeDistance = 0.6f;
         public const float StickyDistance = 4.0f;
         public const float RepeatDistance = 16.0f;
 
@@ -355,9 +355,9 @@ namespace ACE.Server.WorldObjects
                     numStrikes = 1;
 
                 uint baseSkill = GetCreatureSkill(GetCurrentWeaponSkill()).Base;
-                if(baseSkill < 250)
+                if (baseSkill < 250)
                     numStrikes = 1;
-                else if(baseSkill < 325)
+                else if (baseSkill < 325)
                     numStrikes = 2;
             }
 
@@ -421,6 +421,16 @@ namespace ACE.Server.WorldObjects
                             DamageTarget(cleaveHit, weapon);
                         }
                     }
+
+                    if (weapon != null && weapon.IsPiercing)
+                    {
+                        var pierce = GetPierceTarget(creature, weapon);
+
+                        foreach (var pierceHit in pierce)
+                        {
+                            DamageTarget(pierceHit, weapon);
+                        }
+                    }
                 });
 
                 //if (numStrikes == 1 || TwoHandedCombat)
@@ -453,10 +463,20 @@ namespace ACE.Server.WorldObjects
 
                     if (refillWeapon != null && refillWeapon.WeaponSkill == Skill.Dagger && refillWeapon.W_AttackType.IsMultiStrike())
                         refillMod = 0.33f;
-                    else if (GetEquippedOffHand() == null && !TwoHandedCombat)
-                        refillMod = 0.8f;
                     else
-                        refillMod = 1.0f;
+                    {
+                        if (PropertyManager.GetBool("dekaru_dual_wield_speed_mod").Item)
+                        {
+                            if (GetEquippedOffHand() == null && !TwoHandedCombat)
+                                refillMod = 0.8f;
+                            else
+                                refillMod = 1.0f;
+                        }
+                        else
+                        {
+                            refillMod = IsDualWieldAttack ? 0.8f : 1.0f;     // dual wield swing animation 20% faster
+                        }
+                    }
                 }
 
                 PowerLevel = AttackQueue.Fetch();
@@ -505,14 +525,30 @@ namespace ACE.Server.WorldObjects
                 animSpeedMod = IsDualWieldAttack ? 1.2f : 1.0f;     // dual wield swing animation 20% faster
             else
             {
-                if (GetEquippedOffHand() == null && !TwoHandedCombat)
-                    animSpeedMod = 1.2f;
-                else
-                    animSpeedMod = 1.0f;
-
                 var weapon = GetEquippedMeleeWeapon();
                 if (weapon != null && weapon.WeaponSkill == Skill.Dagger && weapon.W_AttackType.IsMultiStrike())
-                    animSpeedMod += 0.8f;
+                {
+                    if (GetEquippedOffHand() == null)
+                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_1h").Item;
+                    else if (IsDualWieldAttack)
+                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_dualwield").Item;
+                    else
+                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_shielded").Item;
+                }
+                else
+                {
+                    if (PropertyManager.GetBool("dekaru_dual_wield_speed_mod").Item)
+                    {
+                        if (GetEquippedOffHand() == null && !TwoHandedCombat)
+                            animSpeedMod = 1.2f;
+                        else
+                            animSpeedMod = 1.0f;
+                    }
+                    else
+                    {
+                        animSpeedMod = IsDualWieldAttack ? 1.2f : 1.0f;     // dual wield swing animation 20% faster
+                    }
+                }
             }
 
             var animSpeed = baseSpeed * animSpeedMod;
@@ -604,3 +640,4 @@ namespace ACE.Server.WorldObjects
         }
     }
 }
+
