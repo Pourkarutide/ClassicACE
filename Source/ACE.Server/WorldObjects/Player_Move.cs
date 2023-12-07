@@ -4,7 +4,7 @@ using ACE.Entity;
 using ACE.Entity.Enum;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
-using ACE.Server.Network.GameEvent.Events;
+using ACE.Server.Managers;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Physics.Animation;
 using ACE.Server.Physics.Collision;
@@ -257,12 +257,14 @@ namespace ACE.Server.WorldObjects
             {
                 //var damage = ratio * 40.0f;
                 var damage = ratio * 87.293810f;
+
+                damage *= (float)PropertyManager.GetDouble("fall_damage_multiplier").Item;
                 //Console.WriteLine($"Damage: {damage}");
 
                 // bludgeon damage
                 // impact damage
                 //if (damage > 0.0f && (FastTick || StartJump == null || StartJump.PositionZ - PhysicsObj.Position.Frame.Origin.Z > 10.0f))
-                if (damage > 0.0f)
+                if (PropertyManager.GetBool("fall_damage_enabled").Item && damage > 0.0f)
                     TakeDamage_Falling(damage);
             }
         }

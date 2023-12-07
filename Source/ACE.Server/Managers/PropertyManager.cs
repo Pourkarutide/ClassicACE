@@ -8,6 +8,7 @@ using System.Timers;
 using log4net;
 
 using ACE.Database;
+using ACE.Server.WorldObjects;
 
 namespace ACE.Server.Managers
 {
@@ -22,6 +23,8 @@ namespace ACE.Server.Managers
         private static readonly ConcurrentDictionary<string, ConfigurationEntry<string>> CachedStringSettings = new ConcurrentDictionary<string, ConfigurationEntry<string>>();
 
         private static Timer _workerThread;
+
+        internal static bool IsLoaded { get; private set; }
 
         /// <summary>
         /// Initializes the PropertyManager.
@@ -42,6 +45,8 @@ namespace ACE.Server.Managers
             _workerThread.Elapsed += DoWork;
             _workerThread.AutoReset = true;
             _workerThread.Start();
+
+            IsLoaded = true;
         }
 
 
@@ -85,6 +90,12 @@ namespace ACE.Server.Managers
                 _workerThread.Stop();
         }
 
+        private static void AssertLoaded()
+        {
+            if (!IsLoaded)
+                throw new InvalidOperationException("PropertyManager not loaded yet");
+        }
+
 
         /// <summary>
         /// Retrieves a boolean property from the cache or database
@@ -95,6 +106,7 @@ namespace ACE.Server.Managers
         /// <returns>A boolean value representing the property</returns>
         public static Property<bool> GetBool(string key, bool fallback = false, bool cacheFallback = true)
         {
+            AssertLoaded();
             // first, check the cache. If the key exists in the cache, grab it regardless of its modified value
             // then, check the database. if the key exists in the database, grab it and cache it
             // finally, set it to a default of false.
@@ -149,6 +161,8 @@ namespace ACE.Server.Managers
         /// <returns>An integer value representing the property</returns>
         public static Property<long> GetLong(string key, long fallback = 0, bool cacheFallback = true)
         {
+            AssertLoaded();
+
             if (CachedLongSettings.ContainsKey(key))
                 return new Property<long>(CachedLongSettings[key].Item, CachedLongSettings[key].Description);
 
@@ -197,8 +211,11 @@ namespace ACE.Server.Managers
         /// <param name="fallback">The value to return if the property cannot be found.</param>
         /// <param name="cacheFallback">Whether or not the fallpack property should be cached</param>
         /// <returns>A float value representing the property</returns>
-        public static Property<double> GetDouble(string key, double fallback = 0.0f, bool cacheFallback = true)
+        public static Property<double> GetDouble(string key, double fallback = 0.0f, bool cacheFallback = true, bool allowWhileInitializing = false)
         {
+            if (!allowWhileInitializing)
+                AssertLoaded();
+
             if (CachedDoubleSettings.ContainsKey(key))
                 return new Property<double>(CachedDoubleSettings[key].Item, CachedDoubleSettings[key].Description);
 
@@ -254,13 +271,13 @@ namespace ACE.Server.Managers
                 switch (key)
                 {
                     case "cantrip_drop_rate":
-                        Factories.Tables.CantripChance.ApplyNumCantripsMod();
+                        Factories.Tables.CantripChance.ApplyNumCantripsMod(newVal);
                         break;
                     case "minor_cantrip_drop_rate":
                     case "major_cantrip_drop_rate":
                     case "epic_cantrip_drop_rate":
                     case "legendary_cantrip_drop_rate":
-                        Factories.Tables.CantripChance.ApplyCantripLevelsMod();
+                        Factories.Tables.CantripChance.ApplyNumCantripsMod(newVal);
                         break;
                 }
             }
@@ -284,6 +301,8 @@ namespace ACE.Server.Managers
         /// <returns>A string value representing the property</returns>
         public static Property<string> GetString(string key, string fallback = "", bool cacheFallback = true)
         {
+            AssertLoaded();
+
             if (CachedStringSettings.ContainsKey(key))
                 return new Property<string>(CachedStringSettings[key].Item, CachedStringSettings[key].Description);
 
@@ -477,7 +496,7 @@ namespace ACE.Server.Managers
 
     public static class DefaultPropertyManager
     {
-        private static ReadOnlyDictionary<A,V> DictOf<A, V>()
+        private static ReadOnlyDictionary<A, V> DictOf<A, V>()
         {
             return new ReadOnlyDictionary<A, V>(new Dictionary<A, V>());
         }
@@ -490,6 +509,12 @@ namespace ACE.Server.Managers
                 tup => tup.Item2
             ));
         }
+
+        // For Dekarutide
+        public const bool SEASON3_DEFAULTS = true;
+        public const bool SEASON3_PATCH_1 = true;
+        public const bool SEASON3_PATCH_2 = true;
+        public const bool SEASON3_PATCH_3 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -525,7 +550,7 @@ namespace ACE.Server.Managers
                 PropertyManager.ModifyBool("show_dat_warning", true);
                 PropertyManager.ModifyString("dat_older_warning_msg", "The location you are attempting to enter is not present in your data files.");
             }
-            else if(Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            else if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
             {
                 PropertyManager.ModifyBool("corpse_destroy_pyreals", false);
                 PropertyManager.ModifyBool("item_dispel", true);
@@ -552,6 +577,181 @@ namespace ACE.Server.Managers
                 PropertyManager.ModifyDouble("quest_mindelta_rate", 0.2412);
 
                 PropertyManager.ModifyBool("pathfinding", true);
+
+                PropertyManager.ModifyBool("useable_gems", false);
+
+                if (SEASON3_DEFAULTS)
+                {
+                    // Hard Mode - Progression Caps
+                    PropertyManager.ModifyLong("max_level", 40);
+                    PropertyManager.ModifyBool("allow_xp_at_max_level", false);
+                    PropertyManager.ModifyBool("allow_skill_specialization", false);
+
+                    // Hard Mode - Progression Rates
+                    PropertyManager.ModifyDouble("quest_xp_modifier", 0.0);
+                    PropertyManager.ModifyDouble("xp_modifier", 0.25);
+                    PropertyManager.ModifyDouble("surface_bonus_xp", 0.0);
+                    PropertyManager.ModifyDouble("cantrip_drop_rate", 0.25);
+                    PropertyManager.ModifyBool("vendor_allow_special_mutations", false);
+                    PropertyManager.ModifyDouble("salvage_amount_multiplier", 0.4);
+                    PropertyManager.ModifyBool("gateway_ties_summonable", false); // No easy portal bots. People won't be able to evade pvp as easily
+                    PropertyManager.ModifyDouble("hot_dungeon_chance", 0.1); // Mitigate lucky gains from relying on hot dungeons being uncontested
+                    PropertyManager.ModifyLong("quest_mindelta_rate_longest", 600000); // Just under 1 week for longest quest timers
+                    PropertyManager.ModifyBool("allow_allegiance_passup", false);
+                    PropertyManager.ModifyDouble("spell_extraction_scroll_base_chance", 0.25);
+                    PropertyManager.ModifyDouble("spell_extraction_scroll_chance_per_extra_spell", 0.05);
+                    PropertyManager.ModifyDouble("coin_stack_multiplier", 0.5);
+                    PropertyManager.ModifyBool("neuter_trade_note_rewards", true);
+
+                    // Hard Mode - PvE Combat
+                    PropertyManager.ModifyDouble("customdm_mob_damage_scale", 1.25);
+                    PropertyManager.ModifyDouble("customdm_player_war_damage_scale_pve", 0.85);
+                    PropertyManager.ModifyDouble("bleed_pve_dmg_mod", 0.5);
+                    PropertyManager.ModifyDouble("customdm_mob_war_damage_scale", 1.0); // Normally 0.5
+
+                    // Hard Mode - Death penalty
+                    PropertyManager.ModifyDouble("vitae_penalty", 0.20);
+                    PropertyManager.ModifyDouble("vitae_penalty_max", 0.60);
+                    PropertyManager.ModifyLong("min_level_drop_wielded_on_death", 20);
+                    PropertyManager.ModifyLong("min_level_eligible_to_drop_items_on_death", 1);
+                    PropertyManager.ModifyBool("use_fixed_death_item_formula", true);
+                    PropertyManager.ModifyLong("max_items_dropped_per_death", 25);
+
+                    // Disabling Features
+                    PropertyManager.ModifyDouble("elite_mob_spawn_rate", 0.0);
+                    PropertyManager.ModifyBool("customdm_mutate_quest_items", false);
+
+                    // Outdoor Nerfs
+                    PropertyManager.ModifyBool("override_encounter_spawn_rates", true);
+                    PropertyManager.ModifyLong("encounter_regen_interval", 1800);
+                    PropertyManager.ModifyDouble("mob_awareness_range", 1.25);
+
+                    // QoL
+                    PropertyManager.ModifyBool("fellow_busy_no_recruit", false);
+                    PropertyManager.ModifyBool("container_opener_name", true);
+                    PropertyManager.ModifyBool("house_15day_account", false);
+                    PropertyManager.ModifyBool("permit_corpse_all", true);
+                    PropertyManager.ModifyBool("usable_gems_generated_with_1_mana_cost", true);
+
+                    // Non-gameplay configs
+                    PropertyManager.ModifyBool("world_closed", true); // require /world open to open server after start
+                    PropertyManager.ModifyBool("block_vpn_connections", true);
+                    PropertyManager.ModifyBool("player_receive_immediate_save", true);
+                    PropertyManager.ModifyBool("house_30day_cooldown", false); // Doesn't matter for apartments but decided to change it
+                    PropertyManager.ModifyLong("player_save_interval", 60); // Less rollback for players on crash
+
+                    // Cosmetic
+                    PropertyManager.ModifyBool("npc_hairstyle_fullrange", true);
+
+                    // PvP
+                    PropertyManager.ModifyBool("pk_server", true);
+                    PropertyManager.ModifyLong("pk_timer", 60);
+                    PropertyManager.ModifyDouble("pk_cast_radius", 8.0);
+
+                    // Scalars: At level 30 (pvp_dmg_mod_low_level), you have low mod for the given weapon
+                    //          At level 40 (pvp_dmg_mod_high_level), you have high mod for the given weapon
+                    //          And the mod goes gradually from low to high proportionally between the level ranges
+                    //          For example, at level 30, you do 1x (pvp_dmg_mod_low_axe) damage with Axe in pvp.
+                    //          At 35, you do 1.25x, and at 40, 1.5x (pvp_dmg_mod_high_axe)
+                    PropertyManager.ModifyLong("pvp_dmg_mod_low_level", 30); // 30-40, from 10-80.
+                    PropertyManager.ModifyLong("pvp_dmg_mod_high_level", 40);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_axe", 1.0); // 1.0-1.5, from 0.85-1.5
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_axe", 1.5);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_mace", 1.2); // 1.0-1.2, from 1.0-1.0
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_spear", 1.15); // 1.15-1.5, from 1.15-1.8
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_spear", 1.5);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_staff", 1.5); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_staff", 1.5);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_sword", 1.5); // 1.0-1.5, from 1.0-2.0
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_dagger", 1.2); // 1.0-1.2, from 1.0-1.5
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_unarmed", 1.3);
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_unarmed", 1.5); // 1.3-1.5, from 1.3-2.2
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_unarmed_war", 0.65); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_unarmed_war", 0.85);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_bow", 1.0); // 1.0-1.7, from 1.45-1.9
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_bow", 1.7);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_crossbow", 1.0); // 1.0-1.5, from 1.5-1.5
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_crossbow", 1.5);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_thrown", 0.90); // 0.90-1.3 from 0.75-1.3
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_thrown", 1.3);
+
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_dot", 0.75); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_dot", 0.75);
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_void_dot", 0.75); // Same, don't think this actually is in the game anyway
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_void_dot", 0.75);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_war", 1.0); // was 1.2
+
+                    // Grandfathered in from Existing non-default server configs
+                    PropertyManager.ModifyBool("dekaru_dual_wield_speed_mod", false);
+                    PropertyManager.ModifyBool("craft_exact_msg", true); // QoL crafting success chance, mitigates advantages given to plugin devs/users
+                    PropertyManager.ModifyBool("assess_creature_pve_always_succeed", true); // Fixes loot delays with vtank in some situations
+                    PropertyManager.ModifyBool("house_per_char", true); // Allow multiple houses per account
+                    PropertyManager.ModifyBool("show_discord_chat_ingame", true);
+                    PropertyManager.ModifyBool("spellcast_recoil_queue", true);
+                    PropertyManager.ModifyDouble("spellcast_max_angle", 40.0);
+                    PropertyManager.ModifyBool("useable_gems", true);
+                    PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_1h", 1.6);
+                    PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_dualwield", 1.7);
+                    PropertyManager.ModifyDouble("dekaru_tw_animation_speed", 3.0);
+                    PropertyManager.ModifyDouble("fast_missile_modifier", 3.0);
+
+                    // Not grandathered in, reverting to default
+                    // fall_damage_enabled: true
+                    // fall_damage_multiplier: 1.0
+                    // vpn_account_whitelist
+
+                    if (SEASON3_PATCH_1)
+                    {
+                        // New properties as of this patch
+                        PropertyManager.ModifyLong("pk_escape_max_level_difference", 20);
+                        PropertyManager.ModifyBool("stackable_trophy_rewards_use_tar", true);
+                        PropertyManager.ModifyBool("drop_all_coins_on_death", true);
+
+                        // Existing properties, needs manual modify as admin for servers that are not new
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_spear", 1.4); // From 1.5, -6.7%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_axe", 1.4); // From 1.5, -6.7%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_sword", 1.65); // From 1.5, +10%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_unarmed", 1.65); // From 1.5, +10%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_crossbow", 1.7); // From 1.5, +13%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_dagger", 1.25); // From 1.2, +4%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_thrown", 1.4); // From 1.3, + 7%
+                        PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_dualwield", 1.6); // From 1.8, -12%
+                        PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_1h", 1.7); // From 1.6, +6%
+                    }
+
+                    if (SEASON3_PATCH_2)
+                    {
+                        PropertyManager.ModifyBool("dekarutide_season3_alternate_weapon_wield_reqs", true);
+                        PropertyManager.ModifyBool("dekarutide_season3_alternate_loot_valuations", true);
+                        PropertyManager.ModifyBool("ai_anti_perch", false);
+                        PropertyManager.ModifyBool("ai_custom_pathfind", false);
+                        PropertyManager.ModifyDouble("spelltransfer_over_tier_success_chance", 0.5);
+                        PropertyManager.ModifyBool("die_command_enabled", false);
+                    }
+
+                    if (SEASON3_PATCH_3)
+                    {
+                        PropertyManager.ModifyLong("max_items_dropped_per_death", 18);
+                        PropertyManager.ModifyBool("cmd_pop_last_24_hours", true);
+                        PropertyManager.ModifyDouble("vitae_penalty", 0.15);
+                        PropertyManager.ModifyDouble("extra_vitae_penalty_pvp", 0.15);
+                        PropertyManager.ModifyDouble("vitae_penalty_max", 0.30);
+                        PropertyManager.ModifyLong("pk_timer", 37);
+                    }
+                }
             }
         }
 
@@ -576,6 +776,7 @@ namespace ACE.Server.Managers
                 ("allow_summoning_killtask_multicredit", new Property<bool>(true, "enables retail behavior where a summoner can get multiple killtask credits from a monster")),
                 ("assess_creature_mod", new Property<bool>(false, "(non-retail function) If enabled, re-enables former skill formula, when assess creature skill is not trained or spec'ed")),
                 ("attribute_augmentation_safety_cap", new Property<bool>(true, "if TRUE players are not able to use attribute augmentations if the innate value of the target attribute is >= 96. All normal restrictions to these augmentations still apply.")),
+                ("bz_snitch_hcpk_top10", new Property<bool>(true, "if TRUE the BZ location snitch in HCPK mode will give the location of players only from the top 10, to any HCPK player.")),
                 ("chat_disable_general", new Property<bool>(false, "disable general global chat channel")),
                 ("chat_disable_lfg", new Property<bool>(false, "disable lfg global chat channel")),
                 ("chat_disable_olthoi", new Property<bool>(false, "disable olthoi global chat channel")),
@@ -683,9 +884,29 @@ namespace ACE.Server.Managers
                 ("enforce_player_movement", new Property<bool>(false, "enable this to enforce server side verification of player movement")),
                 ("enforce_player_movement_speed", new Property<bool>(false, "enable this to enforce server side verification of player movement speed")),
                 ("enforce_player_movement_kick", new Property<bool>(false, "enable this to kick players that fail movement verification too frenquently")),
+                ("useable_gems", new Property<bool>(true, "Allows loot generated gems to be used to cast their spells")),
                 ("allow_PKs_to_go_NPK", new Property<bool>(true, "Allows PKs to go back to being NPKs by using the appropriate altar")),
-                ("dekaru_dual_wield_speed_mod", new Property<bool>(true, "Toggles whether Dekaru's dual wield speed changes (other than for dagger) are enabled"))
+                ("allow_multiple_accounts_hc", new Property<bool>(false, "Toggles whether multiple accounts are allowed in Hardcore mode")),
                 ("show_discord_chat_ingame", new Property<bool>(false, "Display messages posted to Discord in general chat")),
+                ("assess_creature_pve_always_succeed", new(false, "enable this to bypass assess creature PvE skill checks (workaround to fix 5 second delay on vtank looting which occurs due to failed assess)")),
+                ("relive_bonus_applies_to_received_fellow_xp", new(true, "Toggles whether incoming xp received from fellowship members benefits from the relive bonus.")),
+                ("fall_damage_enabled", new(true, "Toggles whether fall damage is enabled")),
+                ("dekaru_dual_wield_speed_mod", new(true, "Toggles whether Dekaru's dual wield speed changes (other than for dagger) are enabled")),
+                ("dekaru_hc_keep_non_equippable_bonded_on_death", new(true, "Toggles whether bonded items are kept on a hardcore death despite being non-equippable")),
+                ("vendor_allow_special_mutations", new(true, "Toggles whether items on vendors can have special mutations like slayer, critical strike, etc.")),
+                ("customdm_mutate_quest_items", new(false, "Toggles whether quest item mutations are enabled")),
+                ("allow_allegiance_passup", new(true, "Toggles whether allegiance passup is enabled")),
+                ("allow_skill_specialization", new(true, "Toggles whether skill specialization is allowed")),
+                ("usable_gems_generated_with_1_mana_cost", new(false, "Toggles whether usable gems are generated with a cost of 1 mana, for virtually unlimited use, instead of the normal amount. Gems should cost at least 1 mana to mitigate any compatibility issues with plugins or other logic")),
+                ("neuter_trade_note_rewards", new(false, "If enabled, trade note quest rewards will be reduced to a single I note")),
+                ("stackable_trophy_rewards_use_tar", new(false, "If enabled, stackable quest rewards from trophies will be modified by TAR, scaling from 120% to 20%")),
+                ("drop_all_coins_on_death", new(false, "If enabled, all coins will drop on death instead of half")),
+                ("dekarutide_season3_alternate_weapon_wield_reqs", new(false, "If enabled, use Dekarutide''s Alternate Weapon Wield Requirements formula for Season 3")),
+                ("dekarutide_season3_alternate_loot_valuations", new(false, "If enabled, use Dekarutide''s Alternate Loot Valuation formula for Season 3")),
+                ("ai_anti_perch", new(true, "If enabled, use Dekaru''s anti-perch AI")),
+                ("ai_custom_pathfind", new(true, "If enabled, use custom pathfinding AI")),
+                ("die_command_enabled", new(true, "If disabled, prevents the use of /die")),
+                ("use_fixed_death_item_formula", new(false, "If enabled, a fixed number of items will be dropped on death instead of variable with level. The max_items_dropped_per_death property will be used for this.")),
                 ("allow_custom_gameplay_modes", new Property<bool>(true, "CustomDM: Allow creation of new characters using gameplay modes such as hardcore and solo self-found")),
                 ("hardcore_death_keep_bonded", new Property<bool>(false, "Allow hardcore characters to keep their bonded equipment on death")),
                 ("hardcore_death_keep_spells", new Property<bool>(false, "Allow hardcore characters to keep their spells on death")),
@@ -696,7 +917,10 @@ namespace ACE.Server.Managers
                 ("cmd_pop_show_current", new Property<bool>(true, "Allow the pop command to show current online population count")),
                 ("cmd_pop_show_24_hours", new Property<bool>(true, "Allow the pop command to show the 24 hours unique IPs count")),
                 ("cmd_pop_show_7_days", new Property<bool>(true, "Allow the pop command to show the 7 days unique IPs count")),
-                ("cmd_pop_show_30_days", new Property<bool>(true, "Allow the pop command to show the 30 days unique IPs count"))
+                ("cmd_pop_show_30_days", new Property<bool>(true, "Allow the pop command to show the 30 days unique IPs count")),
+
+                // Do not edit below this line
+                ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<long>> DefaultLongProperties =
@@ -718,7 +942,20 @@ namespace ACE.Server.Managers
                 ("teleport_visibility_fix", new Property<long>(0, "Fixes some possible issues with invisible players and mobs. 0 = default / disabled, 1 = players only, 2 = creatures, 3 = all world objects")),
                 ("max_level", new Property<long>(275, "Set the max character level.")),
                 ("discord_channel_id", new Property<long>(0, "Messages posted to this Discord channel will be shown in General Chat")),
-                ("quest_mindelta_rate_shortest", new Property<long>(72000, "Quest min deltas below this won't be affected by quest_mindelta_rate, additionally modified min deltas that would fall under this value will be set to this value instead."))
+                ("quest_mindelta_rate_shortest", new Property<long>(72000, "Quest min deltas below this won't be affected by quest_mindelta_rate, additionally modified min deltas that would fall under this value will be set to this value instead.")),
+                ("quest_mindelta_rate_longest", new(600000, "Quest min deltas above this will be set to this value instead.")),
+                ("dekaru_imbue_magic_defense_per_imbue", new(3, "Number of magic defense points to increase per magic defense imbue on an item.")),
+                ("dekaru_imbue_melee_defense_per_imbue", new(3, "Number of melee defense points to increase per magic defense imbue on an item.")),
+                ("dekaru_imbue_missile_defense_per_imbue", new(3, "Number of missile defense points to increase per magic defense imbue on an item.")),
+                ("elite_mob_loot_count", new(20, "Number of random items on an elite corpse.")),
+                ("min_level_drop_wielded_on_death", new(35, "Minimum character level before wielded items may drop on player death.")),
+                ("min_level_eligible_to_drop_items_on_death", new(11, "Minimum character level before items may drop on player death.")),
+                ("pk_escape_max_level_difference", new(10, "The maximum level difference, in either direction, where a player may fast escape from another player in pvp. This includes logouts, portals, and recalls.")),
+                ("bz_snitch_level_difference", new(10, "The maximum level difference, in either direction, where a player may receive a bz snitch (location reveal). Doesn't affect hardcore mode.")),
+                ("max_items_dropped_per_death", new(Player.MaxItemsDropped, "The maximum number of items dropped on death. This is not a simple cap on death items. If changed from the default, the number of actual items dropped per death will be scaled lower or higher depending on the proportion of this versus the default.")),
+
+                // Do not edit below this line
+                ("null_long", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<double>> DefaultDoubleProperties =
@@ -773,6 +1010,17 @@ namespace ACE.Server.Managers
                 ("xp_modifier_reward_tier5", new Property<double>(1.0, "Scales the amount of xp received by players for completing tier 5 quests or unspecified level quests while being between level 76 and 96.")),
                 ("xp_modifier_reward_tier6", new Property<double>(1.0, "Scales the amount of xp received by players for completing tier 6 quests or unspecified level quests while being over level 96.")),
                 ("salvage_amount_multiplier", new Property<double>(1.0, "Scales the amount of salvage a player gets from items.")),
+
+                // Dagger Attack Speed Modifiers (PvE and PvP)
+                ("dekaru_dagger_ms_animation_speed_1h", new(1.8, "Multiplier for dagger attack animation speed, if one handed with no shield (with a shield is hard-coded to 1.0).")),
+                ("dekaru_dagger_ms_animation_speed_dualwield", new(1.8, "Multiplier for dagger attack animation speed, if dual wielding.")),
+                ("dekaru_dagger_ms_animation_speed_shielded", new(1.8, "Multiplier for dagger attack animation speed, if using a shield.")),
+
+                // Dagger bleed mod in pve
+                ("bleed_pve_dmg_mod", new(1.0, "Damage mod for dagger bleed in PvE")),
+
+                // Thrown Weapon Attack Speed Modifier
+                ("dekaru_tw_animation_speed", new(1.0, "Multiplier for thrown weapon attack animation speed")),
 
                 // PvP Damage modifiers
                 //
@@ -1020,19 +1268,47 @@ namespace ACE.Server.Managers
                 ("hardcore_pk_pve_death_level_modifier", new Property<double>(1.0, "Percentage of levels lost on death for Hardcore PK gameplay mode when dying in PvE. A value of 1.0 means deaths reset the player to level 1.")),
                 ("hardcore_npk_xp_modifier", new Property<double>(1.0, "Scales the amount of xp received by hardcore NPK players.")),
                 ("hardcore_pk_xp_modifier", new Property<double>(1.0, "Scales the amount of xp received by hardcore PK players.")),
+                ("hardcore_pk_xp_modifier_pvp_kill", new(1.0, "Scales the amount of xp received by hardcore PK players for a PK kill.")),
+                ("fall_damage_multiplier", new(1.0, "Global multiplier for fall damage. Use fall_damage_enabled=false instead of setting this to 0 to disable completely.")),
 
                 ("hot_dungeon_interval", new Property<double>(7800.0, "The minimum possible duration (in seconds) before a new hot dungeon can be automatically rolled after one was previously activated.")),
                 ("hot_dungeon_duration", new Property<double>(7200.0, "The total duration (in seconds) which a hot dungeon will be active.")),
                 ("hot_dungeon_roll_delay", new Property<double>(1200.0, "The duration (in seconds) between each chance to automatically roll a new hot dungeon (only applies while there are no hot dungeons active).")),
                 ("hot_dungeon_chance", new Property<double>(0.33, "The percentage chance (between 0 and 1) when the server will activate a hot dungeon at each roll interval.")),
 
-
-                ("surface_bonus_xp", new Property<double>(0.25, "Extra xp earned for kills when hunting outside dungeons. 1.0 means 100% more xp.")),
                 ("hot_dungeon_bonus_xp", new Property<double>(1.0, "Extra xp earned for kills when inside hot dungeons. 1.0 means 100% more xp.")),
                 ("exploration_bonus_xp", new Property<double>(0.5, "Extra xp earned while completing exploration assignment's objectives. 1.0 means 100% more xp.")),
-                ("relive_bonus_xp", new Property<double>(1.0, "Extra xp earned while reliving levels after a death that resulted in lost levels. 1.0 means 100% more xp."))
+                ("relive_bonus_xp", new Property<double>(1.0, "Extra xp earned while reliving levels after a death that resulted in lost levels. 1.0 means 100% more xp.")),
+
+                ("riposte_proc_chance", new(0.9, "The percentage chance (between 0 and 1) that riposte will trigger when evading an attack.")),
+                ("dual_wield_riposte_proc_chance", new(0.4, "The percentage chance (between 0 and 1) that a dual wielding player defender will trigger an extra offhand attack when evading the attacker (this does not require riposte technique equipped).")),
+
+                ("surface_bonus_xp", new(0.25, "Extra xp earned for kills when hunting outside dungeons. 1.0 means 100% more xp.")),
+                ("hot_dungeon_bonus_xp", new(1.0, "Extra xp earned for kills when inside hot dungeons. 1.0 means 100% more xp.")),
+                ("exploration_bonus_xp_markers", new(1.0, "Extra xp earned while completing exploration assignment's marker objectives. 1.0 means 100% more xp.")),
+                ("exploration_bonus_xp_kills", new(2.0, "Extra xp earned while completing exploration assignment's kill objectives. 1.0 means 100% more xp.")),
+                ("relive_bonus_xp", new(1.0, "Extra xp earned while reliving levels after a death that resulted in lost levels. 1.0 means 100% more xp.")),
+
+                ("elite_mob_spawn_rate", new(0.00, "Probability of a creature spawning as an elite mob. 1.0 means 100%")),
+                ("elite_mob_loot_quality", new(0.5, "Loot quality mod of elite mob (For reference, normal is 1.0, chests are 1.2, Awareness chests are 1.4")),
+
+                ("quest_mutation_tier_1_major_chance", new(0.10, "The % chance a tier 1 quest item cantrip mutation will be a major cantrip (otherwise will be a minor cantrip).")),
+                ("quest_mutation_tier_2_major_chance", new(0.25, "The % chance a tier 2 quest item cantrip mutation will be a major cantrip (otherwise will be a minor cantrip).")),
+                ("quest_mutation_tier_3_major_chance", new(0.90, "The % chance a tier 3 quest item cantrip mutation will be a major cantrip (otherwise will be a minor cantrip).")),
+                ("customdm_mob_war_damage_scale", new(0.5, "Scales creature war damage in CustomDM. A value of 0.75 means 75% of normal damage")),
+                ("customdm_player_war_damage_scale_pve", new(1.0, "Scales player war damage in CustomDM, in PvE. A value of 0.75 means 75% of normal damage")),
+                ("customdm_mob_damage_scale", new(1.0, "Scales mob damage vs players in CustomDM. A value of 0.75 means 75% of normal damage")),
+                ("spell_extraction_scroll_base_chance", new(0.5, "The base chance of a spell extraction scroll to successfully extract a spell. A value of 0.50 means 50%")),
+                ("spell_extraction_scroll_chance_per_extra_spell", new(0.1, "The additional spell extraction chance added per spell starting from the 2nd spell. A value of 0.1 means 10%")),
+                ("coin_stack_multiplier", new(1.0, "Scales the amount of pyreals awarded from mob kills.")),
+                ("bz_snitch_chance", new(0.3, "The chance to proc a bz snitch per tick (PvP player location reveal).")),
+                ("spelltransfer_over_tier_success_chance", new(1.0, "The chance to successfully transfer a spell that is higher than the tier of the target item without destroying the target")),
+                ("extra_vitae_penalty_pvp", new(0.0, "The extra vitae penalty for a PvP death. A value of 0.05 means an extra 5% vitae on top of the usual 5%, for 10% total")),
+
+                // Do not edit below this line
+                ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
                 );
-        
+
         public static readonly ReadOnlyDictionary<string, Property<string>> DefaultStringProperties =
             DictOf(
                 ("content_folder", new Property<string>("Content", "for content creators to live edit weenies. defaults to Content folder found in same directory as ACE.Server.dll")),
@@ -1050,7 +1326,11 @@ namespace ACE.Server.Managers
                 ("turbine_chat_webhook_audit", new Property<string>("", "Webhook to be used for ingame audit log.")),
                 ("proxycheck_api_key", new Property<string>("", "API key for proxycheck.io service for VPN detection")),
                 ("vpn_account_whitelist", new Property<string>("", "A comma separated list of account names for which VPN detection is bypassed")),
-                ("discord_login_token", new Property<string>("", "Login Token used for Discord chat integration"))
+                ("discord_login_token", new Property<string>("", "Login Token used for Discord chat integration")),
+
+                // Do not edit below this line
+                ("null_string", new("", "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
                 );
     }
 }
+

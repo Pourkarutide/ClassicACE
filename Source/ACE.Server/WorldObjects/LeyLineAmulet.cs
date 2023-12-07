@@ -443,7 +443,7 @@ namespace ACE.Server.WorldObjects
             LongDesc = $"{basicDescription}\n\nCurrent Effect: Unaligned";
         }
 
-        public void OnActivate(Player player)
+        public void OnActivate(Player player, bool forceAddSpellsToWielder = false)
         {
             if (player == null)
                 return;
@@ -472,9 +472,12 @@ namespace ACE.Server.WorldObjects
                         break;
                 }
             }
+
+            if (forceAddSpellsToWielder)
+                player.TryActivateSpells(this);
         }
 
-        public void OnDeactivate(Player player)
+        public void OnDeactivate(Player player, bool forceRemoveSpellsFromWielder = false)
         {
             if (player == null)
                 return;
@@ -490,6 +493,14 @@ namespace ACE.Server.WorldObjects
                         var spell = new Server.Entity.Spell(spellId);
                         player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You forget the {spell.Name} spell.", ChatMessageType.Broadcast));
                     }
+                }
+            }
+
+            if (forceRemoveSpellsFromWielder && Biota.PropertiesSpellBook != null)
+            {
+                foreach (var spell in Biota.PropertiesSpellBook)
+                {
+                    player.RemoveItemSpell(this, (uint)spell.Key, true);
                 }
             }
         }

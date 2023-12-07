@@ -334,6 +334,58 @@ namespace ACE.Server.WorldObjects
             return true;
         }
 
+        public bool TryActivateSpells(WorldObject item)
+        {
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                var leyLineAmulet = item as LeyLineAmulet;
+                if (leyLineAmulet != null)
+                    leyLineAmulet.OnActivate(this);
+            }
+
+            // check activation requirements
+            var result = item.CheckUseRequirements(this);
+
+            if (!result.Success)
+            {
+                if (result.Message != null)
+                    Session.Network.EnqueueSend(result.Message);
+
+                return false;
+            }
+
+            // handle special case
+            if (item.ItemCurMana == 1)
+            {
+                item.ItemCurMana = 0;
+                return false;
+            }
+
+            var isAffecting = true;     // ??
+
+            foreach (var spell in item.Biota.GetKnownSpellsIds(BiotaDatabaseLock))
+            {
+                if (item.HasProcSpell((uint)spell))
+                    continue;
+
+                if (spell == item.SpellDID)
+                    continue;
+
+                var success = CreateItemSpell(item, (uint)spell);
+
+                if (success)
+                    isAffecting = true;
+            }
+
+            if (isAffecting)
+            {
+                item.OnSpellsActivated();
+                item.ItemCurMana--;
+            }
+
+            return true;
+        }
+
         public override bool CanActivateItemSpells(WorldObject item, bool silent = false)
         {
             if (item.ItemCurMana > 0 || item.WeenieType == WeenieType.LeyLineAmulet)
