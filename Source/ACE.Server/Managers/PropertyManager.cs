@@ -681,6 +681,7 @@ namespace ACE.Server.Managers
                 ("allow_PKs_to_go_NPK", new Property<bool>(true, "Allows PKs to go back to being NPKs by using the appropriate altar")),
                 ("show_discord_chat_ingame", new Property<bool>(false, "Display messages posted to Discord in general chat")),
 
+                ("fall_damage_enabled", new Property<bool>(true, "Toggles whether fall damage is enabled")),
                 ("dekaru_dual_wield_speed_mod", new Property<bool>(true, "Toggles whether Dekaru's dual wield speed changes (other than for dagger) are enabled"))
 
                 );
@@ -1007,6 +1008,7 @@ namespace ACE.Server.Managers
                 ("hardcore_npk_xp_modifier", new Property<double>(1.0, "Scales the amount of xp received by hardcore NPK players.")),
                 ("hardcore_pk_xp_modifier", new Property<double>(1.0, "Scales the amount of xp received by hardcore PK players.")),
 
+                ("fall_damage_multiplier", new Property<double>(1.0, "Global multiplier for fall damage. Use fall_damage_enabled=false instead of setting this to 0 to disable completely.")),
                 ("hot_dungeon_interval", new Property<double>(7800.0, "The minimum possible duration (in seconds) before a new hot dungeon can be automatically rolled after one was previously activated.")),
                 ("hot_dungeon_duration", new Property<double>(7200.0, "The total duration (in seconds) which a hot dungeon will be active.")),
                 ("hot_dungeon_roll_delay", new Property<double>(1200.0, "The duration (in seconds) between each chance to automatically roll a new hot dungeon (only applies while there are no hot dungeons active).")),
