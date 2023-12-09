@@ -312,7 +312,8 @@ namespace ACE.Server.Entity
                         }
 
                         if (Weapon != null && Weapon.IsTwoHanded)
-                            CriticalChance += 0.05f + playerAttacker.ScaleWithPowerAccuracyBar(0.05f);
+                           /// CriticalChance += 0.05f + playerAttacker.ScaleWithPowerAccuracyBar(0.05f);
+                            CriticalChance += 0.10f + playerAttacker.ScaleWithPowerAccuracyBar(0.05f);
 
                         if (isAttackFromSneaking)
                         {
@@ -341,7 +342,8 @@ namespace ACE.Server.Entity
                     if (playerDefender != null)
                     {
                         if (defenderTechniqueId == TacticAndTechniqueType.Riposte)
-                            CriticalChance += 0.10f; // Extra chance of receiving critical hits while using the Riposte technique.
+                           /// CriticalChance += 0.10f; // Extra chance of receiving critical hits while using the Riposte technique.
+                            CriticalChance += 0.05f; // Extra chance of receiving critical hits while using the Riposte technique.
                     }
                 }
             }
@@ -371,6 +373,13 @@ namespace ACE.Server.Entity
                     // verify: CriticalMultiplier only applied to the additional crit damage,
                     // whereas CD/CDR applied to the total damage (base damage + additional crit damage)
                     CriticalDamageMod = 1.0f + WorldObject.GetWeaponCritDamageMod(Weapon, attacker, attackSkill, defender, pkBattle);
+
+                    // Axes and Crossbows have a respective passive increase to critical damage
+                    if (Weapon != null && Weapon.WeaponSkill == Skill.Axe)
+						CriticalDamageMod = 1.5f + WorldObject.GetWeaponCritDamageMod(Weapon, attacker, attackSkill, defender, pkBattle);
+
+					if (Weapon != null && Weapon.WeaponSkill == Skill.Crossbow)
+						CriticalDamageMod = 1.3f + WorldObject.GetWeaponCritDamageMod(Weapon, attacker, attackSkill, defender, pkBattle);
 
                     CriticalDamageRatingMod = Creature.GetPositiveRatingMod(attacker.GetCritDamageRating());
 
