@@ -52,7 +52,7 @@ namespace ACE.Server.Factories
             }
             else
             {
-                if(!wo.UiEffects.HasValue) // Elemental effects take precendence over magical as it is more important to know the element of a weapon than if it has spells.
+                if (!wo.UiEffects.HasValue) // Elemental effects take precendence over magical as it is more important to know the element of a weapon than if it has spells.
                     wo.UiEffects = UiEffects.Magical;
 
                 var maxBaseMana = GetMaxBaseMana(wo);
@@ -271,7 +271,7 @@ namespace ACE.Server.Factories
             var rng = ThreadSafeRandom.Next(0.0f, 1.0f);
             if (rng < 0.05)
             {
-                if(roll.Heritage == TreasureHeritageGroup.Invalid)
+                if (roll.Heritage == TreasureHeritageGroup.Invalid)
                     roll.Heritage = (TreasureHeritageGroup)ThreadSafeRandom.Next(1, 3);
 
                 switch (roll.Heritage)
@@ -439,3 +439,4 @@ namespace ACE.Server.Factories
         }
     }
 }
+

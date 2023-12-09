@@ -426,7 +426,7 @@ namespace ACE.Server.Entity
                 GetBodyPart(AttackHeight);
 
                 // get player armor pieces
-                Armor = playerDefender.GetArmorLayers(BodyPart);
+                Armor = playerDefender.GetArmorLayers(playerDefender, BodyPart);
 
                 // get armor modifiers
                 ArmorMod = playerDefender.GetArmorMod(attacker, DamageType, Armor, Weapon, ignoreArmorMod, pkBattle);
