@@ -976,20 +976,22 @@ namespace ACE.Server.Factories
             return (int)Math.Floor(itemDifficulty + spellAddon + epicAddon + legAddon);
         }
 
-        /// <summary>
-        /// Calculates the Arcane Lore requirement / ItemDifficulty
         /// </summary>
         private static int CalculateArcaneLore(WorldObject wo, TreasureRoll roll)
         {
+            // Initialize a Random object
+            Random random = new Random();
+
+            // Generate a random number between 1 and 10
+            int randomItemDifficulty = random.Next(1, 11);  // Note: Upper-bound is exclusive, so we use 11 to include 10
+
             // spellcraft - (itemSkillLevelLimit / 2.0f) + creatureLifeEnchantments + cantrips
 
             var spellcraft = wo.ItemSpellcraft.Value;
-
             // - mutates 100% of the time for melee / missile weapons
             // - mutates 55% of the time for armor
             // - mutates 0% of the time for all other item types
             var itemSkillLevelFactor = 0.0f;
-
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
             {
                 if (wo.ItemSkillLevelLimit > 0)
@@ -1000,19 +1002,21 @@ namespace ACE.Server.Factories
                 if (wo.ItemSkillLevelLimit > 0)
                     itemSkillLevelFactor = wo.ItemSkillLevelLimit.Value / 2.0f;
             }
-
             var fArcane = spellcraft - itemSkillLevelFactor;
-
             if (wo.ItemAllegianceRankLimit > 0)
                 fArcane -= (float)wo.ItemAllegianceRankLimit * 10.0f;
-
             if (wo.HeritageGroup != 0)
                 fArcane -= fArcane * 0.2f;
 
             if (fArcane < 0)
                 fArcane = 0;
 
+            //old calculation from Dekaru
+            //return (int)Math.Floor(fArcane + roll.ItemDifficulty);
+
             return (int)Math.Floor(fArcane + roll.ItemDifficulty);
+            // Use the random number for ItemDifficulty
+            return (int)Math.Floor(fArcane + randomItemDifficulty);
         }
     }
 }
