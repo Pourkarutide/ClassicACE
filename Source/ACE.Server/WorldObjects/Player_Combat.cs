@@ -121,8 +121,8 @@ namespace ACE.Server.WorldObjects
                             Creature creatureAttacker = attacker as Creature;
                             if (creatureAttacker != null)
                             {
-                              ///  var chance = 0.4f;
-                                var chance = 0.9f;
+                                ///  var chance = 0.4f;
+                                var chance = PropertyManager.GetDouble("riposte_proc_chance").Item;
                                 
                                 if (chance > ThreadSafeRandom.Next(0.0f, 1.0f) && GetDistance(creatureAttacker) < 3)
                                 {
@@ -140,7 +140,7 @@ namespace ACE.Server.WorldObjects
                         Creature creatureAttacker = attacker as Creature;
                         if (creatureAttacker != null)
                         {
-                           var chance = 0.4f;
+                            var chance = PropertyManager.GetDouble("dual_wield_riposte_proc_chance").Item;
                                                         
                             if (chance > ThreadSafeRandom.Next(0.0f, 1.0f) && GetDistance(creatureAttacker) < 3)
                             {
@@ -749,13 +749,15 @@ namespace ACE.Server.WorldObjects
 		    { "CANTRIPSTORMBANE2", SpellId.CANTRIPSTORMBANE2 },
 		    { "CANTRIPSTORMBANE3", SpellId.CANTRIPSTORMBANE3 },
 	    };
-    private double ApplySpellOnSpecializedArmorActTime = 0;
-    private static double ApplySpellOnSpecializedArmorActInt = 5;
-    private void ApplySpellOnSpecializedArmor(Player defender, DamageType damageType, BodyPart bodyPart)
+
+        private double ApplySpellOnSpecializedArmorActTime = 0;
+        private static double ApplySpellOnSpecializedArmorActInt = 5;
+
+        private void ApplySpellOnSpecializedArmor(Player defender, DamageType damageType, BodyPart bodyPart)
     {
 	    var currentTime = Time.GetUnixTime();
         if (ApplySpellOnSpecializedArmorActTime > currentTime)
-        return;
+            return;
 
 	    ApplySpellOnSpecializedArmorActTime = currentTime + ApplySpellOnSpecializedArmorActInt;
 
@@ -767,8 +769,8 @@ namespace ACE.Server.WorldObjects
             if (_damageTypeToSpellMapping.TryGetValue(damageType, out string baseSpellName))
             {
                 int maxUsableSpellLevel = 2;
-                int minSpellLevel = Math.Min(Math.Max(0, (int)Math.Floor(((float)armorSkill.Current - 310) / 50.0)), maxUsableSpellLevel);
-                int maxSpellLevel = Math.Max(0, Math.Min((int)Math.Floor(((float)armorSkill.Current - 150) / 50.0), maxUsableSpellLevel));
+                int minSpellLevel = Math.Clamp((int)Math.Floor(((float)armorSkill.Current - 310) / 50.0f), 0, maxUsableSpellLevel);
+                int maxSpellLevel = Math.Clamp((int)Math.Floor(((float)armorSkill.Current - 150) / 50.0f), 0, maxUsableSpellLevel);
 
                 int spellLevel = ThreadSafeRandom.Next(minSpellLevel, maxSpellLevel);
 
