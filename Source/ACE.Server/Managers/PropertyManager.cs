@@ -1014,6 +1014,8 @@ namespace ACE.Server.Managers
                 ("hot_dungeon_roll_delay", new Property<double>(1200.0, "The duration (in seconds) between each chance to automatically roll a new hot dungeon (only applies while there are no hot dungeons active).")),
                 ("hot_dungeon_chance", new Property<double>(0.33, "The percentage chance (between 0 and 1) when the server will activate a hot dungeon at each roll interval.")),
 
+                ("riposte_proc_chance", new Property<double>(0.9, "The percentage chance (between 0 and 1) that riposte will trigger when evading an attack.")),
+                ("dual_wield_riposte_proc_chance", new Property<double>(0.4, "The percentage chance (between 0 and 1) that a dual wielding player defender will trigger an extra offhand attack when evading the attacker (this does not require riposte technique equipped).")),
 
                 ("surface_bonus_xp", new Property<double>(0.25, "Extra xp earned for kills when hunting outside dungeons. 1.0 means 100% more xp.")),
                 ("hot_dungeon_bonus_xp", new Property<double>(1.0, "Extra xp earned for kills when inside hot dungeons. 1.0 means 100% more xp.")),

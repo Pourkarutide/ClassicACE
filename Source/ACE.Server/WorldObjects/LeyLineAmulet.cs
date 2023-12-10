@@ -83,7 +83,7 @@ namespace ACE.Server.WorldObjects
             SpellId.RevitalizeSelf1,
             SpellId.RevitalizeOther1,
             
-            SpellId.HealthToManaSelf1
+            SpellId.HealthToManaSelf1,
             
             SpellId.StaminaToManaSelf1,
 
