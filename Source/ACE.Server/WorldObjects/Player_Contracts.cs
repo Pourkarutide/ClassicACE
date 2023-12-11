@@ -230,7 +230,7 @@ namespace ACE.Server.WorldObjects
             {
                 Session.Network.EnqueueSend(new GameMessageSystemChat($"{sourceObject.Name} tells you, \"Here's your reward for the completed assignments:\"", ChatMessageType.Tell));
 
-                var rewardTier = Math.Clamp(RollTier(CalculateExtendedTier(Level ?? 1)) + 2, 1, 7);
+                var rewardTier = Math.Clamp(RollTier(CalculateExtendedTier(Level ?? 1)) + 3, 1, 7);
                 int rewardAmount;
 
                 if (assignment1Complete)
