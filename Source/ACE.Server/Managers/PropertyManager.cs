@@ -1007,6 +1007,7 @@ namespace ACE.Server.Managers
                 ("hardcore_pk_pve_death_level_modifier", new Property<double>(1.0, "Percentage of levels lost on death for Hardcore PK gameplay mode when dying in PvE. A value of 1.0 means deaths reset the player to level 1.")),
                 ("hardcore_npk_xp_modifier", new Property<double>(1.0, "Scales the amount of xp received by hardcore NPK players.")),
                 ("hardcore_pk_xp_modifier", new Property<double>(1.0, "Scales the amount of xp received by hardcore PK players.")),
+                ("hardcore_pk_xp_modifier_pvp_kill", new Property<double>(1.0, "Scales the amount of xp received by hardcore PK players for a PK kill.")),
 
                 ("fall_damage_multiplier", new Property<double>(1.0, "Global multiplier for fall damage. Use fall_damage_enabled=false instead of setting this to 0 to disable completely.")),
                 ("hot_dungeon_interval", new Property<double>(7800.0, "The minimum possible duration (in seconds) before a new hot dungeon can be automatically rolled after one was previously activated.")),
