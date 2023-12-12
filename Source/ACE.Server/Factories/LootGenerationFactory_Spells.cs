@@ -56,7 +56,7 @@ namespace ACE.Server.Factories
             }
             else if (roll.IsMissileWeapon)
             {
-               procSpellId = MissileSpells.RollProc(profile);
+                procSpellId = MissileSpells.RollProc(profile);
             }
             else
             {
@@ -64,7 +64,7 @@ namespace ACE.Server.Factories
                 return SpellId.Undef;
             }
 
-            if(procSpellId != SpellId.Undef)
+            if (procSpellId != SpellId.Undef)
                 return RollProcLevel(wo, profile, procSpellId);
             return SpellId.Undef;
         }
@@ -81,7 +81,7 @@ namespace ACE.Server.Factories
                 return SpellId.Undef;
             }
 
-            return(spellLevels[spellLevel - 1]);
+            return (spellLevels[spellLevel - 1]);
         }
 
         private static List<SpellId> RollItemEnchantments(WorldObject wo, TreasureDeath profile, TreasureRoll roll)
@@ -95,7 +95,7 @@ namespace ACE.Server.Factories
             }
             else if (roll.HasArmorLevel(wo))
             {
-                if(roll.ArmorType != TreasureArmorType.Covenant || Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                if (roll.ArmorType != TreasureArmorType.Covenant || Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                     spells = ArmorSpells.Roll(profile, wo.IsShield);
             }
             else if (roll.IsMeleeWeapon)
@@ -116,7 +116,7 @@ namespace ACE.Server.Factories
                 return null;
             }
 
-            if(spells != null)
+            if (spells != null)
                 return RollSpellLevels(wo, profile, spells);
             else
                 return null;
@@ -330,7 +330,7 @@ namespace ACE.Server.Factories
 
                 for (var i = 0; i < spells.Count; i++)
                 {
-                    if(i == spells.Count - 1 && Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                    if (i == spells.Count - 1 && Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                     {
                         // exclude highest spell
                         continue;
@@ -515,21 +515,21 @@ namespace ACE.Server.Factories
                         log.Error($"RollCantrips({wo.Name}, {profile.TreasureType}, {roll.ItemType}) - {cantrip} has {cantripLevels.Count} cantrip levels, expected 2.");
                         continue;
                     }
-                    
+
                     finalCantrips.Add(cantripLevels[cantripLevel - 1]);
                 }
                 else
                 {
-	                if (cantripLevels.Count != 4)
-	                {
-	                    log.Error($"RollCantrips({wo.Name}, {profile.TreasureType}, {roll.ItemType}) - {cantrip} has {cantripLevels.Count} cantrip levels, expected 4");
-	                    continue;
-	                }
-	
-	                finalCantrips.Add(cantripLevels[cantripLevel - 1]);
-	
-	                if (cantripLevel == 4)
-	                    hasLegendary = true;
+                    if (cantripLevels.Count != 4)
+                    {
+                        log.Error($"RollCantrips({wo.Name}, {profile.TreasureType}, {roll.ItemType}) - {cantrip} has {cantripLevels.Count} cantrip levels, expected 4");
+                        continue;
+                    }
+
+                    finalCantrips.Add(cantripLevels[cantripLevel - 1]);
+
+                    if (cantripLevel == 4)
+                        hasLegendary = true;
                 }
             }
 
@@ -815,3 +815,4 @@ namespace ACE.Server.Factories
         }
     }
 }
+
