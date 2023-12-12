@@ -84,7 +84,7 @@ namespace ACE.Server.WorldObjects
         /// Returns TRUE if this weapon pierces
         /// </summary>
         public bool IsPiercing { get => WeaponSkill == Skill.Spear && !IsTwoHanded; }
-
+               
         /// <summary>
         /// Returns the number of Pierce targets for this weapon
         /// Removed the tie to propertyint cleaving
@@ -96,10 +96,10 @@ namespace ACE.Server.WorldObjects
                 if (!IsPiercing)
                     return 0;
                 else
-                    return 1;
+                return 1;
             }
         }
-
+        
         /// <summary>
         /// Returns the primary weapon equipped by a creature
         /// (melee, missile, or wand)
