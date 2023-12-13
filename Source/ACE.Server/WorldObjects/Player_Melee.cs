@@ -417,7 +417,17 @@ namespace ACE.Server.WorldObjects
                             DamageTarget(cleaveHit, weapon);
                         }
                     }
-                });
+                    
+                    if (weapon.IsPiercing)
+                    {
+                        var pierce = GetPierceTarget(creature, weapon);
+
+                        foreach (var pierceHit in pierce)
+                        {
+                            DamageTarget(pierceHit, weapon);                 
+                        }
+                    }
+             });
 
                 //if (numStrikes == 1 || TwoHandedCombat)
                 //actionChain.AddDelaySeconds(swingTime);
