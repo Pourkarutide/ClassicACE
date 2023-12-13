@@ -420,7 +420,7 @@ namespace ACE.Server.WorldObjects
                     return;
                 }
 
-                var chance = Math.Clamp(0.25 + ((spellCount - 1) * 0.1), 0.25, 1.0);
+                var chance = Math.Clamp(0.50 + ((spellCount - 1) * 0.1), 0.50, 1.0);
 
                 if (target.ItemType == ItemType.Gem && target.ItemUseable == Usable.No)
                     chance = 1; // Non-useable gems have 100% extraction chance.
