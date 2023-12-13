@@ -312,8 +312,9 @@ namespace ACE.Server.Factories
                 var spell = spells[i];
 
                 var rng = (float)ThreadSafeRandom.Next(0.5f, 1.5f);
-
-                itemDifficulty += spell.Formula.Level * 5.0f * rng;
+                // original   
+                // itemDifficulty += spell.Formula.Level * 5.0f * rng;
+                itemDifficulty += spell.Formula.Level * 1.0f * rng;
             }
 
             return itemDifficulty;
