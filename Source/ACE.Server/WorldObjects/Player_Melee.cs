@@ -389,6 +389,12 @@ namespace ACE.Server.WorldObjects
                         return;
                     }
 
+                    if (weapon == null)
+                    {
+                        // Handle the case where 'weapon' is null
+                        return;
+                    }
+
                     //if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && !IsDirectVisible(target))
                     //{
                     //    Session.Network.EnqueueSend(new GameMessageSystemChat("You can't quite reach your target!", ChatMessageType.Broadcast));
