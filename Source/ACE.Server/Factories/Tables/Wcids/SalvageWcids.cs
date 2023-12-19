@@ -24,62 +24,62 @@ namespace ACE.Server.Factories.Tables.Wcids
             ( WeenieClassName.materiallinen,            2.00f ), // Burden - 25%
             ( WeenieClassName.materialmoonstone,        2.00f ), // Max Mana + 500
 
-            ( WeenieClassName.materialsteel,            0.95f ), // AL + 20
-            ( WeenieClassName.materialalabaster,        1.00f ), // Armor Piercing Resist + 0.2
-            ( WeenieClassName.materialbronze,           1.00f ), // Armor Slashing Resist + 0.2
-            ( WeenieClassName.materialmarble,           1.00f ), // Armor Bludgeoning Resist + 0.2
-            ( WeenieClassName.materialceramic,          1.00f ), // Armor Fire Resist + 0.4
-            ( WeenieClassName.materialwool,             1.00f ), // Armor Cold Resist + 0.4
-            ( WeenieClassName.materialreedsharkhide,    1.00f ), // Armor Lightning Resist + 0.4
-            ( WeenieClassName.materialarmoredillohide,  1.00f ), // Armor Acid Resist + 0.4
+            ( WeenieClassName.materialsteel,            1.20f ), // AL + 20
+            ( WeenieClassName.materialalabaster,        1.20f ), // Armor Piercing Resist + 0.2
+            ( WeenieClassName.materialbronze,           1.20f ), // Armor Slashing Resist + 0.2
+            ( WeenieClassName.materialmarble,           1.20f ), // Armor Bludgeoning Resist + 0.2
+            ( WeenieClassName.materialceramic,          1.20f ), // Armor Fire Resist + 0.4
+            ( WeenieClassName.materialwool,             1.20f ), // Armor Cold Resist + 0.4
+            ( WeenieClassName.materialreedsharkhide,    1.20f ), // Armor Lightning Resist + 0.4
+            ( WeenieClassName.materialarmoredillohide,  1.20f ), // Armor Acid Resist + 0.4
 
-            ( WeenieClassName.materialiron,             0.80f ), // Weapon Damage + 1
-            ( WeenieClassName.materialmahogany,         0.80f ), // Missile Weapon Mod + 4%
+            ( WeenieClassName.materialiron,             1.00f ), // Weapon Damage + 1
+            ( WeenieClassName.materialmahogany,         1.20f ), // Missile Weapon Mod + 4%
 
-            ( WeenieClassName.materialgranite,          0.80f ), // Weapon Variance - 20%
-            ( WeenieClassName.materialoak,              0.80f ), // Weapon Speed - 15
-            ( WeenieClassName.materialbrass,            0.80f ), // Weapon Melee Defense + 1%
-            ( WeenieClassName.materialvelvet,           0.80f ), // Weapon Attack Skill + 1%
+            ( WeenieClassName.materialgranite,          1.00f ), // Weapon Variance - 20%
+            ( WeenieClassName.materialoak,              1.10f ), // Weapon Speed - 15
+            ( WeenieClassName.materialbrass,            1.00f ), // Weapon Melee Defense + 1%
+            ( WeenieClassName.materialvelvet,           1.10f ), // Weapon Attack Skill + 1%
 
-            ( WeenieClassName.materialopal,             0.80f ), // Mana Conversion + 1
-            ( WeenieClassName.materialperidot,          0.80f ), // Melee Defense + 1
-            ( WeenieClassName.materialyellowtopaz,      0.80f ), // Missile Defense + 1
-            ( WeenieClassName.materialzircon,           0.80f ), // Magic Defense + 1
+            ( WeenieClassName.materialopal,             1.10f ), // Mana Conversion + 1
+            ( WeenieClassName.materialperidot,          1.10f ), // Melee Defense + 1
+            ( WeenieClassName.materialyellowtopaz,      1.10f ), // Missile Defense + 1
+            ( WeenieClassName.materialzircon,           1.10f ), // Magic Defense + 1
 
-            ( WeenieClassName.materialcarnelian,        0.90f ), // Minor Strength
-            ( WeenieClassName.materialsmokyquartz,      0.90f ), // Minor Coordination
-            ( WeenieClassName.materialbloodstone,       0.90f ), // Minor Endurance
-            ( WeenieClassName.materialrosequartz,       0.90f ), // Minor Quickness
-            ( WeenieClassName.materialagate,            0.90f ), // Minor Focus
-            ( WeenieClassName.materiallapislazuli,      0.90f ), // Minor Willpower
-            ( WeenieClassName.materialredjade,          0.90f ), // Minor Health Gain
-            ( WeenieClassName.materialcitrine,          0.90f ), // Minor Stamina Gain
-            ( WeenieClassName.materiallavenderjade,     0.90f ), // Minor Mana Gain
+            ( WeenieClassName.materialcarnelian,        1.00f ), // Minor Strength
+            ( WeenieClassName.materialsmokyquartz,      1.00f ), // Minor Coordination
+            ( WeenieClassName.materialbloodstone,       1.00f ), // Minor Endurance
+            ( WeenieClassName.materialrosequartz,       1.00f ), // Minor Quickness
+            ( WeenieClassName.materialagate,            1.00f ), // Minor Focus
+            ( WeenieClassName.materiallapislazuli,      1.00f ), // Minor Willpower
+            ( WeenieClassName.materialredjade,          1.00f ), // Minor Health Gain
+            ( WeenieClassName.materialcitrine,          1.00f ), // Minor Stamina Gain
+            ( WeenieClassName.materiallavenderjade,     1.00f ), // Minor Mana Gain
 
-            ( WeenieClassName.materialtigereye,         0.75f ), // Fire Element
-            ( WeenieClassName.materialwhitequartz,      0.75f ), // Cold Element
-            ( WeenieClassName.materialserpentine,       0.75f ), // Acid Element
-            ( WeenieClassName.materialamethyst,         0.75f ), // Lightning Element
-            ( WeenieClassName.materialyellowgarnet,     0.75f ), // Slash Element
-            ( WeenieClassName.materialwhitejade,        0.75f ), // Pierce Element
-            ( WeenieClassName.materialobsidian,         0.75f ), // Bludge Element
+            ( WeenieClassName.materialtigereye,         .95f ), // Fire Element
+            ( WeenieClassName.materialwhitequartz,      .95f ), // Cold Element
+            ( WeenieClassName.materialserpentine,       .95f ), // Acid Element
+            ( WeenieClassName.materialamethyst,         .95f ), // Lightning Element
+            ( WeenieClassName.materialyellowgarnet,     .95f ), // Slash Element
+            ( WeenieClassName.materialwhitejade,        .95f ), // Pierce Element
+            ( WeenieClassName.materialobsidian,         .95f ), // Bludge Element
 
-            ( WeenieClassName.materialmalachite,        0.75f ), // Warrior's Vigor
-            ( WeenieClassName.materialhematite,         0.75f ), // Warrior's Vitality
-            ( WeenieClassName.materialazurite,          0.75f ), // Wizard's Intellect
+            ( WeenieClassName.materialmalachite,        .95f ), // Warrior's Vigor
+            ( WeenieClassName.materialhematite,         .95f ), // Warrior's Vitality
+            ( WeenieClassName.materialazurite,          .95f ), // Wizard's Intellect
 
-            ( WeenieClassName.materialsunstone,         0.70f ), // Armor Rending
-            ( WeenieClassName.materialblackopal,        0.70f ), // Critical Strike
-            ( WeenieClassName.materialfireopal,         0.70f ), // Critical Blow
-            ( WeenieClassName.materialblackgarnet,      0.70f ), // Pierce Rend
-            ( WeenieClassName.materialimperialtopaz,    0.70f ), // Slashing Rend
-            ( WeenieClassName.materialwhitesapphire,    0.70f ), // Bludgeoning Rend
-            ( WeenieClassName.materialredgarnet,        0.70f ), // Fire Rend
-            ( WeenieClassName.materialaquamarine,       0.70f ), // Frost Rend
-            ( WeenieClassName.materialjet,              0.70f ), // Lightning Rend
-            ( WeenieClassName.materialemerald,          0.70f ), // Acid Rend
+            ( WeenieClassName.materialsunstone,         1.05f ), // Armor Rending
+            ( WeenieClassName.materialblackopal,        1.05f ), // Critical Strike
+            ( WeenieClassName.materialfireopal,         1.05f ), // Critical Blow
+            ( WeenieClassName.materialblackgarnet,      1.05f ), // Pierce Rend
+            ( WeenieClassName.materialimperialtopaz,    1.05f ), // Slashing Rend
+            ( WeenieClassName.materialwhitesapphire,    1.05f ), // Bludgeoning Rend
+            ( WeenieClassName.materialredgarnet,        1.05f ), // Fire Rend
+            ( WeenieClassName.materialaquamarine,       1.05f ), // Frost Rend
+            ( WeenieClassName.materialjet,              1.05f ), // Lightning Rend
+            ( WeenieClassName.materialemerald,          1.05f ), // Acid Rend
 
-            //( WeenieClassName.materialgreengarnet,      0.80f ), // Wand Damage + 1%
+            //( WeenieClassName.materialgreengarnet,      1.10f ), // Wand Damage + 1%
             //( WeenieClassName.materialsatin,            2.00f ), // Switch to Viamontian
             //( WeenieClassName.materialdiamond,          1.00f ), // Armature
             //( WeenieClassName.materialamber,            1.00f ), // Armature
