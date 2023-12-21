@@ -615,6 +615,13 @@ namespace ACE.Server.WorldObjects
 
             var imbuedEffectType = defenseSkill == Skill.MissileDefense ? ImbuedEffectType.MissileDefense : ImbuedEffectType.MeleeDefense;
             var defenseImbues = GetDefenseImbues(imbuedEffectType);
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                if (imbuedEffectType == ImbuedEffectType.MissileDefense)
+                    defenseImbues *= (int)PropertyManager.GetLong("dekaru_imbue_missile_defense_per_imbue").Item;
+                else if (imbuedEffectType == ImbuedEffectType.MeleeDefense)
+                    defenseImbues *= (int)PropertyManager.GetLong("dekaru_imbue_melee_defense_per_imbue").Item;
+            }
 
             var stanceMod = this is Player player ? player.GetDefenseStanceMod() : 1.0f;
 
