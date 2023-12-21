@@ -706,7 +706,11 @@ namespace ACE.Server.Managers
                 ("teleport_visibility_fix", new Property<long>(0, "Fixes some possible issues with invisible players and mobs. 0 = default / disabled, 1 = players only, 2 = creatures, 3 = all world objects")),
                 ("max_level", new Property<long>(275, "Set the max character level.")),
                 ("discord_channel_id", new Property<long>(0, "Messages posted to this Discord channel will be shown in General Chat")),
-                ("quest_mindelta_rate_shortest", new Property<long>(72000, "Quest min deltas below this won't be affected by quest_mindelta_rate, additionally modified min deltas that would fall under this value will be set to this value instead."))
+                ("quest_mindelta_rate_shortest", new Property<long>(72000, "Quest min deltas below this won't be affected by quest_mindelta_rate, additionally modified min deltas that would fall under this value will be set to this value instead.")),
+                ("dekaru_imbue_magic_defense_per_imbue", new Property<long>(3, "Number of magic defense points to increase per magic defense imbue on an item.")),
+                ("dekaru_imbue_melee_defense_per_imbue", new Property<long>(3, "Number of melee defense points to increase per magic defense imbue on an item.")),
+                ("dekaru_imbue_missile_defense_per_imbue", new Property<long>(3, "Number of missile defense points to increase per magic defense imbue on an item."))
+
                 );
 
         public static readonly ReadOnlyDictionary<string, Property<double>> DefaultDoubleProperties =

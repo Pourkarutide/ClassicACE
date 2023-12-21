@@ -469,7 +469,7 @@ namespace ACE.Server.Managers
             {
                 // armor tinkering
                 case 0x38000011:    // Steel
-                    target.ArmorLevel += 20;
+                    target.ArmorLevel += 80;
                     break;
 
                  // mutations apparently didn't cap to 2.0 here, clamps are applied in damage calculations though
@@ -536,7 +536,7 @@ namespace ACE.Server.Managers
                     target.Retained = false;
                     break;
                 case 0x3800002F:    // Moonstone
-                    target.ItemMaxMana += 500;
+                    target.ItemMaxMana += 1500;
                     break;
 
                 case 0x38000042:
@@ -615,10 +615,10 @@ namespace ACE.Server.Managers
                     break;
                 case 0x3800002E:    // Opal
                     //target.ManaConversionMod += 0.01f;
-                    target.ManaConversionMod = (target.ManaConversionMod ?? 0.0f) + 0.01f;
+                    target.ManaConversionMod = (target.ManaConversionMod ?? 0.0f) + 0.03f;
                     break;
                 case 0x3800004B:    // GreenGarnet: 44 -> 4B
-                    target.ElementalDamageMod = (target.ElementalDamageMod ?? 0.0f) + 0.01f;     // + 1% vs. monsters, + 0.25% vs. players
+                    target.ElementalDamageMod = (target.ElementalDamageMod ?? 0.0f) + 0.03f;     // + 1% vs. monsters, + 0.25% vs. players
                     break;
 
                 case 0x38000041:
@@ -654,22 +654,22 @@ namespace ACE.Server.Managers
                 // weapon tinkering
 
                 case 0x3800001A:    // Iron
-                    target.Damage += 1;
+                    target.Damage += 3;
                     break;
                 case 0x3800001B:    // Mahogany
-                    target.DamageMod += 0.04f;
+                    target.DamageMod += 0.16f;
                     break;
                 case 0x3800001C:    // Granite / Lucky Rabbit's Foot
-                    target.DamageVariance *= 0.8f;
+                    target.DamageVariance *= (0.8f * 0.8f * 0.8f);
                     break;
                 case 0x3800001D:    // Oak
                     target.WeaponTime = Math.Max(0, (target.WeaponTime ?? 0) - 50);
                     break;
                 case 0x38000020:    // Brass
-                    target.WeaponDefense += 0.01f;
+                    target.WeaponDefense += 0.05f;
                     break;
                 case 0x38000021:    // Velvet
-                    target.WeaponOffense += 0.01f;
+                    target.WeaponOffense += 0.05f;
                     break;
 
                 // only 1 imbue can be applied per piece of armor?

@@ -4,6 +4,7 @@ using System.Linq;
 using ACE.Common;
 using ACE.Entity.Enum;
 using ACE.Server.Entity;
+using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 
@@ -219,6 +220,10 @@ namespace ACE.Server.WorldObjects
             var current = GetCreatureSkill(Skill.MagicDefense).Current;
             var weaponDefenseMod = GetWeaponMagicDefenseModifier(this);
             var defenseImbues = (uint)GetDefenseImbues(ImbuedEffectType.MagicDefense);
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                defenseImbues *= (uint)PropertyManager.GetLong("dekaru_imbue_magic_defense_per_imbue").Item;
+            }
 
             var effectiveMagicDefense = (uint)Math.Round((current * weaponDefenseMod) + defenseImbues);
 
