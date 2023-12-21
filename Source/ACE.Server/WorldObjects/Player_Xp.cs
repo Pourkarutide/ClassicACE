@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 
 using ACE.Common.Extensions;
@@ -1264,6 +1265,7 @@ namespace ACE.Server.WorldObjects
             var inventory = GetAllPossessions();
             var inventoryToDelete = new List<WorldObject>();
 
+            var keepNonEquippable = PropertyManager.GetBool("dekaru_hc_keep_non_equippable_bonded_on_death").Item;
             foreach (var item in inventory)
             {
                 if (keepHousing && item.WeenieType == WeenieType.Deed) // Keep houses
@@ -1274,7 +1276,7 @@ namespace ACE.Server.WorldObjects
                 }
 
                 if (keepBondedEquipment
-                    && (item.ValidLocations ?? EquipMask.None) != EquipMask.None && item.Bonded == BondedStatus.Bonded
+                    && (keepNonEquippable || (item.ValidLocations ?? EquipMask.None) != EquipMask.None) && item.Bonded == BondedStatus.Bonded
                     && item.WeenieClassId != (int)Factories.Enum.WeenieClassName.ringHardcore
                     && item.WeenieClassId != (uint)Factories.Enum.WeenieClassName.explorationContract)
                 {
