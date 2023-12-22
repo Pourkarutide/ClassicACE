@@ -348,6 +348,8 @@ namespace ACE.Server.WorldObjects
 
         private string QuestItem_ApplyAttributeCantripMutation(uint mutationTier)
         {
+            mutationTier = ConvertMutationTierToCantripTier(mutationTier);
+
             string resultMsg = "";
 
             var selectAttribute = ThreadSafeRandom.Next(1, 6);
@@ -355,33 +357,81 @@ namespace ACE.Server.WorldObjects
             switch (selectAttribute)
             {
                 case 1: // strength
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSTRENGTH2, this.BiotaDatabaseLock, out _);
-                    resultMsg = $"Added Major Strength to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSTRENGTH1, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Minor Strength to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSTRENGTH2, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Major Strength to the quest item!";
+                    }
                     break;
 
                 case 2: // endurance
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPENDURANCE2, this.BiotaDatabaseLock, out _);
-                    resultMsg = $"Added Major Endurance to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPENDURANCE1, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Minor Endurance to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPENDURANCE2, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Major Endurance to the quest item!";
+                    }
                     break;
 
                 case 3:// coordination
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPCOORDINATION2, this.BiotaDatabaseLock, out _);
-                    resultMsg = $"Added Major Coordination to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPCOORDINATION1, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Minor Coordination to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPCOORDINATION2, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Major Coordination to the quest item!";
+                    }
                     break;
 
                 case 4: // quickness
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPQUICKNESS2, this.BiotaDatabaseLock, out _);
-                    resultMsg = $"Added Major Quickness to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPQUICKNESS1, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Minor Quickness to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPQUICKNESS2, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Major Quickness to the quest item!";
+                    }
                     break;
 
                 case 5: // focus
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPFOCUS2, this.BiotaDatabaseLock, out _);
-                    resultMsg = $"Added Major Focus to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPFOCUS1, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Minor Focus to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPFOCUS2, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Major Focus to the quest item!";
+                    }
                     break;
 
                 case 6: // self
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPWILLPOWER2, this.BiotaDatabaseLock, out _);
-                    resultMsg = $"Added Major Willpower to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPWILLPOWER1, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Minor Willpower to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPWILLPOWER2, this.BiotaDatabaseLock, out _);
+                        resultMsg = $"Added Major Willpower to the quest item!";
+                    }
                     break;
             }
 
@@ -390,102 +440,275 @@ namespace ACE.Server.WorldObjects
             return resultMsg;
         }
 
+        private uint ConvertMutationTierToCantripTier(uint mutationTier)
+        {
+            Random rand = new Random();
+            var roll = rand.NextDouble();
+
+
+            if (mutationTier == 1)
+            {
+                // 90% minor 10% major by default
+                if (roll < PropertyManager.GetDouble("quest_mutation_tier_1_major_chance", 0.1).Item)
+                    mutationTier = 2;
+            }
+            else if (mutationTier == 2)
+            {
+                // 75% minor 25% major by default
+                if (roll > PropertyManager.GetDouble("quest_mutation_tier_2_major_chance", 0.25).Item)
+                    mutationTier = 1;
+            }
+            else if (mutationTier == 3)
+            {
+                // 10% minor 90% major
+                if (roll > PropertyManager.GetDouble("quest_mutation_tier_3_major_chance", 0.90).Item)
+                    mutationTier = 1;
+                else
+                    mutationTier = 2;
+            }
+            return mutationTier;
+        }
+
         private string QuestItem_ApplySkillCantripMutation(uint mutationTier)
         {
+            mutationTier = ConvertMutationTierToCantripTier(mutationTier);
             string resultMsg = "";
-
-            var selectSkill = ThreadSafeRandom.Next(1, 18);            
+            var selectSkill = ThreadSafeRandom.Next(1, 18);
 
             switch (selectSkill)
             {
                 case 1:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPINVULNERABILITY2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Invulnerability to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPINVULNERABILITY1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Invulnerability to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPINVULNERABILITY2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Invulnerability to the quest item!";
+                    }
                     break;
 
                 case 2:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMAGICRESISTANCE2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Magic Resistance to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMAGICRESISTANCE1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Magic Resistance to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMAGICRESISTANCE2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Magic Resistance to the quest item!";
+                    }
                     break;
 
                 case 3:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLIFEMAGICAPTITUDE2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Life Magic to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLIFEMAGICAPTITUDE1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Life Magic to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLIFEMAGICAPTITUDE2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Life Magic to the quest item!";
+                    }
                     break;
 
                 case 4:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPARCANEPROWESS2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Arcane Lore to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPARCANEPROWESS1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Arcane Lore to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPARCANEPROWESS2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Arcane Lore to the quest item!";
+                    }
                     break;
 
                 case 5:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMANACONVERSIONPROWESS2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Mana Conversion to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMANACONVERSIONPROWESS1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Mana Conversion to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMANACONVERSIONPROWESS2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Mana Conversion to the quest item!";
+                    }
                     break;
 
                 case 6:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPWARMAGICAPTITUDE2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major War Magic to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPWARMAGICAPTITUDE1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor War Magic to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPWARMAGICAPTITUDE2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major War Magic to the quest item!";
+                    }
                     break;
 
                 case 7:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEALINGPROWESS2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Healing to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEALINGPROWESS1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Healing to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEALINGPROWESS2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Healing to the quest item!";
+                    }
                     break;
 
                 case 8:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPJUMPINGPROWESS2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Jump to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPJUMPINGPROWESS1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Jump to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPJUMPINGPROWESS2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Jump to the quest item!";
+                    }
                     break;
 
                 case 9:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSPRINT2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Run to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSPRINT1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Sprint to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSPRINT2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Sprint to the quest item!";
+                    }
                     break;
 
                 case 10:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CantripDualWieldAptitude2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Dual Wield to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CantripDualWieldAptitude1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Dual Wield to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CantripDualWieldAptitude2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Dual Wield to the quest item!";
+                    }
                     break;
 
                 case 11:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPDECEPTIONPROWESS2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Deception to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPDECEPTIONPROWESS1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Deception to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPDECEPTIONPROWESS2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Deception to the quest item!";
+                    }
                     break;
 
                 case 12:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLEADERSHIP2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Leadership to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLEADERSHIP1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Leadership to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLEADERSHIP2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Leadership to the quest item!";
+                    }
                     break;
 
                 case 13:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSneakingAptitude2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Sneaking Aptitude to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSneakingAptitude1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Sneaking Aptitude to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSneakingAptitude2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Sneaking Aptitude to the quest item!";
+                    }
                     break;
 
                 case 14:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPFLETCHINGPROWESS2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Fletching to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPFLETCHINGPROWESS1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Fletching to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPFLETCHINGPROWESS2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Fletching to the quest item!";
+                    }
                     break;
 
                 case 15:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLIGHTWEAPONSAPTITUDE1, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Axe Aptitude to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLIGHTWEAPONSAPTITUDE1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Axe Aptitude to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPLIGHTWEAPONSAPTITUDE2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Axe Aptitude to the quest item!";
+                    }
                     break;
 
                 case 16:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEAVYWEAPONSAPTITUDE2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Sword Aptitude to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEAVYWEAPONSAPTITUDE1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Sword Aptitude to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEAVYWEAPONSAPTITUDE2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Sword Aptitude to the quest item!";
+                    }
                     break;
 
                 case 17:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPFINESSEWEAPONSAPTITUDE2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Dagger Aptitude to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPFINESSEWEAPONSAPTITUDE1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Dagger Aptitude to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPFINESSEWEAPONSAPTITUDE2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Dagger Aptitude to the quest item!";
+                    }
                     break;
 
                 case 18:
-                    this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMISSILEWEAPONSAPTITUDE2, this.BiotaDatabaseLock, out _);
-                    resultMsg = "Added Major Bow Aptitude to the quest item!";
+                    if (mutationTier == 1)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMISSILEWEAPONSAPTITUDE1, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Minor Bow Aptitude to the quest item!";
+                    }
+                    else if (mutationTier == 2)
+                    {
+                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMISSILEWEAPONSAPTITUDE2, this.BiotaDatabaseLock, out _);
+                        resultMsg = "Added Major Bow Aptitude to the quest item!";
+                    }
                     break;                
             }
 
@@ -496,6 +719,8 @@ namespace ACE.Server.WorldObjects
 
         private string QuestItem_ApplyItemCantripMutation(uint mutationTier)
         {
+            mutationTier = ConvertMutationTierToCantripTier(mutationTier);
+
             string resultMsg = "";
 
             var selectItemSpell = ThreadSafeRandom.Next(1, 3);
@@ -513,11 +738,6 @@ namespace ACE.Server.WorldObjects
                         }
                         else if (mutationTier == 2)
                         {
-                            this.Biota.GetOrAddKnownSpell((int)SpellId.BLOODTHIRST, this.BiotaDatabaseLock, out _);
-                            resultMsg = $"Added Moderate Blood Thirst to the quest item!";
-                        }
-                        else if (mutationTier == 3)
-                        {
                             this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPBLOODTHIRST2, this.BiotaDatabaseLock, out _);
                             resultMsg = $"Added Major Blood Thirst to the quest item!";
                         }
@@ -534,11 +754,6 @@ namespace ACE.Server.WorldObjects
                             this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSpiritThirst2, this.BiotaDatabaseLock, out _);
                             resultMsg = $"Added Major Spirit Thirst to the quest item!";
                         }
-                        else if (mutationTier == 3)
-                        {
-                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSPIRITTHIRST3, this.BiotaDatabaseLock, out _);
-                            resultMsg = $"Added Epic Spirit Thirst to the quest item!";
-                        }
                     }
                     break;
 
@@ -551,12 +766,7 @@ namespace ACE.Server.WorldObjects
                             this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPDEFENDER1, this.BiotaDatabaseLock, out _);
                             resultMsg = $"Added Minor Defender to the quest item!";
                         }
-                        if (mutationTier == 2)
-                        {
-                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPDEFENDER1, this.BiotaDatabaseLock, out _);
-                            resultMsg = $"Added Minor Defender to the quest item!";
-                        }
-                        if (mutationTier == 3)
+                        else if (mutationTier == 2)
                         {
                             this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPDEFENDER2, this.BiotaDatabaseLock, out _);
                             resultMsg = $"Added Major Defender to the quest item!";
@@ -564,20 +774,18 @@ namespace ACE.Server.WorldObjects
                     }
                     else
                     {
-                        if (mutationTier == 1)
+                        if (this.ItemType == ItemType.Caster)
                         {
-                            this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSpiritThirst1, this.BiotaDatabaseLock, out _);
-                            resultMsg = $"Added Minor Spirit Thirst to the quest item!";
-                        }
-                        else if (mutationTier == 2)
-                        {
-                            this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSpiritThirst2, this.BiotaDatabaseLock, out _);
-                            resultMsg = $"Added Major Spirit Thirst to the quest item!";
-                        }
-                        else if (mutationTier == 3)
-                        {
-                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSPIRITTHIRST3, this.BiotaDatabaseLock, out _);
-                            resultMsg = $"Added Epic Spirit Thirst to the quest item!";
+                            if (mutationTier == 1)
+                            {
+                                this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSpiritThirst1, this.BiotaDatabaseLock, out _);
+                                resultMsg = $"Added Minor Spirit Thirst to the quest item!";
+                            }
+                            else if (mutationTier == 2)
+                            {
+                                this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSpiritThirst2, this.BiotaDatabaseLock, out _);
+                                resultMsg = $"Added Major Spirit Thirst to the quest item!";
+                            }
                         }
                         else
                         {
@@ -587,11 +795,6 @@ namespace ACE.Server.WorldObjects
                                 resultMsg = $"Added Minor Heart Thirst to the quest item!";
                             }
                             else if (mutationTier == 2)
-                            {
-                                this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEARTTHIRST1, this.BiotaDatabaseLock, out _);
-                                resultMsg = $"Added Minor Heart Thirst to the quest item!";
-                            }
-                            else if (mutationTier == 3)
                             {
                                 this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEARTTHIRST2, this.BiotaDatabaseLock, out _);
                                 resultMsg = $"Added Major Heart Thirst to the quest item!";
@@ -604,13 +807,29 @@ namespace ACE.Server.WorldObjects
 
                     if (this.ItemType == ItemType.Caster)
                     {
-                        this.Biota.GetOrAddKnownSpell((int)SpellId.CantripHermeticLink2, this.BiotaDatabaseLock, out _);
-                        resultMsg = $"Added Major Hermetic Link to the quest item!";
+                        if (mutationTier == 1)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CantripHermeticLink1, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Minor Hermetic Link to the quest item!";
+                        }
+                        else if (mutationTier == 2)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CantripHermeticLink2, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Major Hermetic Link to the quest item!";
+                        }
                     }
                     else
                     {
-                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSWIFTHUNTER2, this.BiotaDatabaseLock, out _);
-                        resultMsg = $"Added Major Swift Hunter to the quest item!";
+                        if (mutationTier == 1)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSWIFTHUNTER1, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Minor Swift Hunter to the quest item!";
+                        }
+                        else if (mutationTier == 2)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSWIFTHUNTER2, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Major Swift Hunter to the quest item!";
+                        }
                     }
                     break;
             }
