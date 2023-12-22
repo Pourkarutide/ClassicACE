@@ -16,19 +16,94 @@ namespace ACE.Server.Entity
                 if (_mutationWeenieBlackList == null)
                 {
                     _mutationWeenieBlackList = new List<uint>
-            {
-                    5186, 5190, 5768, 9094, 9095, 9096, 10995, 10996, 10997,
-                    12750, 12751, 12752, 12753, 12754, 12755, 12756, 12757,
-                    12758, 12759, 12760, 13210, 13211, 13212, 13213, 13214,
-                    13215, 13216, 13217, 13218, 13219, 13239, 13240, 13241,
-                    23881, 24176, 24177, 24178, 24180, 24615, 24616, 24617, 24618,
-                    24619, 24620, 24621, 24622, 24623, 24624, 24625, 24626,
-                    24627, 24628, 24629, 24630, 24631, 24632, 24889, 24890,
-                    24891, 24892, 24893, 24894, 24895, 24896, 24897, 24898,
-                    24899, 24900, 24901, 24902, 24903, 24904, 24905, 24906,
-                    25547, 25548, 25549, 25550, 25702, 27592, 30493, 30494,
-                    30495, 30496, 30497, 30498
-            };
+                    {
+                        5186, // Bai Den's Gem
+                        5190, // Lou Ka's Yaoji
+                        5768, // Poofy Snowball
+                        9094, // Unkindled Thaumaturgic Plate Coat
+                        9095, // Unkindled Thaumaturgic Plate Girth
+                        9096, // Unkindled Thaumaturgic Plate Leggings
+                        10995, // Ebon Spine Harpoon
+                        10996, // Ebon Spine Harpoon
+                        10997, // Ebon Spine Harpoon
+                        12750, // Academy Dagger
+                        12751, // Academy Hand Axe
+                        12752, // Academy Atlatl
+                        12753, // Academy Cestus
+                        12754, // Academy Shortbow
+                        12755, // Academy Mace
+                        12756, // Academy Spear
+                        12757, // Academy Staff
+                        12758, // Academy Short Sword
+                        12759, // Academy Wand
+                        12760, // Academy Light Crossbow
+                        13210, // Academy Coat
+                        13211, // Academy Coat
+                        13212, // Academy Coat
+                        13213, // Academy Coat
+                        13214, // Academy Coat
+                        13215, // Academy Coat
+                        13216, // Academy Coat
+                        13217, // Academy Coat
+                        13218, // Academy Coat
+                        13219, // Academy Coat
+                        13239, // Leather Cap
+                        13240, // Leather Gauntlets
+                        13241, // Leather Leggings
+                        23881, // Fish Boots
+                        24176, // Jaleh's Wedding Ring
+                        24177, // Jaleh's Silk Shirt
+                        24178, // Jaleh's Slippers
+                        24180, // Jaleh's Turban
+                        24615, // Fine Olthoi Bracers
+                        24616, // Good Olthoi Bracers
+                        24617, // Fine Olthoi Breastplate
+                        24618, // Good Olthoi Breastplate
+                        24619, // Fine Olthoi Gauntlets
+                        24620, // Good Olthoi Gauntlets
+                        24621, // Fine Olthoi Girth
+                        24622, // Good Olthoi Girth
+                        24623, // Fine Olthoi Greaves
+                        24624, // Good Olthoi Greaves
+                        24625, // Fine Olthoi Brood Queen Helm
+                        24626, // Good Olthoi Brood Queen Helm
+                        24627, // Fine Olthoi Pauldrons
+                        24628, // Good Olthoi Pauldrons
+                        24629, // Fine Olthoi Sollerets
+                        24630, // Good Olthoi Sollerets
+                        24631, // Fine Olthoi Tassets
+                        24632, // Good Olthoi Tassets
+                        24889, // Greater Olthoi Bracers
+                        24890, // Lesser Olthoi Bracers
+                        24891, // Greater Olthoi Breastplate
+                        24892, // Lesser Olthoi Breastplate
+                        24893, // Greater Olthoi Gauntlets
+                        24894, // Lesser Olthoi Gauntlets
+                        24895, // Greater Olthoi Girth
+                        24896, // Lesser Olthoi Girth
+                        24897, // Greater Olthoi Greaves
+                        24898, // Lesser Olthoi Greaves
+                        24899, // Greater Olthoi Brood Queen Helm
+                        24900, // Lesser Olthoi Brood Queen Helm
+                        24901, // Greater Olthoi Pauldrons
+                        24902, // Lesser Olthoi Pauldrons
+                        24903, // Greater Olthoi Sollerets
+                        24904, // Lesser Olthoi Sollerets
+                        24905, // Greater Olthoi Tassets
+                        24906, // Lesser Olthoi Tassets
+                        25547, // Greater Olthoi Shield
+                        25548, // Fine Olthoi Shield
+                        25549, // Lesser Olthoi Shield
+                        25550, // Good Olthoi Shield
+                        25702, // Bandit Mask
+                        27592, // Ebon Spine Harpoon
+                        30493, // Bai Den's Ring
+                        30494, // Bai Den's Bracelet
+                        30495, // Bai Den's Necklace
+                        30496, // Lou Ka's Trident
+                        30497, // Lou Ka's Katar
+                        30498 // Lou Ka's Shouken
+                    };
                 }
 
                 return _mutationWeenieBlackList;
@@ -78,8 +153,5 @@ namespace ACE.Server.Entity
         {
             return !MutationToolBlackList.Contains(wcid);
         }
-
-
-
     }    
 }

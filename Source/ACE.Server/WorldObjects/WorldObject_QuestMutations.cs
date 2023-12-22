@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Policy;
 using System.Text;
+using System.Linq;
 using ACE.Common;
 using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
@@ -27,6 +28,7 @@ namespace ACE.Server.WorldObjects
             ItemCantrip = 4,
             Rend = 5
         }
+
         private enum QuestItemClothingMutationType
         {
             None = 0,
@@ -35,14 +37,13 @@ namespace ACE.Server.WorldObjects
             SkillCantrip = 3,
             Rating = 4,
             EquipmentSet = 5
-
         }
+
         private enum QuestItemJewelryMutationType
         {
             None = 0,
             AttributeCantrip = 1,
             SkillCantrip = 2,
-
         }
 
         public string MutateQuestItem()
@@ -70,7 +71,7 @@ namespace ACE.Server.WorldObjects
                 return "This item cannot be mutated!";
 
             StringBuilder resultMessage = new StringBuilder();
-            var mutationTier = QuestItemMutations.GetMutationTierOverride(this.WeenieClassId) ?? GetMutationTier();
+            var mutationTier = GetMutationTier();
 
             Random rand = new Random();
             double roll = 0;
@@ -133,19 +134,19 @@ namespace ACE.Server.WorldObjects
                     switch (mutationType)
                     {
                         case 1: //Slayer
-                            resultMessage.Append(QuestItem_ApplySlayerMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplySlayerMutation(mutationTier) + "\n");
                             break;
                         case 2: //AttributeCantrip
-                            resultMessage.Append(QuestItem_ApplyAttributeCantripMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplyAttributeCantripMutation(mutationTier) + "\n");
                             break;
                         case 3: //SkillCantrip
-                            resultMessage.Append(QuestItem_ApplySkillCantripMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplySkillCantripMutation(mutationTier) + "\n");
                             break;
                         case 4: //ItemCantrip
-                            resultMessage.Append(QuestItem_ApplyItemCantripMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplyItemCantripMutation(mutationTier) + "\n");
                             break;
                         case 5: //Rend
-                            resultMessage.Append(QuestItem_ApplyRendMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplyRendMutation(mutationTier) + "\n");
                             break;
                     }
                 }
@@ -154,19 +155,19 @@ namespace ACE.Server.WorldObjects
                     switch (mutationType)
                     {
                         case 1: //ArmorLevel
-                            resultMessage.Append(QuestItem_ApplyArmorLevelMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplyArmorLevelMutation(mutationTier) + "\n");
                             break;
                         case 2: //AttributeCantrip
-                            resultMessage.Append(QuestItem_ApplyAttributeCantripMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplyAttributeCantripMutation(mutationTier) + "\n");
                             break;
                         case 3: //SkillCantrip
-                            resultMessage.Append(QuestItem_ApplySkillCantripMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplySkillCantripMutation(mutationTier) + "\n");
                             break;
                         case 4: //Rating
-                            resultMessage.Append(QuestItem_ApplyRatingMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplyRatingMutation(mutationTier) + "\n");
                             break;
                         case 5: //EquipmentSet
-                            resultMessage.Append(QuestItem_ApplyEquipmentSetMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplyEquipmentSetMutation(mutationTier) + "\n");
                             break;
                     }
                 }
@@ -175,10 +176,10 @@ namespace ACE.Server.WorldObjects
                     switch (mutationType)
                     {
                         case 1: //AttributeCantrip
-                            resultMessage.Append(QuestItem_ApplyAttributeCantripMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplyAttributeCantripMutation(mutationTier) + "\n");
                             break;
                         case 2: //SkillCantrip
-                            resultMessage.Append(QuestItem_ApplySkillCantripMutation() + "\n");
+                            resultMessage.Append(QuestItem_ApplySkillCantripMutation(mutationTier) + "\n");
                             break;
                     }
                 }
@@ -189,9 +190,52 @@ namespace ACE.Server.WorldObjects
 
         private uint GetMutationTier()
         {
-            //TODO
-            // If this is a quest item where we've defined a mutation tier override, return that override value
-            // else if there's no override, then determine the mutation tier based on some properties of the item, such as the skill wield requirements
+            var mutationTierOverride = QuestItemMutations.GetMutationTierOverride(this.WeenieClassId);
+            if (mutationTierOverride != null)
+                return mutationTierOverride.Value;
+
+            List<(WieldRequirement, int?)> reqs = new List<(WieldRequirement, int?)>() { (WieldRequirements, WieldDifficulty), (WieldRequirements2, WieldDifficulty2), (WieldRequirements3, WieldDifficulty3), (WieldRequirements4, WieldDifficulty4)}.Where(x => (uint)x.Item1 != 0).ToList();
+
+            var levelReq = reqs.Find(x => x.Item1 == WieldRequirement.Level);
+            var attrReq = reqs.Find(x => x.Item1 == WieldRequirement.Attrib);
+            var baseAttrReq = reqs.Find(x => x.Item1 == WieldRequirement.RawAttrib);
+            var skillReq = reqs.Find(x => x.Item1 == WieldRequirement.Skill);
+            var baseSkillReq = reqs.Find(x => x.Item1 == WieldRequirement.RawSkill);
+
+            if (levelReq.Item2 < 30)
+                return 1;
+            else if (levelReq.Item2 < 50)
+                return 2;
+            else if (levelReq.Item2 >= 50)
+                return 3;
+
+            if (attrReq.Item2 < 150)
+                return 1;
+            else if (attrReq.Item2 <= 200)
+                return 2;
+            else if (attrReq.Item2 > 200)
+                return 3;
+
+            if (baseAttrReq.Item2 < 150)
+                return 1;
+            else if (baseAttrReq.Item2 <= 200)
+                return 2;
+            else if (baseAttrReq.Item2 > 200)
+                return 3;
+
+            if (skillReq.Item2 < 250)
+                return 1;
+            else if (skillReq.Item2 <= 350)
+                return 2;
+            else if (skillReq.Item2 > 350)
+                return 3;
+
+            if (baseSkillReq.Item2 < 250)
+                return 1;
+            else if (baseSkillReq.Item2 <= 300)
+                return 2;
+            else if (baseSkillReq.Item2 > 300)
+                return 3;
 
             return 1;
         }
@@ -211,7 +255,7 @@ namespace ACE.Server.WorldObjects
         }
 
 
-        private string QuestItem_ApplySlayerMutation()
+        private string QuestItem_ApplySlayerMutation(uint mutationTier)
         {
             var selectSlayerType = ThreadSafeRandom.Next(1, 20);
             this.SlayerDamageBonus = 1.20f;
@@ -302,7 +346,7 @@ namespace ACE.Server.WorldObjects
             return $"This quest item was granted {this.SlayerCreatureType} slayer!";
         }
 
-        private string QuestItem_ApplyAttributeCantripMutation()
+        private string QuestItem_ApplyAttributeCantripMutation(uint mutationTier)
         {
             string resultMsg = "";
 
@@ -346,7 +390,7 @@ namespace ACE.Server.WorldObjects
             return resultMsg;
         }
 
-        private string QuestItem_ApplySkillCantripMutation()
+        private string QuestItem_ApplySkillCantripMutation(uint mutationTier)
         {
             string resultMsg = "";
 
@@ -450,7 +494,7 @@ namespace ACE.Server.WorldObjects
             return resultMsg;
         }
 
-        private string QuestItem_ApplyItemCantripMutation()
+        private string QuestItem_ApplyItemCantripMutation(uint mutationTier)
         {
             string resultMsg = "";
 
@@ -462,13 +506,39 @@ namespace ACE.Server.WorldObjects
 
                     if (this.ItemType != ItemType.Caster)
                     {
-                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPBLOODTHIRST2, this.BiotaDatabaseLock, out _);
-                        resultMsg = $"Added Major Blood Drinker to the quest item!";
+                        if (mutationTier == 1)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPBLOODTHIRST1, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Minor Blood Thirst to the quest item!";
+                        }
+                        else if (mutationTier == 2)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.BLOODTHIRST, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Moderate Blood Thirst to the quest item!";
+                        }
+                        else if (mutationTier == 3)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPBLOODTHIRST2, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Major Blood Thirst to the quest item!";
+                        }
                     }
                     else
                     {
-                        this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSpiritThirst2, this.BiotaDatabaseLock, out _);
-                        resultMsg = $"Added Major Spirit Drinker to the quest item!";
+                        if (mutationTier == 1)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSpiritThirst1, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Minor Spirit Thirst to the quest item!";
+                        }
+                        else if (mutationTier == 2)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSpiritThirst2, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Major Spirit Thirst to the quest item!";
+                        }
+                        else if (mutationTier == 3)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSPIRITTHIRST3, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Epic Spirit Thirst to the quest item!";
+                        }
                     }
                     break;
 
@@ -476,20 +546,56 @@ namespace ACE.Server.WorldObjects
 
                     if (new Random().NextDouble() < 0.5f)
                     {
-                        this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPDEFENDER2, this.BiotaDatabaseLock, out _);
-                        resultMsg = $"Added Major Defender to the quest item!";
+                        if (mutationTier == 1)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPDEFENDER1, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Minor Defender to the quest item!";
+                        }
+                        if (mutationTier == 2)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPDEFENDER1, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Minor Defender to the quest item!";
+                        }
+                        if (mutationTier == 3)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPDEFENDER2, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Major Defender to the quest item!";
+                        }
                     }
                     else
                     {
-                        if (this.ItemType == ItemType.Caster)
+                        if (mutationTier == 1)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSpiritThirst1, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Minor Spirit Thirst to the quest item!";
+                        }
+                        else if (mutationTier == 2)
                         {
                             this.Biota.GetOrAddKnownSpell((int)SpellId.CantripSpiritThirst2, this.BiotaDatabaseLock, out _);
-                            resultMsg = $"Added Major Spirit Drinker to the quest item!";
+                            resultMsg = $"Added Major Spirit Thirst to the quest item!";
+                        }
+                        else if (mutationTier == 3)
+                        {
+                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPSPIRITTHIRST3, this.BiotaDatabaseLock, out _);
+                            resultMsg = $"Added Epic Spirit Thirst to the quest item!";
                         }
                         else
                         {
-                            this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEARTTHIRST2, this.BiotaDatabaseLock, out _);
-                            resultMsg = $"Added Major Heart Thirst to the quest item!";
+                            if (mutationTier == 1)
+                            {
+                                this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEARTTHIRST1, this.BiotaDatabaseLock, out _);
+                                resultMsg = $"Added Minor Heart Thirst to the quest item!";
+                            }
+                            else if (mutationTier == 2)
+                            {
+                                this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEARTTHIRST1, this.BiotaDatabaseLock, out _);
+                                resultMsg = $"Added Minor Heart Thirst to the quest item!";
+                            }
+                            else if (mutationTier == 3)
+                            {
+                                this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPHEARTTHIRST2, this.BiotaDatabaseLock, out _);
+                                resultMsg = $"Added Major Heart Thirst to the quest item!";
+                            }
                         }
                     }
                     break;
@@ -514,7 +620,7 @@ namespace ACE.Server.WorldObjects
             return resultMsg;
         }
 
-        private string QuestItem_ApplyRendMutation()
+        private string QuestItem_ApplyRendMutation(uint mutationTier)
         {
             string resultMsg = "";
 
@@ -575,9 +681,9 @@ namespace ACE.Server.WorldObjects
             return resultMsg;
         }
 
-        private string QuestItem_ApplyArmorLevelMutation()
+        private string QuestItem_ApplyArmorLevelMutation(uint mutationTier)
         {
-            var numSteelTinksAdded = new Random().Next(1, 4);
+            var numSteelTinksAdded = (int)(new Random().Next(1, 3) * mutationTier);
             this.ArmorLevel += 20 * numSteelTinksAdded;
             this.NumTimesTinkered += numSteelTinksAdded;
             string tinkerLog = "64";
@@ -590,7 +696,7 @@ namespace ACE.Server.WorldObjects
             return $"This quest item was granted {numSteelTinksAdded} Steel tinks! (+{20 * numSteelTinksAdded} AL)";
         }
 
-        private string QuestItem_ApplyEquipmentSetMutation()
+        private string QuestItem_ApplyEquipmentSetMutation(uint mutationTier)
         {
             var roll = new Random().Next(13, 30);
             int tries = 0;
@@ -604,12 +710,12 @@ namespace ACE.Server.WorldObjects
             return $"Added {Enum.GetName((EquipmentSet)roll)} Set to quest item!";
         }
 
-        private string QuestItem_ApplyRatingMutation()
+        private string QuestItem_ApplyRatingMutation(uint mutationTier)
         {
             string resultMsg = "";
 
             var selectRating = ThreadSafeRandom.Next(1, 6);
-            var ratingAmount = ThreadSafeRandom.Next(1, 3);
+            var ratingAmount = (int)(ThreadSafeRandom.Next(1, 3) * mutationTier);
 
             switch (selectRating)
             {
