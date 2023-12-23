@@ -240,17 +240,48 @@ namespace ACE.Server.WorldObjects
             return 1;
         }
 
-        private void SetMagicItemCommonProperties()
+        private void SetMagicItemCommonProperties(uint mutationTier)
         {
             if (!this.ItemMaxMana.HasValue || this.ItemMaxMana < 1)
             {
-                int difficulty = 25;
-                this.ItemSpellcraft = (this.ItemSpellcraft ?? 0) + difficulty;
-                this.ItemDifficulty = (this.ItemDifficulty ?? 0) + difficulty;
-                int newMaxMana = (this.ItemMaxMana ?? 0);
-                this.ItemMaxMana = newMaxMana + difficulty * 4;
+                Random rand = new Random();
+                int difficulty;
+                if (mutationTier == 1)
+                    difficulty = rand.Next(50, 100);
+                else if (mutationTier == 2)
+                    difficulty = rand.Next(100, 150);
+                else
+                    difficulty = rand.Next(150, 200);
+                this.ItemDifficulty = Math.Max(this.ItemDifficulty ?? 0, difficulty);
+
+                int spellcraft;
+                if (mutationTier == 1)
+                    spellcraft = rand.Next(50, 100);
+                else if (mutationTier == 2)
+                    spellcraft = rand.Next(100, 150);
+                else
+                    spellcraft = rand.Next(200, 300);
+                this.ItemSpellcraft = Math.Max(this.ItemSpellcraft ?? 0, spellcraft);
+
+
+                int maxMana;
+                if (mutationTier == 1)
+                    maxMana = rand.Next(250, 500);
+                else if (mutationTier == 2)
+                    maxMana = rand.Next(350, 600);
+                else
+                    maxMana = rand.Next(600, 1500);
+                this.ItemMaxMana = Math.Max(this.ItemMaxMana ?? 0, maxMana);
                 this.ItemCurMana = this.ItemMaxMana;
-                this.ItemManaCost = (this.ItemManaCost ?? 0) + difficulty;
+
+                double manaRate;
+                if (mutationTier == 1)
+                    manaRate = -1 / 60.0;
+                else if (mutationTier == 2)
+                    manaRate = -1 / 30.0;
+                else
+                    manaRate = -1 / 20.0;
+                this.ManaRate = Math.Min(this.ManaRate ?? 0, manaRate);
             }
         }
 
@@ -435,7 +466,7 @@ namespace ACE.Server.WorldObjects
                     break;
             }
 
-            SetMagicItemCommonProperties();
+            SetMagicItemCommonProperties(mutationTier);
 
             return resultMsg;
         }
@@ -712,7 +743,7 @@ namespace ACE.Server.WorldObjects
                     break;                
             }
 
-            SetMagicItemCommonProperties();
+            SetMagicItemCommonProperties(mutationTier);
 
             return resultMsg;
         }
@@ -834,7 +865,7 @@ namespace ACE.Server.WorldObjects
                     break;
             }
 
-            SetMagicItemCommonProperties();
+            SetMagicItemCommonProperties(mutationTier);
 
             return resultMsg;
         }
@@ -902,7 +933,7 @@ namespace ACE.Server.WorldObjects
 
         private string QuestItem_ApplyArmorLevelMutation(uint mutationTier)
         {
-            var numSteelTinksAdded = (int)(new Random().Next(1, 2 * (int)mutationTier));
+            var numSteelTinksAdded = new Random().Next(1, 2 * (int)mutationTier);
             this.ArmorLevel += 20 * numSteelTinksAdded;
             this.NumTimesTinkered += numSteelTinksAdded;
             string tinkerLog = "64";
@@ -934,7 +965,7 @@ namespace ACE.Server.WorldObjects
             string resultMsg = "";
 
             var selectRating = ThreadSafeRandom.Next(1, 6);
-            var ratingAmount = (int)(ThreadSafeRandom.Next(1, mutationTier));
+            var ratingAmount = ThreadSafeRandom.Next(1, (int)mutationTier);
 
             switch (selectRating)
             {
