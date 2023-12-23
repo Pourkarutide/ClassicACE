@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static HarmonyLib.Code;
 
 namespace ACE.Server.Entity
 {
@@ -334,6 +335,17 @@ namespace ACE.Server.Entity
                         7466, // Peerless Atlan Sword of Black Fire
                         7467, // Superior Atlan Sword of Black Fire
                         7468, // Fine Atlan Sword of Black Fire
+                        12746,//Training Atlatl
+                        12740,//Training Hand Axe
+                        12741,//Training Shortbow
+                        12742,//Training Cestus
+                        12739,//Training Dagger
+                        12744,//Training Mace
+                        12745,//Training Spear
+                        12743,//Training Staff
+                        12747,//Training Short Sword
+                        12748,//Training Wand
+                        12749,//Light Training Crossbow
 
                     };
                 }
