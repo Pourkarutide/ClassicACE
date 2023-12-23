@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using ACE.Common;
 using System.Threading;
 
 using ACE.Database;
@@ -4011,6 +4012,8 @@ namespace ACE.Server.WorldObjects
             if (itemBeingGiven.IsUniqueOrContainsUnique && !CheckUniques(itemBeingGiven, giver))
                 return false;
 
+            string mutationResult = itemBeingGiven.MutateQuestItem();
+
             if (!TryCreateInInventoryWithNetworking(itemBeingGiven, out _, true))
             {
                 var msg = new GameMessageSystemChat($"{giver.Name} tries to give you {(itemBeingGiven.StackSize > 1 ? $"{itemBeingGiven.StackSize} " : "")}{itemBeingGiven.GetNameWithMaterial(itemBeingGiven.StackSize)}.", ChatMessageType.Broadcast);
@@ -4022,6 +4025,12 @@ namespace ACE.Server.WorldObjects
             {
                 var msg = new GameMessageSystemChat($"{giver.Name} gives you {(itemBeingGiven.StackSize > 1 ? $"{itemBeingGiven.StackSize} " : "")}{itemBeingGiven.GetNameWithMaterial(itemBeingGiven.StackSize)}.", ChatMessageType.Broadcast);
                 Session.Network.EnqueueSend(msg);
+
+                if (!string.IsNullOrEmpty(mutationResult))
+                {
+                    msg = new GameMessageSystemChat(mutationResult, ChatMessageType.System);
+                    Session.Network.EnqueueSend(msg);
+                }
 
                 EnqueueBroadcast(new GameMessageSound(Guid, Sound.ReceiveItem));
             }

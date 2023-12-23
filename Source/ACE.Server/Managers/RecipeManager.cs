@@ -1206,6 +1206,17 @@ namespace ACE.Server.Managers
             }
 
             var modified = ModifyItem(player, recipe, source, target, result, success);
+            // New method need for tracking tool and type
+            if (result != null && QuestItemMutations.IsToolValidForQuestMutation(source.WeenieClassId))
+            {
+                var mutationResult = result.MutateQuestItem();
+
+                if (!string.IsNullOrEmpty(mutationResult))
+                    player.Session.Network.EnqueueSend(new GameMessageSystemChat(mutationResult, ChatMessageType.System));
+            }
+
+            if (result != null)
+                result.MutateQuestItem();
 
             // broadcast different messages based on recipe type
             if (!recipe.IsTinkering())
