@@ -902,7 +902,7 @@ namespace ACE.Server.WorldObjects
 
         private string QuestItem_ApplyArmorLevelMutation(uint mutationTier)
         {
-            var numSteelTinksAdded = (int)(new Random().Next(1, 3) * mutationTier);
+            var numSteelTinksAdded = (int)(new Random().Next(1, 2 * (int)mutationTier));
             this.ArmorLevel += 20 * numSteelTinksAdded;
             this.NumTimesTinkered += numSteelTinksAdded;
             string tinkerLog = "64";
@@ -934,7 +934,7 @@ namespace ACE.Server.WorldObjects
             string resultMsg = "";
 
             var selectRating = ThreadSafeRandom.Next(1, 6);
-            var ratingAmount = (int)(ThreadSafeRandom.Next(1, 3) * mutationTier);
+            var ratingAmount = (int)(ThreadSafeRandom.Next(1, mutationTier));
 
             switch (selectRating)
             {
