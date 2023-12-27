@@ -238,8 +238,27 @@ namespace ACE.Entity.Enum.Properties
         BlockMod                       = 10013,
         AttacksCauseBleedChance        = 10014,
         VendorIncomeDecayTimestamp     = 10015,
-        VitaeDecayTimestamp            = 10016,
-        NSCoordinates                  = 10017,
-        EWCoordinates                  = 10018,
+        VitaeDecayTimestamp = 10016,
+        NSCoordinates = 10017,
+        EWCoordinates = 10018,
+
+        //Elite Implementation
+        [ServerOnly]
+        TrophyTime = 9001,
+        [ServerOnly]
+        TrophyTimer = 9002,
+        [ServerOnly]
+        MirrorCreationTime = 9003,
+        [ServerOnly]
+        EliteDungeonIdleTime = 9004,
+    }
+
+    public static class PropertyFloatExtensions
+    {
+        public static string GetDescription(this PropertyFloat prop)
+        {
+            var description = prop.GetAttributeOfType<DescriptionAttribute>();
+            return description?.Description ?? prop.ToString();
+        }
     }
 }
