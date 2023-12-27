@@ -379,6 +379,9 @@ namespace ACE.Server.WorldObjects
                 if ((this is Admin || this is Sentinel) && CloakStatus == CloakStatus.On)
                     chance = 1.0f;
 
+                if (PropertyManager.GetBool("assess_creature_pve_always_succeed").Item && player == null && creature != null)
+                    chance = 1.0f;
+
                 success = chance > ThreadSafeRandom.Next(0.0f, 1.0f);
             }
 
