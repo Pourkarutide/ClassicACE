@@ -73,7 +73,6 @@ namespace ACE.Server.WorldObjects
             StringBuilder resultMessage = new StringBuilder();
             var mutationTier = GetMutationTier();
 
-            Random rand = new Random();
             double roll = 0;
 
             //Get the number of mutations to apply
@@ -82,7 +81,7 @@ namespace ACE.Server.WorldObjects
             //1% chance for a third mutation
             //TODO should this be dictated by mutation tier?
             //TODO should make the chances configurable?
-            roll = rand.NextDouble();
+            roll = ThreadSafeRandom.Next(0f, 1f);
             int mutationCount = 0;
             if(roll < 0.10)
             {
@@ -113,13 +112,13 @@ namespace ACE.Server.WorldObjects
 
             for(int i = 0; i < mutationCount; i++)
             {
-                int mutationType = rand.Next(1, 6);
+                int mutationType = ThreadSafeRandom.Next(1, 5);
 
                 //For Slayers, Rends, Sets and Steel Tinks, don't allow those to be added more than once, reroll if already added
                 int rerollAttempts = 0; //just a fail-safe to avoid an infinite loop, even tho it shouldn't be possible
                 while ((mutationType == 1 || mutationType == 5) && mutationTypes.Contains(mutationType) && rerollAttempts < 20)
                 {
-                    mutationType = rand.Next(1, 6);
+                    mutationType = ThreadSafeRandom.Next(1, 5);
                     rerollAttempts++;
                 }
 
@@ -244,33 +243,32 @@ namespace ACE.Server.WorldObjects
         {
             if (!this.ItemMaxMana.HasValue || this.ItemMaxMana < 1)
             {
-                Random rand = new Random();
                 int difficulty;
                 if (mutationTier == 1)
-                    difficulty = rand.Next(50, 100);
+                    difficulty = ThreadSafeRandom.Next(50, 100);
                 else if (mutationTier == 2)
-                    difficulty = rand.Next(100, 150);
+                    difficulty = ThreadSafeRandom.Next(100, 150);
                 else
-                    difficulty = rand.Next(150, 200);
+                    difficulty = ThreadSafeRandom.Next(150, 200);
                 this.ItemDifficulty = Math.Max(this.ItemDifficulty ?? 0, difficulty);
 
                 int spellcraft;
                 if (mutationTier == 1)
-                    spellcraft = rand.Next(50, 100);
+                    spellcraft = ThreadSafeRandom.Next(50, 100);
                 else if (mutationTier == 2)
-                    spellcraft = rand.Next(100, 150);
+                    spellcraft = ThreadSafeRandom.Next(100, 150);
                 else
-                    spellcraft = rand.Next(200, 300);
+                    spellcraft = ThreadSafeRandom.Next(200, 300);
                 this.ItemSpellcraft = Math.Max(this.ItemSpellcraft ?? 0, spellcraft);
 
 
                 int maxMana;
                 if (mutationTier == 1)
-                    maxMana = rand.Next(250, 500);
+                    maxMana = ThreadSafeRandom.Next(250, 500);
                 else if (mutationTier == 2)
-                    maxMana = rand.Next(350, 600);
+                    maxMana = ThreadSafeRandom.Next(350, 600);
                 else
-                    maxMana = rand.Next(600, 1500);
+                    maxMana = ThreadSafeRandom.Next(600, 1500);
                 this.ItemMaxMana = Math.Max(this.ItemMaxMana ?? 0, maxMana);
                 this.ItemCurMana = this.ItemMaxMana;
 
@@ -473,8 +471,7 @@ namespace ACE.Server.WorldObjects
 
         private uint ConvertMutationTierToCantripTier(uint mutationTier)
         {
-            Random rand = new Random();
-            var roll = rand.NextDouble();
+            var roll = ThreadSafeRandom.Next(0f, 1f);
 
 
             if (mutationTier == 1)
@@ -790,7 +787,7 @@ namespace ACE.Server.WorldObjects
 
                 case 2: // Defender / HeartSeeker                                
 
-                    if (new Random().NextDouble() < 0.5f)
+                    if (ThreadSafeRandom.Next(0f, 1f) < 0.5f)
                     {
                         if (mutationTier == 1)
                         {
@@ -933,7 +930,7 @@ namespace ACE.Server.WorldObjects
 
         private string QuestItem_ApplyArmorLevelMutation(uint mutationTier)
         {
-            var numSteelTinksAdded = new Random().Next(1, 2 * (int)mutationTier);
+            var numSteelTinksAdded = ThreadSafeRandom.Next(1, 2 * (int)mutationTier);
             this.ArmorLevel += 20 * numSteelTinksAdded;
             this.NumTimesTinkered += numSteelTinksAdded;
             string tinkerLog = "64";
@@ -948,11 +945,11 @@ namespace ACE.Server.WorldObjects
 
         private string QuestItem_ApplyEquipmentSetMutation(uint mutationTier)
         {
-            var roll = new Random().Next(13, 30);
+            var roll = ThreadSafeRandom.Next(13, 29);
             int tries = 0;
-            while (roll == 17 && tries < 20)
+            while ((EquipmentSet)roll == EquipmentSet.Tinkers && tries < 20)
             {
-                roll = new Random().Next(13, 30);
+                roll = ThreadSafeRandom.Next(13, 29);
                 tries++;
             }
 
