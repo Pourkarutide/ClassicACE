@@ -56,7 +56,10 @@ namespace ACE.Server.WorldObjects
                 if (!Account15Days && IsOlthoiPlayer)
                     Session.Network.EnqueueSend(new GameMessageSystemChat("You may not leave Olthoi Island until your account and this character have been active on this game world for 15 days.", ChatMessageType.Broadcast));
             }
-
+            if (EliteTrigger)
+            {
+                SetProperty(PropertyBool.EliteTrigger, false);
+            }
             if (PlayerKillerStatus == PlayerKillerStatus.PKLite && !PropertyManager.GetBool("pkl_server").Item && !IsHardcore)
             {
                 PlayerKillerStatus = PlayerKillerStatus.NPK;

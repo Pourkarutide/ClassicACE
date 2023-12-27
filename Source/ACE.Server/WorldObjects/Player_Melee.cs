@@ -392,6 +392,12 @@ namespace ACE.Server.WorldObjects
                     if (weapon == null)
                     {
                         // Handle the case where 'weapon' is null
+					    return;
+					}
+
+                    if (creature.Warded && creature.TogglePhys)
+                    {
+                        Session.Network.EnqueueSend(new GameMessageSystemChat($"{creature.Name} resists your attack completely", ChatMessageType.CombatEnemy));
                         return;
                     }
 

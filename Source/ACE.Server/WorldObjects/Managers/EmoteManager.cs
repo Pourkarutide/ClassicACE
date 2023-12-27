@@ -1264,7 +1264,7 @@ namespace ACE.Server.WorldObjects.Managers
 
                     questTarget = GetQuestTarget((EmoteType)emote.Type, targetCreature, creature);
 
-                    if (questTarget != null)
+                    if (questTarget != null && !questTarget.IsElite)
                     {
                         var questName = emote.Message;
 
