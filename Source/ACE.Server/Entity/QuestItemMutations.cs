@@ -347,6 +347,12 @@ namespace ACE.Server.Entity
                         12748,//Training Wand
                         12749,//Light Training Crossbow
 
+                        46,   // Metal Cap
+                        56,   // Leather Gauntlets,
+                        13240,// Leather Gauntlets
+                        25642,// Leather Gauntlets
+                        1435, // Ice Tachi
+                        4792, // Celcynd's Ring
                     };
                 }
 
