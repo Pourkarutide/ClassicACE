@@ -7,6 +7,7 @@ using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
+using ACE.Server.Factories;
 using ACE.Server.Managers;
 using ACE.Server.Network.GameMessages.Messages;
 
@@ -187,126 +188,16 @@ namespace ACE.Server.WorldObjects
                     actionChain.AddDelaySeconds(2.5f);
                     actionChain.AddAction(this, () =>
                     {
-                        if (Level > 99)
-                        {
-                            if (RNGwar == 1)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.AcidArc5), this);
-                            if (RNGwar == 2)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.LightningBolt5), this);
-                            if (RNGwar == 3)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.LightningArc5), this);
-                            if (RNGwar == 4)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FlameBolt5), this);
-                            if (RNGwar == 5)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FrostArc5), this);
-                            if (RNGwar == 6)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ForceArc5), this);
-                            if (RNGwar == 7)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ShockArc5), this);
-                            if (RNGwar == 8)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.BladeArc5), this);
-                            if (RNGwar == 9)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ForceBolt5), this);
-                            if (RNGwar == 10)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FrostBolt5), this);
-                            if (RNGwar == 11)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ShockWave5), this);
-                            if (RNGwar == 12)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.WhirlingBlade5), this);
-                            if (RNGwar == 13)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.AcidStream5), this);
-                        }
-                        else
-                        {
-                            if (RNGwar == 1)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.AcidArc2), this);
-                            if (RNGwar == 2)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.LightningBolt2), this);
-                            if (RNGwar == 3)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.LightningArc2), this);
-                            if (RNGwar == 4)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FlameBolt2), this);
-                            if (RNGwar == 5)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FrostArc2), this);
-                            if (RNGwar == 6)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ForceArc2), this);
-                            if (RNGwar == 7)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ShockArc2), this);
-                            if (RNGwar == 8)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.BladeArc2), this);
-                            if (RNGwar == 9)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ForceBolt2), this);
-                            if (RNGwar == 10)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FrostBolt2), this);
-                            if (RNGwar == 11)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ShockWave2), this);
-                            if (RNGwar == 12)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.WhirlingBlade2), this);
-                            if (RNGwar == 13)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.AcidStream2), this);
-                        }
+                        var spellToCastId = Level > 99 ? SpellId.AcidArc5 : SpellId.AcidArc2;
+                        var spellToCast = new Server.Entity.Spell(spellToCastId);
+                        CreateSpellProjectiles(spellToCast, attackerwakeup, this);
                     });
                     actionChain.AddDelaySeconds(2.5f);
                     actionChain.AddAction(this, () =>
                     {
-                        if (Level > 99)
-                        {
-                            if (RNGwar == 1)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.AcidArc5), this);
-                            if (RNGwar == 2)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.LightningBolt5), this);
-                            if (RNGwar == 3)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.LightningArc5), this);
-                            if (RNGwar == 4)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FlameBolt5), this);
-                            if (RNGwar == 5)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FrostArc5), this);
-                            if (RNGwar == 6)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ForceArc5), this);
-                            if (RNGwar == 7)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ShockArc5), this);
-                            if (RNGwar == 8)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.BladeArc5), this);
-                            if (RNGwar == 9)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ForceBolt5), this);
-                            if (RNGwar == 10)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FrostBolt5), this);
-                            if (RNGwar == 11)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ShockWave5), this);
-                            if (RNGwar == 12)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.WhirlingBlade5), this);
-                            if (RNGwar == 13)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.AcidStream5), this);
-                        }
-                        else
-                        {
-                            if (RNGwar == 1)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.AcidArc2), this);
-                            if (RNGwar == 2)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.LightningBolt2), this);
-                            if (RNGwar == 3)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.LightningArc2), this);
-                            if (RNGwar == 4)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FlameBolt2), this);
-                            if (RNGwar == 5)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FrostArc2), this);
-                            if (RNGwar == 6)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ForceArc2), this);
-                            if (RNGwar == 7)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ShockArc2), this);
-                            if (RNGwar == 8)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.BladeArc2), this);
-                            if (RNGwar == 9)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ForceBolt2), this);
-                            if (RNGwar == 10)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FrostBolt2), this);
-                            if (RNGwar == 11)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ShockWave2), this);
-                            if (RNGwar == 12)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.WhirlingBlade2), this);
-                            if (RNGwar == 13)
-                                WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.AcidStream2), this);
-                        }
+                        var spellToCastId = Level > 99 ? SpellId.AcidArc5 : SpellId.AcidArc2;
+                        var spellToCast = new Server.Entity.Spell(spellToCastId);
+                        CreateSpellProjectiles(spellToCast, attackerwakeup, this);
                     });
                     actionChain.EnqueueChain();
                 }
@@ -320,28 +211,27 @@ namespace ACE.Server.WorldObjects
 
                 var randomshootermodrng = ThreadSafeRandom.Next(1, 10);
                 var spell1 = ThreadSafeRandom.Next(1, 5);
-                var spell2 = ThreadSafeRandom.Next(1, 5);
 
                 if (randomshootermodrng <= 5) // 70% chance to cast meteor type spells
                 {
-                    
-                        // choose randomly a meteor type
-                        if (spell1 == 1)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FrostStrike), this);
-                        else if (spell1 == 2)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FlameStrike), this);
-                        else if (spell1 == 3)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.LightningStrike), this);
-                        else if (spell1 == 4)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.BladeStrike), this);
-                        else if (spell1 == 5)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ForceStrike), this);
-                   
-                    
+                    var spellId = SpellId.FrostStrike; // Default spell ID
+                    if (spell1 == 1)
+                        spellId = SpellId.FrostStrike;
+                    else if (spell1 == 2)
+                        spellId = SpellId.FlameStrike;
+                    else if (spell1 == 3)
+                        spellId = SpellId.LightningStrike;
+                    else if (spell1 == 4)
+                        spellId = SpellId.BladeStrike;
+                    else if (spell1 == 5)
+                        spellId = SpellId.ForceStrike;
+
+                    var spellToCast = new Server.Entity.Spell(spellId);
+                    CreateSpellProjectiles(spellToCast, attackerwakeup, this);
                 }
             }
 
-            // Nova Mod -- Constanty casts Ring Spells.
+            // Nova Mod -- Constantly casts Ring Spells.
             if (PlayersInRange(96) && IsElite && NovaMod && attackerwakeup != null && IsAwake)
             {
                 if (attackerwakeup == null)
@@ -352,28 +242,29 @@ namespace ACE.Server.WorldObjects
 
                 if (randomshootermodrng <= 5) // Constant Stream of Ring Spells
                 {
-                    var actionChain = new ActionChain();
+                    var spellId = SpellId.NetherRing; // Default spell ID
+                    if (spell1 == 1)
+                        spellId = SpellId.NetherRing;
+                    else if (spell1 == 2)
+                        spellId = SpellId.AcidRing;
+                    else if (spell1 == 3)
+                        spellId = SpellId.LightningRingLarge;
+                    else if (spell1 == 4)
+                        spellId = SpellId.FrostRing;
+                    else if (spell1 == 5)
+                        spellId = SpellId.FlameRing;
+                    else if (spell1 == 6)
+                        spellId = SpellId.ForceRing;
+                    else if (spell1 == 7)
+                        spellId = SpellId.BladeRing;
+                    else if (spell1 == 8)
+                        spellId = SpellId.ShockwaveRing;
 
-                        // choose randomly a meteor type
-                        if (spell1 == 1)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.NetherRing), this);
-                        else if (spell1 == 2)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.AcidRing), this);
-                        else if (spell1 == 3)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.LightningRingLarge), this);
-                        else if (spell1 == 4)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FrostRing), this);
-                        else if (spell1 == 5)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.FlameRing), this);
-                        else if (spell1 == 6)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ForceRing), this);
-                        else if (spell1 == 7)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.BladeRing), this);
-                        else if (spell1 == 8)
-                            WarMagic(attackerwakeup, new Server.Entity.Spell(SpellId.ShockwaveRing), this);
-                    
+                    var spellToCast = new Server.Entity.Spell(spellId);
+                    CreateSpellProjectiles(spellToCast, attackerwakeup, this);
                 }
             }
+
 
             var mirrormobtimer = GetProperty(PropertyFloat.MirrorCreationTime);
             // Deletes a MirrorMob after 15 seconds.
