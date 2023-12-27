@@ -240,6 +240,16 @@ namespace ACE.Entity.Enum.Properties
         AttacksCauseBleedChance        = 10014,
         [ServerOnly]
         VendorIncomeDecayTimestamp     = 10015,
+
+        //Elite Implementation
+        [ServerOnly]
+        TrophyTime                     = 9001,
+        [ServerOnly]
+        TrophyTimer                    = 9002,
+        [ServerOnly]
+        MirrorCreationTime             = 9003,
+        [ServerOnly]
+        EliteDungeonIdleTime           = 9004,
     }
 
     public static class PropertyFloatExtensions

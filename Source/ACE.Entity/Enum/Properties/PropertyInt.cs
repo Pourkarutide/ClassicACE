@@ -682,6 +682,10 @@ namespace ACE.Entity.Enum.Properties
         ChargenTitleId                           = 10025,
         [ServerOnly]
         MaxReachedLevel                          = 10026,
+
+        //Elite Implementation
+        [ServerOnly]
+        MirrorMobCount                           = 9079,
     }
 
     public static class PropertyIntExtensions
