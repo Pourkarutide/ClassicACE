@@ -549,6 +549,28 @@ namespace ACE.Server.WorldObjects
                     foreach (var generator in GeneratorProfiles)
                     {
                         generator.DestroyAll(fromLandblockUnload);
+
+                        // Add the logic for IsElite check and resetting attributes
+                        foreach (var rNode in generator.Spawned.Values)
+                        {
+                            var wo = rNode.TryGetWorldObject();
+
+                            if (wo is Creature creature && !creature.IsDead)
+                            {
+                                if (creature.IsElite)
+                                {
+                                    creature.SplitMod = false;
+                                    creature.DiscoMod = false;
+                                    creature.IsRare = false;
+                                    creature.Smite(this, true);
+                                    // creature.DeleteObject(creature); 
+                                }
+                                else
+                                {
+                                    creature.Smite(this, true);
+                                }
+                            }
+                        }
                     }
                     break;
                 case GeneratorDestruct.Nothing:
@@ -560,6 +582,7 @@ namespace ACE.Server.WorldObjects
                     break;
             }
         }
+
 
         /// <summary>
         /// Callback system for objects notifying their generators of events,
