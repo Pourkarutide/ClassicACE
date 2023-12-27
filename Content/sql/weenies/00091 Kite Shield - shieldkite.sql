@@ -37,8 +37,7 @@ VALUES (91,  13,       1) /* ArmorModVsSlash */
      , (91, 10004,      -5) /* MissileDefenseCap */;
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
-VALUES (91,   1, 'Kite Shield') /* Name */
-     , (91,  33, 'pickup_mutated_kiteshield') /* Quest string */;
+VALUES (91,   1, 'Kite Shield') /* Name */;
 
 INSERT INTO `weenie_properties_d_i_d` (`object_Id`, `type`, `value`)
 VALUES (91,   1, 0x02000164) /* Setup */
