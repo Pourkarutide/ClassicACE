@@ -727,7 +727,11 @@ namespace ACE.Server.Entity
                     if (shield.IsEnchantable)
                         shieldDefenseMod += defender.EnchantmentManager.GetAttackMod();
 
-                    EffectiveBlockSkill = (uint)Math.Round(shieldSkill.Current * shieldDefenseMod);
+                    var maceBonus = 1.0f;
+                    if (defender.GetEquippedMeleeWeapon(true)?.WeaponSkill == Skill.Mace)
+                        maceBonus = 1.1f;
+
+                    EffectiveBlockSkill = (uint)Math.Round(shieldSkill.Current * shieldDefenseMod * maceBonus);
                 }
                 else
                     EffectiveBlockSkill = 0;
