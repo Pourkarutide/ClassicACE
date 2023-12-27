@@ -723,6 +723,9 @@ namespace ACE.Server.Entity
             if (ShieldMod != 1.0f && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
                 DamageBlocked = damageBeforeShieldMod - Damage;
 
+            // elites hit for double dmg
+            if (attacker.IsElite)
+                Damage *= 2;
             return Damage;
         }
 

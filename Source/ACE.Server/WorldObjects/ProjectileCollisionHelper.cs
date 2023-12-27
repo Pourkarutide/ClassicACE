@@ -164,7 +164,10 @@ namespace ACE.Server.WorldObjects
 
             if (worldObject.ProjectileSource is Player player)
             {
-                player.Session.Network.EnqueueSend(new GameMessageSystemChat("Your missile attack hit the environment.", ChatMessageType.Broadcast));
+                if (worldObject.ProjectileTarget is Creature creature && creature.Warded)
+                    return;
+                else
+                    player.Session.Network.EnqueueSend(new GameMessageSystemChat("Your missile attack hit the environment.", ChatMessageType.Broadcast));
             }
             else if (worldObject.ProjectileSource is Creature creature)
             {
