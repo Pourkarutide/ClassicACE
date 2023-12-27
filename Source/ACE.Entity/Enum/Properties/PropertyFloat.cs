@@ -243,13 +243,9 @@ namespace ACE.Entity.Enum.Properties
         EWCoordinates = 10018,
 
         //Elite Implementation
-        [ServerOnly]
         TrophyTime = 9001,
-        [ServerOnly]
         TrophyTimer = 9002,
-        [ServerOnly]
         MirrorCreationTime = 9003,
-        [ServerOnly]
         EliteDungeonIdleTime = 9004,
     }
 
