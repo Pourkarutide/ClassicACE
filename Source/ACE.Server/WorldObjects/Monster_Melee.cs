@@ -479,8 +479,8 @@ namespace ACE.Server.WorldObjects
                 if (bodyArmorMod > effectiveAL)
                     effectiveAL = bodyArmorMod; // Body armor doesn't stack with equipment armor, use whichever is highest.
 
-                if (!ignoreMagicResist)
-                    effectiveAL += defender.EnchantmentManager.GetBodyArmorMod(false); // Take into account armor debuffs now, but only if weapon isn't hollow.
+                if (!isPvP && !ignoreMagicResist)
+                    effectiveAL += defender.EnchantmentManager.GetBodyArmorMod(false); // Take into account armor debuffs now, but only if weapon isn't hollow and this is not PvP (Imperil disabled in PvP for now).
             }
 
             // Armor Rending reduces physical armor too?

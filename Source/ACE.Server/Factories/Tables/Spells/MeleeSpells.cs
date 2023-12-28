@@ -109,40 +109,56 @@ namespace ACE.Server.Factories.Tables
         {
             ( SpellId.Undef,              150.0f ),
 
-            ( SpellId.StaminaToHealthSelf1, 1.0f ),
-            ( SpellId.StaminaToManaSelf1,   1.0f ),
-            ( SpellId.ManaToStaminaSelf1,   1.0f ),
-            ( SpellId.ManaToHealthSelf1,    1.0f ),
-            ( SpellId.HealthToStaminaSelf1, 1.0f ),
-            ( SpellId.HealthToManaSelf1,    1.0f ),
+            ( SpellId.StaminaToHealthSelf1,      1.0f ),
+            ( SpellId.StaminaToManaSelf1,        1.0f ),
+            ( SpellId.ManaToStaminaSelf1,        1.0f ),
+            ( SpellId.ManaToHealthSelf1,         1.0f ),
+            ( SpellId.HealthToStaminaSelf1,      1.0f ),
+            ( SpellId.HealthToManaSelf1,         1.0f ),
 
-            ( SpellId.DrainStamina1,        1.0f ),
-            ( SpellId.DrainMana1,           1.0f ),
-            ( SpellId.DrainHealth1,         1.0f ),
+            ( SpellId.DrainStamina1,             1.0f ),
+            ( SpellId.DrainMana1,                1.0f ),
+            ( SpellId.DrainHealth1,              1.0f ),
 
-            ( SpellId.BloodLoather,         1.0f ),
-            ( SpellId.LeadenWeapon1,        1.0f ),
-            ( SpellId.TurnBlade1,           1.0f ),
-            ( SpellId.Brittlemail1,         1.0f ),
+            ( SpellId.BloodLoather,              1.0f ),
+            ( SpellId.LeadenWeapon1,             1.0f ),
+            ( SpellId.TurnBlade1,                1.0f ),
+            ( SpellId.Brittlemail1,              1.0f ),
+
+            ( SpellId.MagicYieldOther1,          1.0f ),
+            ( SpellId.DefenselessnessOther1,     1.0f ),
+            ( SpellId.VulnerabilityOther1,       1.0f ),
+            ( SpellId.WarMagicIneptitudeOther1,  1.0f ),
+            ( SpellId.LifeMagicIneptitudeOther1, 1.0f ),
+
+            ( SpellId.ImperilOther1,             1.0f )
         };
 
         private static ChanceTable<SpellId> meleeProcsCertain = new ChanceTable<SpellId>(ChanceTableType.Weight)
         {
-            ( SpellId.StaminaToHealthSelf1, 1.0f ),
-            ( SpellId.StaminaToManaSelf1,   1.0f ),
-            ( SpellId.ManaToStaminaSelf1,   1.0f ),
-            ( SpellId.ManaToHealthSelf1,    1.0f ),
-            ( SpellId.HealthToStaminaSelf1, 1.0f ),
-            ( SpellId.HealthToManaSelf1,    1.0f ),
+            ( SpellId.StaminaToHealthSelf1,      1.0f ),
+            ( SpellId.StaminaToManaSelf1,        1.0f ),
+            ( SpellId.ManaToStaminaSelf1,        1.0f ),
+            ( SpellId.ManaToHealthSelf1,         1.0f ),
+            ( SpellId.HealthToStaminaSelf1,      1.0f ),
+            ( SpellId.HealthToManaSelf1,         1.0f ),
 
-            ( SpellId.DrainStamina1,        1.0f ),
-            ( SpellId.DrainMana1,           1.0f ),
-            ( SpellId.DrainHealth1,         1.0f ),
+            ( SpellId.DrainStamina1,             1.0f ),
+            ( SpellId.DrainMana1,                1.0f ),
+            ( SpellId.DrainHealth1,              1.0f ),
 
-            ( SpellId.BloodLoather,         1.0f ),
-            ( SpellId.LeadenWeapon1,        1.0f ),
-            ( SpellId.TurnBlade1,           1.0f ),
-            ( SpellId.Brittlemail1,         1.0f ),
+            ( SpellId.BloodLoather,              1.0f ),
+            ( SpellId.LeadenWeapon1,             1.0f ),
+            ( SpellId.TurnBlade1,                1.0f ),
+            ( SpellId.Brittlemail1,              1.0f ),
+
+            ( SpellId.MagicYieldOther1,          1.0f ),
+            ( SpellId.DefenselessnessOther1,     1.0f ),
+            ( SpellId.VulnerabilityOther1,       1.0f ),
+            ( SpellId.WarMagicIneptitudeOther1,  1.0f ),
+            ( SpellId.LifeMagicIneptitudeOther1, 1.0f ),
+
+            ( SpellId.ImperilOther1,             1.0f )
         };
 
         public static List<SpellId> Roll(TreasureDeath treasureDeath)
