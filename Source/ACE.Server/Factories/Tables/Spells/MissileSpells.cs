@@ -38,6 +38,14 @@ namespace ACE.Server.Factories.Tables
             ( SpellId.TurnBlade1,           1.0f ),
             ( SpellId.Brittlemail1,         1.0f ),
             ( SpellId.TurnShield1,          1.0f ),
+
+            ( SpellId.MagicYieldOther1,          1.0f ),
+            ( SpellId.DefenselessnessOther1,     1.0f ),
+            ( SpellId.VulnerabilityOther1,       1.0f ),
+            ( SpellId.WarMagicIneptitudeOther1,  1.0f ),
+            ( SpellId.LifeMagicIneptitudeOther1, 1.0f ),
+
+            ( SpellId.ImperilOther1,             1.0f )
         };
 
         private static ChanceTable<SpellId> missileProcsCertain = new ChanceTable<SpellId>(ChanceTableType.Weight)
@@ -58,6 +66,14 @@ namespace ACE.Server.Factories.Tables
             ( SpellId.TurnBlade1,           1.0f ),
             ( SpellId.Brittlemail1,         1.0f ),
             ( SpellId.TurnShield1,          1.0f ),
+
+            ( SpellId.MagicYieldOther1,          1.0f ),
+            ( SpellId.DefenselessnessOther1,     1.0f ),
+            ( SpellId.VulnerabilityOther1,       1.0f ),
+            ( SpellId.WarMagicIneptitudeOther1,  1.0f ),
+            ( SpellId.LifeMagicIneptitudeOther1, 1.0f ),
+
+            ( SpellId.ImperilOther1,             1.0f )
         };
 
         static MissileSpells()
@@ -101,3 +117,4 @@ namespace ACE.Server.Factories.Tables
         }
     }
 }
+

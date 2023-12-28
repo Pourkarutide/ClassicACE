@@ -481,7 +481,17 @@ namespace ACE.Server.WorldObjects
 
             //Console.WriteLine("==");
             //Console.WriteLine("Armor Self: " + bodyArmorMod);
-            effectiveAL += bodyArmorMod;
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                effectiveAL += bodyArmorMod;
+            else
+            {
+                if (bodyArmorMod > effectiveAL)
+                    effectiveAL = bodyArmorMod; // Body armor doesn't stack with equipment armor, use whichever is highest.
+
+                if (!isPvP && !ignoreMagicResist)
+                    effectiveAL += attacker.EnchantmentManager.GetBodyArmorMod(false); // Take into account armor debuffs now, but only if weapon isn't hollow and this is not PvP (Imperil disabled in PvP for now).
+            }
 
             // Armor Rending reduces physical armor too?
             if (effectiveAL > 0)

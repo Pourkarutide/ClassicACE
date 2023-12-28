@@ -39,6 +39,14 @@ namespace ACE.Server.Factories.Tables
             ( SpellId.TurnBlade1,           1.0f ),
             ( SpellId.Brittlemail1,         1.0f ),
             ( SpellId.TurnShield1,          1.0f ),
+
+            ( SpellId.MagicYieldOther1,          1.0f ),
+            ( SpellId.DefenselessnessOther1,     1.0f ),
+            ( SpellId.VulnerabilityOther1,       1.0f ),
+            ( SpellId.WarMagicIneptitudeOther1,  1.0f ),
+            ( SpellId.LifeMagicIneptitudeOther1, 1.0f ),
+
+            ( SpellId.ImperilOther1,             1.0f )
         };
 
         private static ChanceTable<SpellId> meleeProcsCertain = new ChanceTable<SpellId>(ChanceTableType.Weight)
@@ -59,11 +67,19 @@ namespace ACE.Server.Factories.Tables
             ( SpellId.TurnBlade1,           1.0f ),
             ( SpellId.Brittlemail1,         1.0f ),
             ( SpellId.TurnShield1,          1.0f ),
+
+            ( SpellId.MagicYieldOther1,          1.0f ),
+            ( SpellId.DefenselessnessOther1,     1.0f ),
+            ( SpellId.VulnerabilityOther1,       1.0f ),
+            ( SpellId.WarMagicIneptitudeOther1,  1.0f ),
+            ( SpellId.LifeMagicIneptitudeOther1, 1.0f ),
+
+            ( SpellId.ImperilOther1,             1.0f )
         };
 
         static MeleeSpells()
         {
-            if(Common.ConfigManager.Config.Server.WorldRuleset == Ruleset.CustomDM)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Ruleset.CustomDM)
             {
                 weaponMeleeSpells = new List<(SpellId, float)>()
                 {
@@ -100,3 +116,4 @@ namespace ACE.Server.Factories.Tables
         }
     }
 }
+
