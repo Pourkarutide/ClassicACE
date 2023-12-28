@@ -159,7 +159,7 @@ namespace ACE.Server.Factories
                     counter++;
                 if (counter < 2 && RollCrushingBlow(profile, wo))
                     counter++;
-                RollSlayer(profile, wo);
+                RollSlayer(profile, wo, counter);
             }
 
             // material type
