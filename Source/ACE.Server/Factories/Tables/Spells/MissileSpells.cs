@@ -105,7 +105,7 @@ namespace ACE.Server.Factories.Tables
 
         public static ChanceTable<SpellId> missileProcs = new ChanceTable<SpellId>(ChanceTableType.Weight)
         {
-            ( SpellId.Undef,              150.0f ),
+            ( SpellId.Undef,              75.0f ),
 
             ( SpellId.StaminaToHealthSelf1,      1.0f ),
             ( SpellId.StaminaToManaSelf1,        1.0f ),
