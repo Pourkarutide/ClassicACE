@@ -647,7 +647,10 @@ namespace ACE.Server.Entity
 
             var maxDamage = float.MaxValue;
             if (pvpDamageCapPercentageMaxHealth < 1.0f)
+            {
+                pvpDamageCapPercentageMaxHealth -= (float)ThreadSafeRandom.Next(0, 0.20f); //Randomize between 0 and 20% less than the actual cap
                 maxDamage = (float)Math.Ceiling(((double)defender.GetCreatureVital(ACE.Entity.Enum.Properties.PropertyAttribute2nd.Health).MaxValue) * pvpDamageCapPercentageMaxHealth) + 1f;
+            }
 
             var damageBeforeShieldMod = DamageBeforeMitigation * ArmorMod * ResistanceMod * DamageResistanceRatingMod;
 
