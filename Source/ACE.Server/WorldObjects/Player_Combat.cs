@@ -1129,10 +1129,22 @@ namespace ACE.Server.WorldObjects
             if (strAndEnd <= 200)
                 return 1.0f;
 
-            var naturalResistance = 1.0f - (float)(strAndEnd - 200) / 300 * 0.5f;
-            naturalResistance = Math.Max(naturalResistance, 0.5f);
 
-            return naturalResistance;
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                // (cap) 60% (0.4 incoming damage multi) at 250 base str/end
+                // 40% at 200 base str/end
+                // 20% at 150 base str/end
+                var naturalResistance = 1.0f - (float)(strAndEnd - 200) / 250 * 0.5f;
+                naturalResistance = Math.Max(naturalResistance, 0.4f);
+                return naturalResistance;
+            }
+            else
+            {
+                var naturalResistance = 1.0f - (float)(strAndEnd - 200) / 300 * 0.5f;
+                naturalResistance = Math.Max(naturalResistance, 0.5f);
+                return naturalResistance;
+            }
         }
 
         public string GetNaturalResistanceString(ResistanceType resistanceType)
