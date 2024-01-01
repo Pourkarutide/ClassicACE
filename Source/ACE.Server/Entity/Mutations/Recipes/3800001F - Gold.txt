@@ -3,7 +3,7 @@
 Tier chances: 1
 
     - Chance: 100%:
-        Value *= 1.25
-        OriginalValue *= 1.25
+        Value += 30000
+        OriginalValue += 30000
         NumTimesTinkered (>= 1 ? add : set) 1
 
