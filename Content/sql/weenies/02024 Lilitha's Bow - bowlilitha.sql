@@ -11,7 +11,7 @@ VALUES (2024,   1,        256) /* ItemType - MissileWeapon */
      , (2024,  16,          1) /* ItemUseable - No */
      , (2024,  19,        875) /* Value */
      , (2024,  33,          1) /* Bonded - Bonded */
-     , (2024,  44,          2) /* Damage */
+     , (2024,  44,          4) /* Damage */
      , (2024,  46,         16) /* DefaultCombatStyle - Bow */
      , (2024,  48,          2) /* WeaponSkill - Bow */
      , (2024,  49,         40) /* WeaponTime */
@@ -45,8 +45,8 @@ VALUES (2024,   5,  -0.033) /* ManaRate */
      , (2024,  26,    27.5) /* MaximumVelocity */
      , (2024,  29,    1.08) /* WeaponDefense */
      , (2024,  62,       1) /* WeaponOffense */
-     , (2024,  63,     1.9) /* DamageMod */
-     , (2024, 147,    0.15) /* CriticalFrequency */;
+     , (2024,  63,     2.1) /* DamageMod */
+     , (2024, 147,    0.25) /* CriticalFrequency */;
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (2024,   1, 'Lilitha''s Bow') /* Name */
