@@ -572,6 +572,7 @@ namespace ACE.Server.Managers
                 ("allow_summoning_killtask_multicredit", new Property<bool>(true, "enables retail behavior where a summoner can get multiple killtask credits from a monster")),
                 ("assess_creature_mod", new Property<bool>(false, "(non-retail function) If enabled, re-enables former skill formula, when assess creature skill is not trained or spec'ed")),
                 ("attribute_augmentation_safety_cap", new Property<bool>(true, "if TRUE players are not able to use attribute augmentations if the innate value of the target attribute is >= 96. All normal restrictions to these augmentations still apply.")),
+                ("bz_snitch_hcpk_top10", new Property<bool>(true, "if TRUE the BZ location snitch in HCPK mode will give the location of players only from the top 10, to any HCPK player.")),
                 ("chat_disable_general", new Property<bool>(false, "disable general global chat channel")),
                 ("chat_disable_lfg", new Property<bool>(false, "disable lfg global chat channel")),
                 ("chat_disable_olthoi", new Property<bool>(false, "disable olthoi global chat channel")),

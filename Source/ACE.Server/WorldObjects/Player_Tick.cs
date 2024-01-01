@@ -961,7 +961,22 @@ namespace ACE.Server.WorldObjects
             List<Player> possiblePlayers;
 
             if(GameplayMode == GameplayModes.HardcorePK)
-                possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.HardcorePK && e.Level >= Level && e.Level <= Level + 5).ToList();
+            {
+                if (PropertyManager.GetBool("bz_snitch_hcpk_top10").Item)
+                {
+                    possiblePlayers =
+                        PlayerManager
+                        .FindAllByGameplayMode(GameplayMode)
+                        .Where(x => x.Account.AccessLevel == 0)
+                        .OrderByDescending(x => x.GetProperty(PropertyInt64.TotalExperience) ?? 0)
+                        .Take(10)
+                        .Where(x => x is Player) // Filter by online
+                        .Cast<Player>()
+                        .ToList();
+                }
+                else
+                    possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.HardcorePK && e.Level >= Level && e.Level <= Level + 5).ToList();
+            }
             else
                 possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && e.Level >= Level && e.Level <= Level + 5).ToList();
 
