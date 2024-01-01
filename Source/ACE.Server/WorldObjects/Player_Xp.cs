@@ -263,7 +263,7 @@ namespace ACE.Server.WorldObjects
                 {
                     float totalExtraXP = 0;
                     float totalNotSharedExtraXP = 0;
-                    if (xpType == XpType.Quest || xpType == XpType.Exploration)
+                    if (xpType == XpType.Quest || xpType == XpType.Exploration || (xpType == XpType.Fellowship && PropertyManager.GetBool("relive_bonus_applies_to_received_fellow_xp").Item))
                     {
                         if (Level < (MaxReachedLevel ?? 1))
                         {

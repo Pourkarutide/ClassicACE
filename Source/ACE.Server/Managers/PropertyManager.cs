@@ -682,6 +682,7 @@ namespace ACE.Server.Managers
                 ("show_discord_chat_ingame", new Property<bool>(false, "Display messages posted to Discord in general chat")),
 
                 ("assess_creature_pve_always_succeed", new Property<bool>(false, "enable this to bypass assess creature PvE skill checks (workaround to fix 5 second delay on vtank looting which occurs due to failed assess)")),
+                ("relive_bonus_applies_to_received_fellow_xp", new Property<bool>(true, "Toggles whether incoming xp received from fellowship members benefits from the relive bonus.")),
 
                 ("fall_damage_enabled", new Property<bool>(true, "Toggles whether fall damage is enabled")),
                 ("dekaru_dual_wield_speed_mod", new Property<bool>(true, "Toggles whether Dekaru's dual wield speed changes (other than for dagger) are enabled")),
