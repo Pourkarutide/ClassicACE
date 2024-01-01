@@ -50,7 +50,7 @@ namespace ACE.Server.WorldObjects
             if (UseSound > 0)
                 player.Session.Network.EnqueueSend(new GameMessageSound(player.Guid, UseSound));
 
-            if(WeenieClassId == (uint)Factories.Enum.WeenieClassName.explorationMarker)
+            if (WeenieClassId == (uint)Factories.Enum.WeenieClassName.explorationMarker)
             {
                 short landblockId = (short)(CurrentLandblock.Id.Raw >> 16);
                 if (player.Exploration1LandblockId == landblockId)
@@ -120,3 +120,4 @@ namespace ACE.Server.WorldObjects
         }
     }
 }
+

@@ -487,6 +487,9 @@ namespace ACE.Server.WorldObjects
 
             if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
             {
+                if (HasVitae && IsHardcore && xpType != XpType.Kill)
+                    return; // Only kill xp reduces hardcore vitae penalty.
+
                 if (HasVitae && xpType != XpType.Allegiance)
                     UpdateXpVitae(amount);
             }
