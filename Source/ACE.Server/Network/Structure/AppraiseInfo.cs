@@ -651,7 +651,7 @@ namespace ACE.Server.Network.Structure
                         hasExtraPropertiesText = true;
                     }
                 }
-           
+
                 if (wo.IsShield)
                 {
                     var BlockModBase = (float)(wo.BlockMod ?? 1);

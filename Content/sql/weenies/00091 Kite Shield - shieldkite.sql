@@ -34,7 +34,8 @@ VALUES (91,  13,       1) /* ArmorModVsSlash */
      , (91, 110,       1) /* BulkMod */
      , (91, 111,    1.33) /* SizeMod */
      , (91, 10003,      -5) /* MeleeDefenseCap */
-     , (91, 10004,      -5) /* MissileDefenseCap */;
+     , (91, 10004,      -5) /* MissileDefenseCap */
+     , (91, 10013,       1) /* ShieldDefense */;
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (91,   1, 'Kite Shield') /* Name */;
