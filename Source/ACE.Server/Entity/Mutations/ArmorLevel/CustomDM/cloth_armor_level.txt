@@ -338,6 +338,11 @@ Tier chances: 0, 0, 0, 1, 0, 0
     - Chance: 5%:
         ManaConversionMod = 0.08
 
+    - Chance 100%:
+        WieldRequirements = Level
+        WieldSkillType = 1
+        WieldDifficulty = 30
+
 Armor Mutation #5:
 
 Tier chances: 0, 0, 0, 0, 1, 0
@@ -363,6 +368,11 @@ Tier chances: 0, 0, 0, 0, 1, 0
     - Chance: 5%:
         ManaConversionMod = 0.1
 
+    - Chance 100%:
+        WieldRequirements = Level
+        WieldSkillType = 1
+        WieldDifficulty = 50
+
 Armor Mutation #6:
 
 Tier chances: 0, 0, 0, 0, 0, 1
@@ -384,6 +394,11 @@ Tier chances: 0, 0, 0, 0, 0, 1
 
     - Chance: 10%:
         ManaConversionMod = 0.1
+
+    - Chance 100%:
+        WieldRequirements = Level
+        WieldSkillType = 1
+        WieldDifficulty = 60
 
 Armor Mutation #7:
 
