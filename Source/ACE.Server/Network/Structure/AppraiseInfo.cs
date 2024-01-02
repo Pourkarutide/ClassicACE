@@ -637,12 +637,12 @@ namespace ACE.Server.Network.Structure
 
                 if (wo.IsShield)
                 {
-                    var shieldDefenseMod = Math.Abs(((wo.ShieldDefense ?? 1) - 1) * 100);
+                    var shieldDefenseMod = ((wo.ShieldDefense ?? 1) - 1) * 100;
                     if (shieldDefenseMod != 0)
                     {
                         if (hasExtraPropertiesText)
                             extraPropertiesText += "\n";
-                        extraPropertiesText += $"Bonus to Shield Skill: +{shieldDefenseMod.ToString("0.0")}%.";
+                        extraPropertiesText += $"Bonus to Shield Skill: {(shieldDefenseMod > 0 ? "+" : "")}{shieldDefenseMod.ToString("0.0")}%.";
                         hasExtraPropertiesText = true;
                     }
 
