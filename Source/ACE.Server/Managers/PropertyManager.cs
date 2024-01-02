@@ -770,6 +770,14 @@ namespace ACE.Server.Managers
                 ("xp_modifier_reward_tier6", new Property<double>(1.0, "Scales the amount of xp received by players for completing tier 6 quests or unspecified level quests while being over level 96.")),
                 ("salvage_amount_multiplier", new Property<double>(1.0, "Scales the amount of salvage a player gets from items.")),
 
+
+                // Dagger Attack Speed Modifiers (PvE and PvP)
+                ("dekaru_dagger_ms_animation_speed_1h", new Property<double>(1.8, "Multiplier for dagger attack animation speed, if one handed with no shield (with a shield is hard-coded to 1.0).")),
+                ("dekaru_dagger_ms_animation_speed_dualwield", new Property<double>(1.8, "Multiplier for dagger attack animation speed, if dual wielding.")),
+
+
+
+
                 // PvP Damage modifiers
                 //
                 // For CustomDM:

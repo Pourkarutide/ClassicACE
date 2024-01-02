@@ -526,7 +526,14 @@ namespace ACE.Server.WorldObjects
             {
                 var weapon = GetEquippedMeleeWeapon();
                 if (weapon != null && weapon.WeaponSkill == Skill.Dagger && weapon.W_AttackType.IsMultiStrike())
-                    animSpeedMod = 1.8f;
+                {
+                    if (GetEquippedOffHand() == null)
+                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_1h").Item;
+                    else if (IsDualWieldAttack)
+                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_dualwield").Item;
+                    else
+                        animSpeedMod = 1.0f;
+                }
                 else
                 {
                     if (PropertyManager.GetBool("dekaru_dual_wield_speed_mod").Item)
