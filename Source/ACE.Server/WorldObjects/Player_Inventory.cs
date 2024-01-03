@@ -1225,6 +1225,13 @@ namespace ACE.Server.WorldObjects
 
         private bool VerifyQuest(WorldObject item, Container itemRootOwner, out bool questSolve, out bool isFromAPlayerCorpse)
         {
+            if (IsInLimboMode)
+            {
+                questSolve = false;
+                isFromAPlayerCorpse = false;
+                return true;
+            }
+
             questSolve = false;
             isFromAPlayerCorpse = false;
 
