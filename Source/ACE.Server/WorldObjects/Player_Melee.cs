@@ -532,7 +532,7 @@ namespace ACE.Server.WorldObjects
                     else if (IsDualWieldAttack)
                         animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_dualwield").Item;
                     else
-                        animSpeedMod = 1.0f;
+                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_shielded").Item;
                 }
                 else
                 {
