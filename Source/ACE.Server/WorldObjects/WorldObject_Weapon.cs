@@ -671,8 +671,8 @@ namespace ACE.Server.WorldObjects
             if (wielder == null || weapon == null)
                 return defaultModifier;
 
-            // handle quest weapon fixed resistance cleaving
-            if (weapon.ResistanceModifierType != null && weapon.ResistanceModifierType == damageType)
+            // handle quest weapon fixed resistance cleaving. And-ing types to handle Slashing/Piercing
+            if (weapon.ResistanceModifierType.HasValue && (weapon.ResistanceModifierType.Value & damageType) > 0)
             {
                 if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                     resistMod = 1.0f + (float)(weapon.ResistanceModifier ?? defaultModifier);       // 1.0 in the data, equivalent to a level 5 vuln
