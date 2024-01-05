@@ -1076,6 +1076,23 @@ namespace ACE.Server.WorldObjects
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
             {
+                if (!worldObject.ItemWorkmanship.HasValue)
+                {
+                    //Add bonded to quest items
+                    if (!worldObject.Bonded.HasValue || worldObject.Bonded == BondedStatus.Normal)
+                    {
+                        if (worldObject.ItemType == ItemType.Clothing ||
+                            worldObject.ItemType == ItemType.Armor ||
+                            worldObject.ItemType == ItemType.Caster ||
+                            worldObject.ItemType == ItemType.Jewelry ||
+                            worldObject.ItemType == ItemType.MissileWeapon ||
+                            worldObject.ItemType == ItemType.MeleeWeapon)
+                        {
+                            worldObject.Bonded = BondedStatus.Bonded;   
+                        }
+                    }
+                }
+                
                 // Add default ExtraSpellsMaxOverride value to quest items.
                 if (worldObject.ExtraSpellsMaxOverride == null && worldObject.ItemWorkmanship == null && worldObject.ResistMagic == null && (worldObject.ItemType & (ItemType.WeaponOrCaster | ItemType.Vestements | ItemType.Jewelry)) != 0 && worldObject.WeenieType != WeenieType.Missile && worldObject.WeenieType != WeenieType.Ammunition)
                 {
