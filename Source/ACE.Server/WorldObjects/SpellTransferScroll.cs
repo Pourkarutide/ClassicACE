@@ -84,7 +84,7 @@ namespace ACE.Server.WorldObjects
 
             if (!RecipeManager.VerifyUse(player, source, target, true))
             {
-                if(!confirmed)
+                if (!confirmed)
                     player.SendUseDoneEvent(WeenieError.YouDoNotPassCraftingRequirements);
                 else
                     player.SendTransientError("Either you or one of the items involved does not pass the requirements for this craft interaction.");
@@ -201,9 +201,9 @@ namespace ACE.Server.WorldObjects
                     foreach (var spellId in allSpells)
                     {
                         Spell spell = new Spell(spellId);
-                        if(spell.IsCantrip)
+                        if (spell.IsCantrip)
                         {
-                            if(spell.Formula.Level == 1 && (source.Level == 3 || source.Level == 10)) // Minor Cantrips
+                            if (spell.Formula.Level == 1 && (source.Level == 3 || source.Level == 10)) // Minor Cantrips
                                 spells.Add(spellId);
                             else if (spell.Formula.Level > 1 && (source.Level == 6 || source.Level == 11)) // Other Cantrips
                                 spells.Add(spellId);
@@ -223,12 +223,6 @@ namespace ACE.Server.WorldObjects
                     return;
                 }
 
-                var chance = Math.Clamp(0.50 + ((spellCount - 1) * 0.1), 0.50, 1.0);
-
-                if (target.ItemType == ItemType.Gem && target.ItemUseable == Usable.No)
-                    chance = 1; // Non-useable gems have 100% extraction chance.
-
-                var percent = chance * 100;
                 var showDialog = player.GetCharacterOption(CharacterOption.UseCraftingChanceOfSuccessDialog);
                 if (showDialog && !confirmed)
                 {
@@ -639,7 +633,7 @@ namespace ACE.Server.WorldObjects
                     data.Target.ItemMaxMana = newMaxMana;
                     data.Target.ItemCurMana = Math.Clamp(data.Target.ItemCurMana ?? 0, 0, data.Target.ItemMaxMana ?? 0);
                     data.Target.ManaRate = newManaRate;
-                }                    
+                }
 
                 data.Target.LongDesc = LootGenerationFactory.GetLongDesc(data.Target);
             }
@@ -687,3 +681,4 @@ namespace ACE.Server.WorldObjects
         }
     }
 }
+
