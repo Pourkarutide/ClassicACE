@@ -174,6 +174,11 @@ namespace ACE.Server.Factories
                 RollSlayer(profile, wo, counter);
             }
 
+            // Match melee weapon damage type to rend type. Normally handled with mutate scripts
+            // but helpful here for admin commands, and cheap insurance.
+            if (wo.ResistanceModifierType.HasValue && wo.ResistanceModifierType != DamageType.Undef)
+                wo.W_DamageType = wo.ResistanceModifierType.Value;
+
             // material type
             var materialType = GetMaterialType(wo, profile.Tier);
             if (materialType > 0)

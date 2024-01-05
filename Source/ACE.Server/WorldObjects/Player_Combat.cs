@@ -1310,11 +1310,13 @@ namespace ACE.Server.WorldObjects
                 return DamageType.Bludgeon;
             }
 
-            // return multiple damage types
-            if (multiple || !damageType.IsMultiDamage())
+            // Return multiple damage types where specifically requested.
+            // Otherwise, the job of this function is to return the damage type applicable now.
+            // There are no known consumers of the multiple==true scenario
+            if (multiple)
                 return damageType;
 
-            // get single damage type
+            // get single damage type from slash/pierce
             if (damageType == (DamageType.Pierce | DamageType.Slash))
             {
                 if ((AttackType & AttackType.Punches) != 0)
