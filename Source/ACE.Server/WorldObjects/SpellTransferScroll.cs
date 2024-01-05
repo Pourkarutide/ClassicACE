@@ -344,7 +344,7 @@ namespace ACE.Server.WorldObjects
                         target.LongDesc = LootGenerationFactory.GetLongDesc(target);
                     }
 
-                    if (spellToReplace == null && (isProc && target.ProcSpell == null))
+                    if (spellToReplace == null || (isProc && target.ProcSpell == null))
                         target.ExtraSpellsCount = (target.ExtraSpellsCount ?? 0) + 1;
 
                     var newRollDiff = LootGenerationFactory.RollEnchantmentDifficulty(enchantments);
