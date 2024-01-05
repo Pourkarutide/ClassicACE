@@ -1145,7 +1145,7 @@ namespace ACE.Server.WorldObjects
                     && item.WeenieClassId != (int)Factories.Enum.WeenieClassName.ringHardcore
                     && item.WeenieClassId != (uint)Factories.Enum.WeenieClassName.explorationContract)
                 {
-                    if(item.CurrentWieldedLocation != null || item.Container != this)
+                    if(item.CurrentWieldedLocation != null || item.Container != this && item.Container.Bonded != BondedStatus.Bonded)
                         HandleActionPutItemInContainer(item.Guid.Full, Guid.Full);
                     continue;
                 }
