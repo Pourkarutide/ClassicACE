@@ -1082,12 +1082,23 @@ namespace ACE.Server.WorldObjects
                 // Add default ExtraSpellsMaxOverride value to quest items.
                 if (worldObject.ExtraSpellsMaxOverride == null && worldObject.ItemWorkmanship == null && worldObject.ResistMagic == null && (worldObject.ItemType & (ItemType.WeaponOrCaster | ItemType.Vestements | ItemType.Jewelry)) != 0 && worldObject.WeenieType != WeenieType.Missile && worldObject.WeenieType != WeenieType.Ammunition)
                 {
-                    worldObject.ExtraSpellsMaxOverride = 2;
-                    if(worldObject.IsClothArmor)
-                        worldObject.ExtraSpellsMaxOverride *= 2;
+                    bool isRobe = false;
 
-                    worldObject.BaseItemDifficultyOverride = worldObject.ItemDifficulty;
-                    worldObject.BaseSpellcraftOverride = worldObject.ItemSpellcraft;
+                    if ((worldObject.ItemType == ItemType.Clothing || worldObject.ItemType == ItemType.Armor) && worldObject.ClothingPriority.HasValue)
+                    {
+                        var clothingPriority = worldObject.ClothingPriority.Value;
+                        if (clothingPriority.HasFlag(CoverageMask.OuterwearChest) && clothingPriority.HasFlag(CoverageMask.OuterwearLowerArms) && clothingPriority.HasFlag(CoverageMask.OuterwearLowerLegs))
+                            isRobe = true;
+                    }
+
+                    // Quest robes get 6
+                    if (isRobe)
+                        worldObject.ExtraSpellsMaxOverride = 6;
+                    else
+                        worldObject.ExtraSpellsMaxOverride = 2;
+
+                    worldObject.BaseItemDifficultyOverride = worldObject.ItemDifficulty ?? 0;
+                    worldObject.BaseSpellcraftOverride = worldObject.ItemSpellcraft ?? 0;
                 }
 
                 // The following code makes sure the item fits into CustomDM's ruleset as not all database entries have been updated.
