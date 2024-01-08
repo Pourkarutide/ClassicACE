@@ -168,6 +168,12 @@ namespace ACE.Server.Factories
                     tweakedDeathTreasure.MagicItemChance = (int)(tweakedDeathTreasure.MagicItemChance * magicItemLootChance);
                     tweakedDeathTreasure.MundaneItemChance = (int)(tweakedDeathTreasure.MundaneItemChance * mundaneItemLootChance);
 
+                    if (creature.IsElite)
+                    {
+                        tweakedDeathTreasure.LootQualityMod = (float)PropertyManager.GetDouble("elite_mob_loot_quality").Item;
+                        tweakedDeathTreasure.ItemMinAmount = (int)PropertyManager.GetLong("elite_mob_loot_count").Item;
+                        tweakedDeathTreasure.ItemMaxAmount = (int)PropertyManager.GetLong("elite_mob_loot_count").Item;
+                    }
                     return tweakedDeathTreasure;
                 }
 
