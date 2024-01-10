@@ -147,7 +147,8 @@ namespace ACE.Server.WorldObjects
             {
                 // Current target is already trying to taunt and is visible, so he has priority over everyone else and we also skip the activation chance step.
 
-                Entity.CreatureSkill skill = target.GetCreatureSkill(Skill.Deception);
+                //Balance change: Effective Taunt skill gets +10% bonus
+                uint effectiveTauntSkill = (uint)(target.GetCreatureSkill(Skill.Deception).Current * 1.1f);
 
                 if (target.Mana.Current < manaCost)
                 {
@@ -157,7 +158,7 @@ namespace ACE.Server.WorldObjects
                     if (entry != default(TargetDistance))
                         targetDistances.Remove(entry);
                 }
-                else if (target.attacksReceivedPerSecond >= Math.Ceiling(skill.Current / 50.0f))
+                else if (target.attacksReceivedPerSecond >= Math.Ceiling(effectiveTauntSkill / 50.0f))
                 {
                     // We're too busy to keep this taunt going, remove from targetDistances to incentivize the monster to switch targets.
                     target.Session.Network.EnqueueSend(new GameMessageSystemChat($"You're too busy to keep taunting {Name}!", ChatMessageType.CombatSelf));
@@ -168,7 +169,7 @@ namespace ACE.Server.WorldObjects
                 else
                 {
                     var defenseSkill = GetCreatureSkill(Skill.AssessCreature);
-                    var avoidChance = 1.0f - SkillCheck.GetSkillChance(skill.Current, defenseSkill.Current);
+                    var avoidChance = 1.0f - SkillCheck.GetSkillChance(effectiveTauntSkill, defenseSkill.Current);
 
                     if (avoidChance > ThreadSafeRandom.Next(0.0f, 1.0f))
                     {
@@ -199,17 +200,19 @@ namespace ACE.Server.WorldObjects
                     if (!IsDirectVisible(target))
                         continue;
 
-                    Entity.CreatureSkill skill = target.GetCreatureSkill(Skill.Deception);
+                    //Balance change: Effective Taunt skill gets +10% bonus
+                    uint effectiveTauntSkill = (uint)(target.GetCreatureSkill(Skill.Deception).Current * 1.1f);
+                    var advancementClass = target.GetCreatureSkill(Skill.Deception).AdvancementClass;
 
                     var activationChance = ThreadSafeRandom.Next(0.0f, 1.0f);
-                    if (skill.AdvancementClass == SkillAdvancementClass.Specialized && activationChance > 0.5)
+                    if (advancementClass == SkillAdvancementClass.Specialized && activationChance > 0.5)
                         continue;
-                    else if (skill.AdvancementClass == SkillAdvancementClass.Trained && activationChance > 0.25)
+                    else if (advancementClass == SkillAdvancementClass.Trained && activationChance > 0.25)
                         continue;
                     else if (activationChance > 0.10)
                         continue;
 
-                    if (target.attacksReceivedPerSecond >= skill.Current / 50.0f)
+                    if (target.attacksReceivedPerSecond >= effectiveTauntSkill / 50.0f)
                     {
                         target.Session.Network.EnqueueSend(new GameMessageSystemChat($"You're too busy with your current targets to attempt to taunt any others!", ChatMessageType.CombatSelf));
                         continue;
@@ -218,7 +221,7 @@ namespace ACE.Server.WorldObjects
                     target.UpdateVitalDelta(target.Mana, -manaCost); // We're past the activation stage so no matter if we succeed or not we consume the mana.
 
                     Entity.CreatureSkill defenseSkill = GetCreatureSkill(Skill.AssessCreature);
-                    var avoidChance = 1.0f - SkillCheck.GetSkillChance(skill.Current, defenseSkill.Current);
+                    var avoidChance = 1.0f - SkillCheck.GetSkillChance(effectiveTauntSkill, defenseSkill.Current);
 
                     if (avoidChance > ThreadSafeRandom.Next(0.0f, 1.0f))
                     {
@@ -229,7 +232,7 @@ namespace ACE.Server.WorldObjects
                     {
                         target.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your taunt successfully attracts the attention of {Name}!", ChatMessageType.CombatSelf));
 
-                        Proficiency.OnSuccessUse(target, skill, defenseSkill.Current);
+                        Proficiency.OnSuccessUse(target, target.GetCreatureSkill(Skill.Deception), defenseSkill.Current);
                         return target;
                     }
                 }
