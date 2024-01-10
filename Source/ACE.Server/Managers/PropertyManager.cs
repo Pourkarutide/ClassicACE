@@ -776,7 +776,8 @@ namespace ACE.Server.Managers
                 ("dekaru_dagger_ms_animation_speed_dualwield", new Property<double>(1.8, "Multiplier for dagger attack animation speed, if dual wielding.")),
                 ("dekaru_dagger_ms_animation_speed_shielded", new Property<double>(1.8, "Multiplier for dagger attack animation speed, if using a shield.")),
 
-
+                // Thrown Weapon Attack Speed Modifier
+                ("dekaru_tw_animation_speed", new Property<double>(1.0, "Multiplier for thrown weapon attack animation speed")),
 
                 // PvP Damage modifiers
                 //
