@@ -3,6 +3,7 @@ using System.Numerics;
 
 using ACE.Entity.Enum;
 using ACE.Server.Entity.Actions;
+using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Physics.Animation;
@@ -264,7 +265,15 @@ namespace ACE.Server.WorldObjects
             }
 
             // reload animation
-            var animSpeed = GetAnimSpeed();
+            var baseSpeed = GetAnimSpeed();
+            float animSpeedMod = 1.0f;
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                if (weapon?.WeaponSkill == Skill.ThrownWeapon)
+                    animSpeedMod = (float)PropertyManager.GetDouble("dekaru_tw_animation_speed").Item;
+            }
+            var animSpeed = baseSpeed * animSpeedMod;
+
             var reloadTime = EnqueueMotionPersist(actionChain, stance, MotionCommand.Reload, animSpeed);
 
             // reset for next projectile
@@ -278,7 +287,7 @@ namespace ACE.Server.WorldObjects
                     EnqueueBroadcast(new GameMessageParentEvent(this, ammo, ACE.Entity.Enum.ParentLocation.RightHand, ACE.Entity.Enum.Placement.RightHandCombat));
             }); 
 
-            actionChain.AddDelaySeconds(linkTime);
+            actionChain.AddDelaySeconds(linkTime * (1f / Math.Max(0.1, animSpeedMod)));
 
             if (ammo.MaterialType != null && !ammo.UnlimitedUse && ammo.IsThrownWeapon && ammo.StackSize <= 2)
             {
