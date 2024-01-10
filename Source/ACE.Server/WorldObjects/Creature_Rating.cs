@@ -229,7 +229,7 @@ namespace ACE.Server.WorldObjects
 
         public int GetDamageResistRating(CombatType? combatType = null, bool directDamage = true)
         {
-            if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration)
                 return 0;
 
             // get from base properties (monsters)?
@@ -261,7 +261,7 @@ namespace ACE.Server.WorldObjects
 
         public float GetDamageResistRatingMod(CombatType? combatType = null, bool directDamage = true)
         {
-            if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration)
                 return 1;
 
             var damageResistRating = GetDamageResistRating(combatType, directDamage);
@@ -302,7 +302,7 @@ namespace ACE.Server.WorldObjects
         {
             // crit chance
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration)
                 return 0;
 
             // get from base properties (monsters)?
@@ -325,7 +325,7 @@ namespace ACE.Server.WorldObjects
 
         public int GetCritDamageRating()
         {
-            if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration)
                 return 0;
 
             // get from base properties (monsters)?

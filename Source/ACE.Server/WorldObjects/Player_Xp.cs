@@ -1124,6 +1124,135 @@ namespace ACE.Server.WorldObjects
             EnqueueBroadcast(new GameMessagePublicUpdatePropertyInt(this, PropertyInt.PlayerKillerStatus, (int)PlayerKillerStatus), new GameMessagePublicUpdatePropertyInt(this, PropertyInt.PkLevelModifier, PkLevelModifier));
         }
 
+        HashSet<uint> BondedItemBlacklist = new HashSet<uint>()
+        {
+            23045, // Coordination To Endurance Gem
+            23046, // Coordination To Focus Gem
+            23047, // Coordination To Quickness Gem
+            23048, // Coordination To Self Gem
+            23049, // Coordination To Strength Gem
+            23050, // Endurance To Coordination Gem
+            23051, // Endurance To Focus Gem
+            23052, // Endurance To Quickness Gem
+            23053, // Endurance To Self Gem
+            23054, // Endurance To Strength Gem
+            23055, // Focus To Coordination Gem
+            23056, // Focus To Endurance Gem
+            23057, // Focus To Quickness Gem
+            23058, // Focus To Self Gem
+            23059, // Focus To Strength Gem
+            23060, // Quickness To Coordination Gem
+            23061, // Quickness To Endurance Gem
+            23062, // Quickness To Focus Gem
+            23063, // Quickness To Self Gem
+            23064, // Quickness To Strength Gem
+            23065, // Self To Coordination Gem
+            23066, // Self To Endurance Gem
+            23067, // Self To Focus Gem
+            23068, // Self To Quickness Gem
+            23069, // Self To Strength Gem
+            23070, // Strength To Coordination Gem
+            23071, // Strength To Endurance Gem
+            23072, // Strength To Focus Gem
+            23073, // Strength To Quickness Gem
+            23074, // Strength To Self Gem
+            22937, // Gem of Lowering Coordination
+            22938, // Gem of Lowering Endurance
+            22939, // Gem of Lowering Focus
+            22940, // Gem of Lowering Quickness
+            22941, // Gem of Lowering Self
+            22942, // Gem of Lowering Strength
+            22943, // Gem of Raising Coordination
+            22944, // Gem of Raising Endurance
+            22945, // Gem of Raising Focus
+            22946, // Gem of Raising Quickness
+            22947, // Gem of Raising Self
+            22948, // Gem of Raising Strength
+            50180, // Exploration Contract
+            50189, //Ring of Impermanency
+            22315, // Alchemy Gem of Forgetfulness
+            22316, // Arcane Lore Gem of Forgetfulness
+            22317, // Armor Tinkering Gem of Forgetfulness
+            22318, // Axe and Mace Gem of Forgetfulness
+            22319, // Bow and Crossbow Gem of Forgetfulness
+            22320, // Cooking Gem of Forgetfulness
+            22321, // Assess Gem of Forgetfulness
+            22322, // Creature Enchantment Gem of Forgetfulness
+            22323, // Crossbow Gem of Forgetfulness
+            22324, // Dagger Gem of Forgetfulness
+            22325, // Deception Gem of Forgetfulness
+            22326, // Fletching Gem of Forgetfulness
+            22327, // Healing Gem of Forgetfulness
+            22328, // Item Tinkering Gem of Forgetfulness
+            22329, // Item Enchantment Gem of Forgetfulness
+            22330, // Jump Gem of Forgetfulness
+            22331, // Leadership Gem of Forgetfulness
+            22332, // Life Magic Gem of Forgetfulness
+            22333, // Lockpick Gem of Forgetfulness
+            22334, // Loyalty Gem of Forgetfulness
+            22335, // Mace Gem of Forgetfulness
+            22336, // Magic Defense Gem of Forgetfulness
+            22337, // Magic Item Tinkering Gem of Forgetfulness
+            22338, // Mana Conversion Gem of Forgetfulness
+            22339, // Melee Defense Gem of Forgetfulness
+            22340, // Missile Defense Gem of Forgetfulness
+            22341, // Personal Appraisal Gem of Forgetfulness
+            22342, // Run Gem of Forgetfulness
+            22343, // Spear and Staff Gem of Forgetfulness
+            22344, // Staff Gem of Forgetfulness
+            22345, // Sword Gem of Forgetfulness
+            22346, // Thrown Weapon Gem of Forgetfulness
+            22347, // Unarmed Combat Gem of Forgetfulness
+            22348, // War Magic Gem of Forgetfulness
+            22349, // Weapon Tinkering Gem of Forgetfulness
+            22350, // Alchemy Gem of Enlightenment
+            22351, // Arcane Lore Gem of Enlightenment
+            22352, // Armor Tinkering Gem of Enlightenment
+            22353, // Axe and Mace Gem of Enlightenment
+            22354, // Bow and Crossbow Gem of Enlightenment
+            22355, // Cooking Gem of Enlightenment
+            22356, // Assess Gem of Enlightenment
+            22357, // Creature Enchantment Gem of Enlightenment
+            22358, // Crossbow Gem of Enlightenment
+            22359, // Dagger Gem of Enlightenment
+            22360, // Deception Gem of Enlightenment
+            22361, // Fletching Gem of Enlightenment
+            22362, // Healing Gem of Enlightenment
+            22363, // Item Tinkering Gem of Enlightenment
+            22364, // Item Enchantment Gem of Enlightenment
+            22365, // Jump Gem of Enlightenment
+            22366, // Leadership Gem of Enlightenment
+            22367, // Life Magic Gem of Enlightenment
+            22368, // Lockpick Gem of Enlightenment
+            22369, // Loyalty Gem of Enlightenment
+            22370, // Mace Gem of Enlightenment
+            22371, // Magic Defense Gem of Enlightenment
+            22372, // Magic Item Tinkering Gem of Enlightenment
+            22373, // Mana Conversion Gem of Enlightenment
+            22374, // Melee Defense Gem of Enlightenment
+            22375, // Missile Defense Gem of Enlightenment
+            22376, // Personal Appraisal Gem of Enlightenment
+            22377, // Run Gem of Enlightenment
+            22378, // Spear and Staff Gem of Enlightenment
+            22379, // Staff Gem of Enlightenment
+            22380, // Sword Gem of Enlightenment
+            22381, // Thrown Weapon Gem of Enlightenment
+            22382, // Unarmed Combat Gem of Enlightenment
+            22383, // War Magic Gem of Enlightenment
+            22384, // Weapon Tinkering Gem of Enlightenment
+            28926, // Salvaging Gem of Forgetfulness
+            45378, // Shield Gem of Forgetfulness
+            45383, // Shield Gem of Enlightenment
+            50095, // Armor Gem of Enlightenment
+            50096, // Appraise Gem of Enlightenment
+            50097, // Awareness Gem of Enlightenment
+            50098, // Sneaking Gem of Enlightenment
+            50099, // Appraise Gem of Forgetfulness
+            50100, // Armor Gem of Forgetfulness
+            50101, // Awareness Gem of Forgetfulness
+            50102 // Sneaking Gem of Forgetfulness
+        };
+
         public void RevertToBrandNewCharacterEquipment(bool keepHousing, bool keepBondedEquipment)
         {
             // Destroy all items
@@ -1142,8 +1271,7 @@ namespace ACE.Server.WorldObjects
 
                 if (keepBondedEquipment
                     && (keepNonEquippable || (item.ValidLocations ?? EquipMask.None) != EquipMask.None) && item.Bonded == BondedStatus.Bonded
-                    && item.WeenieClassId != (int)Factories.Enum.WeenieClassName.ringHardcore
-                    && item.WeenieClassId != (uint)Factories.Enum.WeenieClassName.explorationContract)
+                    && !BondedItemBlacklist.Contains(item.WeenieClassId))
                 {
                     if(item.CurrentWieldedLocation != null || item.Container != this && item.Container.Bonded != BondedStatus.Bonded)
                         HandleActionPutItemInContainer(item.Guid.Full, Guid.Full);
