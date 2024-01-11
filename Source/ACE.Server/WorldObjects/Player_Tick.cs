@@ -969,7 +969,7 @@ namespace ACE.Server.WorldObjects
                         .FindAllByGameplayMode(GameplayMode)
                         .Where(x => x.Account.AccessLevel == 0)
                         .OrderByDescending(x => x.GetProperty(PropertyInt64.TotalExperience) ?? 0)
-                        .Take(10)
+                        .Take(15)
                         .Where(x => x is Player) // Filter by online
                         .Cast<Player>()
                         .ToList();
