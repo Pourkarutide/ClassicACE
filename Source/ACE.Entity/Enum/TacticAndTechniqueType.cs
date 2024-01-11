@@ -11,5 +11,6 @@ namespace ACE.Entity.Enum
         Sneak,
         PowerShot,
         Misdirect,
+        MasteryAxe,
     }
 }
