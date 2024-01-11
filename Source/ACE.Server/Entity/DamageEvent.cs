@@ -409,6 +409,13 @@ namespace ACE.Server.Entity
                 // select random body part @ current attack height
                 GetBodyPart(AttackHeight);
 
+
+                if (IsCritical && attackerTechniqueId == TacticAndTechniqueType.MasteryAxe && Weapon.WeaponSkill == Skill.Axe && (BodyPart == BodyPart.Hand || BodyPart == BodyPart.Head || BodyPart == BodyPart.Foot))
+                {
+                    CriticalDamageMod *= 1.5f;
+                    DamageBeforeMitigation *= 1.5f;
+                }
+
                 // get player armor pieces
                 Armor = attacker.GetArmorLayers(playerDefender, BodyPart);
 
@@ -424,6 +431,27 @@ namespace ACE.Server.Entity
                 GetBodyPart(Defender, Quadrant);
                 if (Evaded)
                     return 0.0f;
+
+                if (IsCritical && attackerTechniqueId == TacticAndTechniqueType.MasteryAxe && Weapon.WeaponSkill == Skill.Axe)
+                {
+                    // No creature body parts, so approximate the same extremity chance as if it were a human
+                    // High = 1/4
+                    // Med = 1/6
+                    // Low = 1/2
+                    float axeMasteryProcChance = 0f;
+                    if (AttackHeight == AttackHeight.Low)
+                        axeMasteryProcChance = 0.5f;
+                    else if (AttackHeight == AttackHeight.Medium)
+                        axeMasteryProcChance = 0.167f;
+                    else if (AttackHeight == AttackHeight.High)
+                        axeMasteryProcChance = 0.25f;
+
+                    if (ThreadSafeRandom.Next(0f, 1f) < axeMasteryProcChance)
+                    {
+                        CriticalDamageMod *= 1.5f;
+                        DamageBeforeMitigation *= 1.5f;
+                    }
+                }
 
                 Armor = CreaturePart.GetArmorLayers(PropertiesBodyPart.Key);
 
