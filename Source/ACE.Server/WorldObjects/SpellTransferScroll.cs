@@ -344,8 +344,14 @@ namespace ACE.Server.WorldObjects
                         target.LongDesc = LootGenerationFactory.GetLongDesc(target);
                     }
 
-                    if (spellToReplace == null || (isProc && target.ProcSpell == null))
+                    if (isProc)
+                    {
+                        // Don't use a spell slot for Cast on Strike
+                    }
+                    else if (spellToReplace == null)
+                    {
                         target.ExtraSpellsCount = (target.ExtraSpellsCount ?? 0) + 1;
+                    }
 
                     var newRollDiff = LootGenerationFactory.RollEnchantmentDifficulty(enchantments);
                     newRollDiff += LootGenerationFactory.RollCantripDifficulty(cantrips);
