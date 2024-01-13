@@ -363,6 +363,17 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            if (xpType == XpType.Fellowship && PropertyManager.GetBool("relive_bonus_applies_to_received_fellow_xp").Item)
+            {
+                if (Level < (MaxReachedLevel ?? 1))
+                {
+                    var extraXP = (long)(amount * (float)PropertyManager.GetDouble("relive_bonus_xp").Item);
+                    extraNotSharedAmount += extraXP;
+
+                    xpMessage = $"Relive Bonus: +{extraXP:N0}xp {xpMessage}";
+                }
+            }
+
             // Make sure UpdateXpAndLevel is done on this players thread
             EnqueueAction(new ActionEventDelegate(() => UpdateXpAndLevel(amount + extraNotSharedAmount, xpType, xpMessage, sourceString)));
 
