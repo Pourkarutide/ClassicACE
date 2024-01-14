@@ -928,23 +928,6 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
-            if (IsElite)
-            {
-                // 3 stacks of 1k-50k pyreals
-                for (int i = 0; i < 3; i++)
-                {
-                    var wo = WorldObjectFactory.CreateNewWorldObject((uint)Factories.Enum.WeenieClassName.coinstack);
-                    wo.StackSize = ThreadSafeRandom.Next(1000, 50000);
-
-                    if (wo != null)
-                    {
-                        if (corpse != null)
-                            corpse.TryAddToInventory(wo);
-                        else
-                            droppedItems.Add(wo);
-                    }
-                }
-            }
             return droppedItems;
         }
         

@@ -713,9 +713,7 @@ namespace ACE.Server.Managers
                 ("quest_mindelta_rate_shortest", new Property<long>(72000, "Quest min deltas below this won't be affected by quest_mindelta_rate, additionally modified min deltas that would fall under this value will be set to this value instead.")),
                 ("dekaru_imbue_magic_defense_per_imbue", new Property<long>(3, "Number of magic defense points to increase per magic defense imbue on an item.")),
                 ("dekaru_imbue_melee_defense_per_imbue", new Property<long>(3, "Number of melee defense points to increase per magic defense imbue on an item.")),
-                ("dekaru_imbue_missile_defense_per_imbue", new Property<long>(3, "Number of missile defense points to increase per magic defense imbue on an item.")),
-                ("elite_mob_loot_count", new Property<long>(20, "Number of random items on an elite corpse."))
-                
+                ("dekaru_imbue_missile_defense_per_imbue", new Property<long>(3, "Number of missile defense points to increase per magic defense imbue on an item."))
 
                 );
 
@@ -1044,8 +1042,7 @@ namespace ACE.Server.Managers
                 ("relive_bonus_xp", new Property<double>(1.0, "Extra xp earned while reliving levels after a death that resulted in lost levels. 1.0 means 100% more xp.")),
 
                 ("elite_mob_spawn_rate", new Property<double>(0.005, "Probability of a creature spawning as an elite mob. 1.0 means 100%")),
-                ("elite_mob_loot_quality", new Property<double>(0.5, "Loot quality mod of elite mob (For reference, normal is 1.0, chests are 1.2, Awareness chests are 1.4")),
-                
+
                 ("quest_mutation_tier_1_major_chance", new Property<double>(0.10, "The % chance a tier 1 quest item cantrip mutation will be a major cantrip (otherwise will be a minor cantrip).")),
                 ("quest_mutation_tier_2_major_chance", new Property<double>(0.25, "The % chance a tier 2 quest item cantrip mutation will be a major cantrip (otherwise will be a minor cantrip).")),
                 ("quest_mutation_tier_3_major_chance", new Property<double>(0.90, "The % chance a tier 3 quest item cantrip mutation will be a major cantrip (otherwise will be a minor cantrip)."))
