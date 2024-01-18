@@ -105,7 +105,7 @@ namespace ACE.Server.Factories
             if (chance > ThreadSafeRandom.Next(0.0f, 1.0f))
             {
                 wo.SlayerCreatureType = SlayerTypeChance.Roll(treasureDeath);
-                wo.SlayerDamageBonus = 1.5f;
+                wo.SlayerDamageBonus = 1.3f;
                 wo.IconOverlayId = 0x06005EC0;
 
                 if (counter >= 2)

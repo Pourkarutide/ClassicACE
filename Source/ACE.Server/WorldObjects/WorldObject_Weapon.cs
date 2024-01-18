@@ -592,8 +592,14 @@ namespace ACE.Server.WorldObjects
         {
             if (weapon != null && weapon.SlayerCreatureType != null && weapon.SlayerDamageBonus != null && target != null)
             {
+                float slayerMod = (float)weapon.SlayerDamageBonus;
+
+                //Slayer Cap for Lootgen = 1.3x
+                if (weapon.Workmanship.HasValue && slayerMod > 1.3f)
+                    slayerMod = 1.3f;
+
                 if (weapon.SlayerCreatureType == target.CreatureType)
-                    return (float)weapon.SlayerDamageBonus; // TODO: scale with base weapon skill?
+                    return slayerMod; // TODO: scale with base weapon skill?
                 else
                 {
                     var creatureFamily = target.CreatureType;
@@ -642,7 +648,7 @@ namespace ACE.Server.WorldObjects
                     }
 
                     if (weapon.SlayerCreatureType == creatureFamily)
-                        return (float)weapon.SlayerDamageBonus; // TODO: scale with base weapon skill?
+                        return slayerMod; // TODO: scale with base weapon skill?
                 }
             }
 
