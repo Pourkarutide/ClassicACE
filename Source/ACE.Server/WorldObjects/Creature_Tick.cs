@@ -305,9 +305,9 @@ namespace ACE.Server.WorldObjects
                         // set life magic if non
                         var lifeMagic = mirrormob.GetCreatureSkill(Skill.LifeMagic);
                         if (lifeMagic.InitLevel > 100 && lifeMagic.InitLevel < 200)
-                            lifeMagic.InitLevel += 300;
+                            lifeMagic.InitLevel += 30;
                         else
-                            lifeMagic.InitLevel += 500;
+                            lifeMagic.InitLevel += 50;
                     }
 
                     // handles the duration of each mirrored mob. lasting 5 seconds.
@@ -602,7 +602,7 @@ namespace ACE.Server.WorldObjects
                 if (NonProjectileMagicImmune)
                     HealthRate = 50;
                 else
-                    HealthRate = 1000;
+                    HealthRate = 100;
 
                 ManaRate = 1000;
                 StaminaRate = 1000;
@@ -610,8 +610,8 @@ namespace ACE.Server.WorldObjects
                 // Allow Unarmed to ignore banes.
                 //IgnoreMagicArmor = true;
 
-                // scale all stats randomly. MAX 200 - STR 500
-                var strRNG = ThreadSafeRandom.Next(70, 500);
+                // scale all stats randomly. MAX 200
+                var strRNG = ThreadSafeRandom.Next(70, 200);
                 var endRNG = ThreadSafeRandom.Next(70, 200);
                 var quickRNG = ThreadSafeRandom.Next(70, 200);
                 var coordRNG = ThreadSafeRandom.Next(70, 200);
@@ -942,25 +942,25 @@ namespace ACE.Server.WorldObjects
                     // set war magic if non
                     var warMagic = GetCreatureSkill(Skill.WarMagic);
                     if (warMagic.InitLevel > 100 && warMagic.InitLevel < 200)
-                        warMagic.InitLevel += 300;
+                        warMagic.InitLevel += 30;
                     else
-                        warMagic.InitLevel += 450;
+                        warMagic.InitLevel += 45;
                 }
                 if (SupportMod)
                 {
                     // set life magic if non
                     var lifeMagic = GetCreatureSkill(Skill.LifeMagic);
                     if (lifeMagic.InitLevel > 100 && lifeMagic.InitLevel < 200)
-                        lifeMagic.InitLevel += 300;
+                        lifeMagic.InitLevel += 30;
                     else
-                        lifeMagic.InitLevel += 500;
+                        lifeMagic.InitLevel += 50;
 
                     // set critter magic if non
                     var creatureMagic = GetCreatureSkill(Skill.CreatureEnchantment);
                     if (creatureMagic.InitLevel > 100 && creatureMagic.InitLevel < 200)
-                        creatureMagic.InitLevel += 300;
+                        creatureMagic.InitLevel += 30;
                     else
-                        creatureMagic.InitLevel += 500;
+                        creatureMagic.InitLevel += 50;
 
                 }
 
@@ -970,12 +970,12 @@ namespace ACE.Server.WorldObjects
                 if (deception.InitLevel > 0)
                     deception.InitLevel = 0;
                 // Xp Scaled by mods. A mob always has at least 2 mods which typically means Double XP.
-                var XP = GetProperty(PropertyInt.XpOverride);
-
                 if (Level > 100)
-                    XpOverride = (XP + 5000000) * ModCount;
+                    XpOverride = 2000000 * ModCount;
                 else
-                    XpOverride = (XP + 150000) * ModCount;
+                    XpOverride = 100000 * ModCount;
+                UseXpOverride = true;
+
                 // multiples hp by 12 for increased soakability. Beefy Mod increases HP by a bit more.
                 var hp = GetCreatureVital(PropertyAttribute2nd.Health);
 
@@ -1030,7 +1030,9 @@ namespace ACE.Server.WorldObjects
                     PlayerManager.BroadcastToAll(new GameMessageSystemChat($"[ELITE] An elite monster with the RARE mod has spawned at {Location.GetMapCoordStr()}", ChatMessageType.Broadcast));               
 
                 SetProperty(PropertyBool.EliteTrigger, false);
-
+                Level += 15;
+                Level *= 2;
+                
                 //sets elite to non aggressive in dungeons and adds the initial IdleTime  for upgrades.
                 if (Location.Indoors)
                 {
