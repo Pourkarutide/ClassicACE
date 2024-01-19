@@ -55,7 +55,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public bool ExistedBeforeAllegianceXpChanges
         {
-            get => GetProperty(PropertyBool.ExistedBeforeAllegianceXpChanges) ?? true;
+            get => true;//GetProperty(PropertyBool.ExistedBeforeAllegianceXpChanges) ?? true;
             set { if (value) RemoveProperty(PropertyBool.ExistedBeforeAllegianceXpChanges); else SetProperty(PropertyBool.ExistedBeforeAllegianceXpChanges, value); }
         }
 

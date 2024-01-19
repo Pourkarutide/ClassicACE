@@ -199,6 +199,8 @@ namespace ACE.Server.Managers
 
         private static void DoPassXP(AllegianceNode vassalNode, ulong amount, bool direct)
         {
+            amount *= 3; // 3x xp 
+
             // http://asheron.wikia.com/wiki/Allegiance_Experience
 
             // Pre-patch:
@@ -316,7 +318,7 @@ namespace ACE.Server.Managers
                 }
 
                 // call recursively
-                DoPassXP(patronNode, passupAmount, false);
+                //DoPassXP(patronNode, passupAmount, false); Disabled 
             }
         }
 
