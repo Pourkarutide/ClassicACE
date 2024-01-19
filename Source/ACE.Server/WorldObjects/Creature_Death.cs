@@ -928,6 +928,27 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
+            if (IsElite)
+            {
+                for (int i = 1; i <= Tier; i++)
+                {
+                    var wo = WorldObjectFactory.CreateNewWorldObject((uint)Factories.Enum.WeenieClassName.coinstack);
+                    wo.StackSize = ThreadSafeRandom.Next(2000, 8000);
+                    if (Tier >= 5)
+                        wo.StackSize *= 2;
+                    if (Tier >= 6)
+                        wo.StackSize *= 2;
+
+                    if (wo != null)
+                    {
+                        if (corpse != null)
+                            corpse.TryAddToInventory(wo);
+                        else
+                            droppedItems.Add(wo);
+                    }
+                }
+            }
+
             return droppedItems;
         }
         
