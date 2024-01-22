@@ -1500,17 +1500,21 @@ namespace ACE.Server.WorldObjects.Managers
                     //Console.WriteLine("DRR: " + Creature.NegativeModToRating(damageResistRatingMod));
                     //Console.WriteLine("NRR: " + Creature.NegativeModToRating(netherResistRatingMod));
 
-                    var pvpMod = 1.0f;
+                    var additionalMod = 1.0f;
                     if (isPvP)
                     {
-                        pvpMod = (float)PropertyManager.GetInterpolatedDouble(sourcePlayer.Level ?? 1, "pvp_dmg_mod_low", "pvp_dmg_mod_high", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
+                        additionalMod = (float)PropertyManager.GetInterpolatedDouble(sourcePlayer.Level ?? 1, "pvp_dmg_mod_low", "pvp_dmg_mod_high", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
                         if (damageType == DamageType.Nether)
-                            pvpMod *= (float)PropertyManager.GetInterpolatedDouble(sourcePlayer.Level ?? 1, "pvp_dmg_mod_low_void_dot", "pvp_dmg_mod_high_void_dot", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
+                            additionalMod *= (float)PropertyManager.GetInterpolatedDouble(sourcePlayer.Level ?? 1, "pvp_dmg_mod_low_void_dot", "pvp_dmg_mod_high_void_dot", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
                         else
-                            pvpMod *= (float)PropertyManager.GetInterpolatedDouble(sourcePlayer.Level ?? 1, "pvp_dmg_mod_low_dot", "pvp_dmg_mod_high_dot", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
+                            additionalMod *= (float)PropertyManager.GetInterpolatedDouble(sourcePlayer.Level ?? 1, "pvp_dmg_mod_low_dot", "pvp_dmg_mod_high_dot", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
+                    }
+                    else
+                    {
+                        additionalMod = (float)PropertyManager.GetDouble("bleed_pve_dmg_mod").Item;
                     }
 
-                    tickAmount *= resistanceMod * damageResistRatingMod * dotResistRatingMod * pvpMod;
+                    tickAmount *= resistanceMod * damageResistRatingMod * dotResistRatingMod * additionalMod;
 
                     enchantment.CachedModifiedStatModValue = tickAmount;
                 }
