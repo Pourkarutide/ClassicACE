@@ -1019,6 +1019,9 @@ namespace ACE.Server.Managers
                 // Dagger bleed mod in pve
                 ("bleed_pve_dmg_mod", new(1.0, "Damage mod for dagger bleed in PvE")),
 
+                // Dagger bleed mod in pve
+                ("bleed_pve_dmg_mod", new Property<double>(1.0, "Damage mod for dagger bleed in PvE")),
+
                 // Thrown Weapon Attack Speed Modifier
                 ("dekaru_tw_animation_speed", new(1.0, "Multiplier for thrown weapon attack animation speed")),
 
