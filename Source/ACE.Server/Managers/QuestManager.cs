@@ -350,6 +350,8 @@ namespace ACE.Server.Managers
                 scaledMinDelta = (uint)(quest.MinDelta * PropertyManager.GetDouble("quest_mindelta_rate", 1).Item);
                 if (scaledMinDelta != quest.MinDelta)
                     scaledMinDelta = Math.Max(scaledMinDelta, (uint)PropertyManager.GetLong("quest_mindelta_rate_shortest", 0).Item);
+
+                scaledMinDelta = Math.Min(scaledMinDelta, (uint)PropertyManager.GetLong("quest_mindelta_rate_longest", 0).Item);
             }
             else
                 scaledMinDelta = quest.MinDelta;
@@ -384,6 +386,7 @@ namespace ACE.Server.Managers
                 if (scaledMinDelta != quest.MinDelta)
                     scaledMinDelta = Math.Max(scaledMinDelta, (uint)PropertyManager.GetLong("quest_mindelta_rate_shortest", 0).Item);
 
+                scaledMinDelta = Math.Min(scaledMinDelta, (uint)PropertyManager.GetLong("quest_mindelta_rate_longest", 0).Item);
                 nextSolveTime = playerQuest.LastTimeCompleted + scaledMinDelta;
             }
             else
