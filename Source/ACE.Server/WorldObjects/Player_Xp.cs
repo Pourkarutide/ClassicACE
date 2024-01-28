@@ -1418,6 +1418,12 @@ namespace ACE.Server.WorldObjects
                     continue;
                 }
 
+                if (item.WeenieType == WeenieType.Gem && item.Container.WeenieClassId == 60001) // Gem pouch
+                    continue;
+
+                if (item.WeenieType == WeenieType.SpellComponent && item.Container.WeenieClassId == 50009) // Spell Component Pouch
+                    continue;
+
                 if (keepBondedEquipment
                     && (keepNonEquippable || (item.ValidLocations ?? EquipMask.None) != EquipMask.None) && item.Bonded == BondedStatus.Bonded
                     && !BondedItemBlacklist.Contains(item.WeenieClassId))
