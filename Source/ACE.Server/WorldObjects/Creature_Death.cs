@@ -278,7 +278,7 @@ namespace ACE.Server.WorldObjects
                 var playerDamagerLevel = playerDamager.Level ?? 1;
                 levelDifference = Math.Abs(victimLevel - playerDamagerLevel);
 
-                if (victimLevel < playerDamagerLevel && victim.Level < 80 && levelDifference > 10)
+                if (!playerDamager.IsOnArenaLandblock && (victimLevel < playerDamagerLevel && victim.Level < 80 && levelDifference > 10))
                 {
                     var penalty = (int)Math.Ceiling((double)levelDifference * damagePercent);
                     playerDamager.InflictVitaePenalty(penalty);

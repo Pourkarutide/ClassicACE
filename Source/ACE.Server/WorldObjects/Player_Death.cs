@@ -29,6 +29,18 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public Dictionary<ObjectGuid, DateTime> LootPermission;
 
+        public static HashSet<ushort> ArenaLandblocks = new HashSet<ushort>() { 0x01A2, 0x02AA, 0x019C };
+
+
+
+        public bool IsOnArenaLandblock
+        {
+            get
+            {
+                return ArenaLandblocks.Contains(Location.LandblockId.Landblock);
+            }
+        }
+
         /// <summary>
         /// Called when a player dies, in conjunction with Die()
         /// </summary>
@@ -38,7 +50,7 @@ namespace ACE.Server.WorldObjects
         {
             var topDamager = DamageHistory.GetTopDamager(false);
 
-            if (!HandlePKDeathBroadcast(lastDamager, topDamager) && IsHardcore)
+            if (!HandlePKDeathBroadcast(lastDamager, topDamager) && IsHardcore && !IsOnArenaLandblock)
             {
                 string sourceString;
                 if (lastDamager == null || lastDamager.Guid == Guid)
@@ -251,7 +263,7 @@ namespace ACE.Server.WorldObjects
                     topDamager = topDamagerOther;
             }
 
-            if (IsHardcore)
+            if (IsHardcore && !IsOnArenaLandblock)
             {
                 var killerName = "misadventure";
                 var killerLevel = 0;
@@ -312,10 +324,10 @@ namespace ACE.Server.WorldObjects
 
             // update vitae
             // players who died in a PKLite fight do not accrue vitae
-            if (!IsPKLiteDeath(topDamager) && !IsHardcore)
+            if (!IsPKLiteDeath(topDamager) && !IsHardcore && !IsOnArenaLandblock)
                 InflictVitaePenalty();
 
-            if (IsPKDeath(topDamager) || AugmentationSpellsRemainPastDeath == 0)
+            if ((IsPKDeath(topDamager) || AugmentationSpellsRemainPastDeath == 0) && !IsOnArenaLandblock)
             {
                 var msgPurgeEnchantments = new GameEventMagicPurgeEnchantments(Session);
                 EnchantmentManager.RemoveAllEnchantments();
@@ -358,10 +370,10 @@ namespace ACE.Server.WorldObjects
 
                 CreateCorpse(topDamager, hadVitae);
 
-                if(IsHardcore)
+                if(IsHardcore && !IsOnArenaLandblock)
                     Session.Network.EnqueueSend(new GameMessageSystemChat("Your corpse will release your soul in 30 seconds.", ChatMessageType.Broadcast));
             });
-            dieChain.AddDelaySeconds(IsHardcore ? 30 : 1);
+            dieChain.AddDelaySeconds((IsHardcore && !IsOnArenaLandblock) ? 30 : 1);
             dieChain.AddAction(this, () =>
             {
                 ThreadSafeTeleportOnDeath(topDamager); // enter portal space
@@ -386,7 +398,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public void ThreadSafeTeleportOnDeath(DamageHistoryInfo topDamager)
         {
-            if (!IsHardcore)
+            if (!IsHardcore || IsOnArenaLandblock)
             {
                 // teleport to sanctuary or best location
                 var newPosition = Sanctuary ?? Instantiation ?? Location;
@@ -689,6 +701,9 @@ namespace ACE.Server.WorldObjects
 
             // if player dies on a No Drop landblock,
             // they don't drop any items
+
+            if (IsOnArenaLandblock)
+                return new List<WorldObject>();
 
             bool onDropAllPyrealsLandblock = corpse.IsOnDropAllPyrealsLandblock;
             bool onDropRecentlyPurchasedLandblock = corpse.IsOnDropRecentlyPurchasedLandblock;
