@@ -15,3 +15,11 @@ VALUES (0x7016C002,  5530, 0x016C022A, 103.406, -14.9637, -0.063, -0.691387, 0, 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
 VALUES (0x7016C003, 23891, 0x016C022A, 97.9898, -5.29271, -0.063, 0.275109, 0, 0, 0.961413, False, '2024-01-30 01:49:41'); /* Falcon Clan Training Camp(23891/portaltumerokwarfalcon) */
 /* @teleloc 0x016C022A [97.989799 -5.292710 -0.063000] 0.275109 0.000000 0.000000 0.961413 */
+
+INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
+VALUES (0x7016C004,  9005, 0x016C01C2, 62.2057, -30.9326, -0.063, -0.686136, 0, 0, -0.727473, False, '2024-02-03 19:38:41'); /* Desert March Portal(9005/portaldesertmarch) */
+/* @teleloc 0x016C01C2 [62.205700 -30.932600 -0.063000] -0.686136 0.000000 0.000000 -0.727473 */
+
+INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
+VALUES (0x7016C005,  2556, 0x016C01C3, 62.09026, -37.69334, -0.063, -0.699719, 0, 0, -0.714418, False, '2024-02-03 19:41:20'); /* Swamp Temple(2556/portalswampdirelands) */
+/* @teleloc 0x016C01C3 [62.090260 -37.693340 -0.063000] -0.699719 0.000000 0.000000 -0.714418 */
