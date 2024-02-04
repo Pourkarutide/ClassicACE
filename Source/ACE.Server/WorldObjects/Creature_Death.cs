@@ -246,6 +246,8 @@ namespace ACE.Server.WorldObjects
                 else if (levelDifference < 10)
                     extraXp = victimLevelXp * ((10d - levelDifference) * 0.1);
                 extraXp *= PropertyManager.GetDouble("hardcore_pk_xp_modifier_pvp_kill").Item;
+                if (killer?.IsOnArenaLandblock == true)
+                    extraXp = 0;
             }
 
             // Divide our extra xp with the multiplier so that it ends up the same no matter the xp modifier.
