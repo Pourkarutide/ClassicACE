@@ -457,21 +457,19 @@ namespace ACE.Server.WorldObjects
                 if (topDamager != null && topDamager.Guid != Guid)
                     wasPvP = topDamager.IsPlayer;
 
-                double levelToRestartAt = Level ?? 1;
+                double xpLossPercent = 0;
 
                 if(GameplayMode == GameplayModes.HardcoreNPK)
-                    levelToRestartAt = levelToRestartAt - (levelToRestartAt * Math.Clamp(PropertyManager.GetDouble("hardcore_npk_death_level_modifier").Item, 0, 1));
+                    xpLossPercent = Math.Clamp(PropertyManager.GetDouble("hardcore_npk_death_xp_loss_percent").Item, 0, 1);
                 else if (wasPvP)
-                    levelToRestartAt = levelToRestartAt - (levelToRestartAt * Math.Clamp(PropertyManager.GetDouble("hardcore_pk_pvp_death_level_modifier").Item, 0, 1));
+                    xpLossPercent = Math.Clamp(PropertyManager.GetDouble("hardcore_pk_pvp_death_xp_loss_percent").Item, 0, 1);
                 else
-                    levelToRestartAt = levelToRestartAt - (levelToRestartAt * Math.Clamp(PropertyManager.GetDouble("hardcore_pk_pve_death_level_modifier").Item, 0, 1));
+                    xpLossPercent = Math.Clamp(PropertyManager.GetDouble("hardcore_pk_pve_death_xp_loss_percent").Item, 0, 1);
 
-                ulong xpToRetain = 0;
-                if (levelToRestartAt > 1)
+                ulong xpToRetain = (ulong)TotalExperience.Value;
+                if (xpLossPercent > 0)
                 {
-                    var betweenLevelsXp = (levelToRestartAt % 1) * GetXPBetweenLevels((int)levelToRestartAt, (int)(levelToRestartAt + 1));
-
-                    xpToRetain =  GetXPBetweenLevels(1, (int)levelToRestartAt) + (ulong)betweenLevelsXp;
+                    xpToRetain = (ulong)(TotalExperience.Value - xpLossPercent * TotalExperience.Value);
                 }
 
                 WorldManager.ThreadSafeTeleport(this, position, new ActionEventDelegate(() =>
