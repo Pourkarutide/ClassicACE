@@ -15,5 +15,6 @@ namespace ACE.Database.Models.World
         public int MaxLevel { get; set; }
         public int CreatureCount { get; set; }
         public DateTime LastModified { get; set; }
+        public bool ExcludedFromPool { get; set; }
     }
 }
