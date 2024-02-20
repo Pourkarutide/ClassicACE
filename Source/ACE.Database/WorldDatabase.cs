@@ -449,7 +449,7 @@ namespace ACE.Database
             }
         }
 
-        public List<ExplorationSite> GetExplorationSitesByLevelRange(int minLevel, int maxLevel, int mustAllowLevel = 0)
+        public List<ExplorationSite> GetExplorationSitesByLevelRange(int minLevel, int maxLevel, int mustAllowLevel = 0, bool include_blacklisted = false)
         {
             if (mustAllowLevel == 0)
             {
@@ -457,7 +457,7 @@ namespace ACE.Database
                 {
                     var results = context.ExplorationSite
                         .AsNoTracking()
-                        .Where(r => r.Level >= minLevel && r.Level <= maxLevel)
+                        .Where(r => r.Level >= minLevel && r.Level <= maxLevel && (!r.ExcludedFromPool || include_blacklisted))
                         .ToList();
 
                     return results;
@@ -469,7 +469,7 @@ namespace ACE.Database
                 {
                     var results = context.ExplorationSite
                         .AsNoTracking()
-                        .Where(r => r.Level >= minLevel && r.Level <= maxLevel && (r.MinLevel == 0 || r.MinLevel <= mustAllowLevel) && (r.MaxLevel == 0 || r.MaxLevel >= mustAllowLevel))
+                        .Where(r => r.Level >= minLevel && r.Level <= maxLevel && (r.MinLevel == 0 || r.MinLevel <= mustAllowLevel) && (r.MaxLevel == 0 || r.MaxLevel >= mustAllowLevel) && (!r.ExcludedFromPool || include_blacklisted))
                         .ToList();
 
                     return results;

@@ -223,6 +223,8 @@ public partial class WorldDbContext : DbContext
             entity.Property(e => e.CreatureCount)
                 .HasColumnName("creature_Count")
                 .HasComment("The amount of creatures at this exploration site");
+
+            entity.Property(e => e.ExcludedFromPool).HasColumnName("excluded_from_pool");
         });
 
         modelBuilder.Entity<LandblockDescription>(entity =>
