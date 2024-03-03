@@ -150,7 +150,7 @@ namespace ACE.Server.WorldObjects
                         globalPKDe += $" The kill occured at {Location.GetMapCoordStr()}";
                 }
                 else
-                {                       
+                {
                     if ((pkPlayer.Level ?? 1) > (Level ?? 1) + 10)
                         pkPlayer.Session.Network.EnqueueSend(new GameMessageSystemChat($"The leaderboards will not take into account this kill as {Name}'s level was too low for you!", ChatMessageType.Broadcast));
                     else
@@ -179,7 +179,9 @@ namespace ACE.Server.WorldObjects
                     pkPlayer.PlayerKillsPkl++;
                 else
                 {
-                    if((pkPlayer.Level ?? 1) > (Level ?? 1) + 10)
+                    if (IsOnArenaLandblock)
+                        pkPlayer.Session.Network.EnqueueSend(new GameMessageSystemChat($"The leaderboards will not take into account this kill as this was on an arena landblock!", ChatMessageType.Broadcast));
+                    else if ((pkPlayer.Level ?? 1) > (Level ?? 1) + 10)
                         pkPlayer.Session.Network.EnqueueSend(new GameMessageSystemChat($"The leaderboards will not take into account this kill as {Name}'s level was too low for you!", ChatMessageType.Broadcast));
                     else
                         pkPlayer.PlayerKillsPkl++;
@@ -196,7 +198,11 @@ namespace ACE.Server.WorldObjects
                     {
                         string locationString = Landblock.GetLocationString(Location.LandblockId.Landblock);
 
-                        var globalPKDe = $"{Name}({Level}) was hardcore killed by {lastDamagerPlayer.Name}({lastDamagerPlayer.Level}){locationString}!";
+                        var globalPKDe = "";
+                        if (IsOnArenaLandblock)
+                            globalPKDe = $"{lastDamagerPlayer.Name}({lastDamagerPlayer.Level}) has defeated {Name}({Level}) in the arena!";
+                        else
+                            globalPKDe = $"{Name}({Level}) was hardcore killed by {lastDamagerPlayer.Name}({lastDamagerPlayer.Level}){locationString}!";
 
                         if (namesList.Count > 1)
                         {
