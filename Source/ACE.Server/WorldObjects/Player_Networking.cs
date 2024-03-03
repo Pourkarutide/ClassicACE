@@ -259,6 +259,9 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public void CheckMultipleAccounts()
         {
+            if (PropertyManager.GetBool("allow_multiple_accounts_hc").Item)
+                return;
+
             if (!Session.Player.IsAdmin)
             {
                 foreach (var p in PlayerManager.GetAllOnline())

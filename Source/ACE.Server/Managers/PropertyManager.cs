@@ -681,6 +681,7 @@ namespace ACE.Server.Managers
                 ("useable_gems", new Property<bool>(true, "Allows loot generated gems to be used to cast their spells")),
                 ("allow_PKs_to_go_NPK", new Property<bool>(true, "Allows PKs to go back to being NPKs by using the appropriate altar")),
                 ("show_discord_chat_ingame", new Property<bool>(false, "Display messages posted to Discord in general chat")),
+                ("allow_multiple_accounts_hc", new Property<bool>(false, "Toggles whether multiple accounts are allowed in Hardcore mode")),
 
                 ("assess_creature_pve_always_succeed", new Property<bool>(false, "enable this to bypass assess creature PvE skill checks (workaround to fix 5 second delay on vtank looting which occurs due to failed assess)")),
                 ("relive_bonus_applies_to_received_fellow_xp", new Property<bool>(true, "Toggles whether incoming xp received from fellowship members benefits from the relive bonus.")),
