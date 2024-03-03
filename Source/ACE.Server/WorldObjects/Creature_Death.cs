@@ -248,6 +248,14 @@ namespace ACE.Server.WorldObjects
                 extraXp *= PropertyManager.GetDouble("hardcore_pk_xp_modifier_pvp_kill").Item;
                 if (killer?.IsOnArenaLandblock == true)
                     extraXp = 0;
+                else if (extraXp > 10000 && killerLevel < (killer.MaxReachedLevel ?? 1))
+                {
+                    var xpWithRelive = extraXp + (long)(extraXp * (float)PropertyManager.GetDouble("relive_bonus_xp").Item);
+                    if (xpWithRelive > 10000 && xpWithRelive > extraXp)
+                    {
+                        extraXp = extraXp * (extraXp / xpWithRelive); // Reduce to what it would have been without relive
+                    }
+                }
             }
 
             // Divide our extra xp with the multiplier so that it ends up the same no matter the xp modifier.
