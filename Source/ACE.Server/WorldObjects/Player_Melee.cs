@@ -399,17 +399,8 @@ namespace ACE.Server.WorldObjects
                         return;
                     }
 
-                    if (weapon == null)
-                    {
-                        // Handle the case where 'weapon' is null
-					    return;
-					}
-
-                    if (creature.Warded && creature.TogglePhys)
-                    {
-                        Session.Network.EnqueueSend(new GameMessageSystemChat($"{creature.Name} resists your attack completely", ChatMessageType.CombatEnemy));
-                        return;
-                    }
+                    // If weapon==null, then this is unarmed combat, which is accounted in DamageTarget
+                    // check for this explicitly in any custom behaviors below.
 
                     //if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && !IsDirectVisible(target))
                     //{
