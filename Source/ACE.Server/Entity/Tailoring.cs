@@ -130,8 +130,11 @@ namespace ACE.Server.Entity
             }
 
             // verify not society armor
-            if (source.IsSocietyArmor || target.IsSocietyArmor)
-                return WeenieError.YouDoNotPassCraftingRequirements;
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+            {
+                if (source.IsSocietyArmor || target.IsSocietyArmor)
+                    return WeenieError.YouDoNotPassCraftingRequirements;
+            }
 
             return WeenieError.None;
         }
