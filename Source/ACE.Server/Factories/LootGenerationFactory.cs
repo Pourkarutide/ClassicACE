@@ -1673,9 +1673,68 @@ namespace ACE.Server.Factories
                     wo.WieldSkillType3 = (int)wo.ConvertToMoASkill((Skill)wo.WieldSkillType3);
                 if (wo.WieldSkillType4.HasValue)
                     wo.WieldSkillType4 = (int)wo.ConvertToMoASkill((Skill)wo.WieldSkillType4);
+
+                if (treasureDeath.Tier == 4)
+                    PushWieldReq(wo, WieldRequirement.Level, 40);
+                if (treasureDeath.Tier == 5)
+                    PushWieldReq(wo, WieldRequirement.Level, 41);
+                if (treasureDeath.Tier == 6)
+                    PushWieldReq(wo, WieldRequirement.Level, 60);
             }
 
             return wo;
+        }
+
+        private static void PushWieldReq(WorldObject wo, WieldRequirement req, int wieldDifficulty)
+        {
+            if (req == WieldRequirement.Invalid)
+                return;
+
+            if (wo.WieldRequirements == req && wo.WieldDifficulty < wieldDifficulty)
+            {
+                wo.WieldDifficulty = wieldDifficulty;
+                return;
+            }
+            if (wo.WieldRequirements2 == req && wo.WieldDifficulty2 < wieldDifficulty)
+            {
+                wo.WieldDifficulty2 = wieldDifficulty;
+                return;
+            }
+            if (wo.WieldRequirements3 == req && wo.WieldDifficulty3 < wieldDifficulty)
+            {
+                wo.WieldDifficulty3 = wieldDifficulty;
+                return;
+            }
+            if (wo.WieldRequirements4 == req && wo.WieldDifficulty4 < wieldDifficulty)
+            {
+                wo.WieldDifficulty4 = wieldDifficulty;
+                return;
+            }
+
+            if (wo.WieldRequirements == WieldRequirement.Invalid)
+            {
+                wo.WieldRequirements = req;
+                wo.WieldDifficulty = wieldDifficulty;
+                return;
+            }
+            if (wo.WieldRequirements2 == WieldRequirement.Invalid)
+            {
+                wo.WieldRequirements2 = req;
+                wo.WieldDifficulty2 = wieldDifficulty;
+                return;
+            }
+            if (wo.WieldRequirements3 == WieldRequirement.Invalid)
+            {
+                wo.WieldRequirements3 = req;
+                wo.WieldDifficulty3 = wieldDifficulty;
+                return;
+            }
+            if (wo.WieldRequirements4 == WieldRequirement.Invalid)
+            {
+                wo.WieldRequirements4 = req;
+                wo.WieldDifficulty4 = wieldDifficulty;
+                return;
+            }
         }
 
         /// <summary>
