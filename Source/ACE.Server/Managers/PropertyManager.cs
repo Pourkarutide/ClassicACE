@@ -1051,7 +1051,7 @@ namespace ACE.Server.Managers
                 ("surface_bonus_xp", new(0.25, "Extra xp earned for kills when hunting outside dungeons. 1.0 means 100% more xp.")),
                 ("hot_dungeon_bonus_xp", new(1.0, "Extra xp earned for kills when inside hot dungeons. 1.0 means 100% more xp.")),
                 ("exploration_bonus_xp_markers", new(1.0, "Extra xp earned while completing exploration assignment's marker objectives. 1.0 means 100% more xp.")),
-                ("exploration_bonus_xp_kills", new(1.0, "Extra xp earned while completing exploration assignment's kill objectives. 1.0 means 100% more xp.")),
+                ("exploration_bonus_xp_kills", new(2.0, "Extra xp earned while completing exploration assignment's kill objectives. 1.0 means 100% more xp.")),
                 ("relive_bonus_xp", new(1.0, "Extra xp earned while reliving levels after a death that resulted in lost levels. 1.0 means 100% more xp.")),
 
                 ("elite_mob_spawn_rate", new(0.00, "Probability of a creature spawning as an elite mob. 1.0 means 100%")),
