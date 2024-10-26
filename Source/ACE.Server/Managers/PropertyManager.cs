@@ -690,7 +690,7 @@ namespace ACE.Server.Managers
                 ("dekaru_dual_wield_speed_mod", new Property<bool>(true, "Toggles whether Dekaru's dual wield speed changes (other than for dagger) are enabled")),
                 ("dekaru_hc_keep_non_equippable_bonded_on_death", new Property<bool>(true, "Toggles whether bonded items are kept on a hardcore death despite being non-equippable")),
                 ("vendor_allow_special_mutations", new(false, "Toggles whether items on vendors can have special mutations like slayer, critical strike, etc.")),
-
+                ("customdm_mutate_quest_items", new(false, "Toggles whether quest item mutations are enabled")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
