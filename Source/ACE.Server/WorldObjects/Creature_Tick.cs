@@ -451,7 +451,7 @@ namespace ACE.Server.WorldObjects
             if (EliteTrigger && Attackable && PlayerKillerStatus != PlayerKillerStatus.RubberGlue)
             {
                 // controls the RNG % of spawning in Elites
-                if (ThreadSafeRandom.Next(0.0000f, 1.0000f) <= PropertyManager.GetDouble("elite_mob_spawn_rate").Item && !Location.Indoors) // outside spawn
+                if (ThreadSafeRandom.Next(0.0000f, 1.0000f) < PropertyManager.GetDouble("elite_mob_spawn_rate").Item && !Location.Indoors) // outside spawn
                 {
                     SetProperty(PropertyBool.IsElite, true);
                 }
