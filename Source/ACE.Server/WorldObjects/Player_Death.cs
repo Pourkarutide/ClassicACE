@@ -827,7 +827,8 @@ namespace ACE.Server.WorldObjects
                 else if (numItemsDropped > 0 || dropAllWielded)
                 {
                     var level = Level ?? 1;
-                    var canDropWielded = level >= 35;
+
+                    var canDropWielded = level >= PropertyManager.GetLong("min_level_drop_wielded_on_death", 35).Item;
 
                     // get all items in inventory
                     var inventory = GetAllPossessions();

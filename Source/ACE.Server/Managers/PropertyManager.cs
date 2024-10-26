@@ -491,6 +491,8 @@ namespace ACE.Server.Managers
             ));
         }
 
+        const bool SEASON3_DEFAULTS = true;
+
         public static void LoadDefaultProperties()
         {
             // Place any default properties to load in here
@@ -548,6 +550,10 @@ namespace ACE.Server.Managers
                 PropertyManager.ModifyDouble("quest_mindelta_rate", 0.2412);
 
                 PropertyManager.ModifyBool("useable_gems", false);
+                if (SEASON3_DEFAULTS)
+                {
+                    PropertyManager.ModifyLong("min_level_drop_wielded_on_death", 20);
+                }
             }
         }
 
@@ -721,6 +727,7 @@ namespace ACE.Server.Managers
                 ("dekaru_imbue_melee_defense_per_imbue", new(3, "Number of melee defense points to increase per magic defense imbue on an item.")),
                 ("dekaru_imbue_missile_defense_per_imbue", new(3, "Number of missile defense points to increase per magic defense imbue on an item.")),
                 ("elite_mob_loot_count", new(20, "Number of random items on an elite corpse.")),
+                ("min_level_drop_wielded_on_death", new(35, "Minimum character level before wielded items may drop on player death.")),
 
                 // Do not edit below this line
                 ("null_long", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
