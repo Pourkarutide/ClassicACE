@@ -566,6 +566,7 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyBool("gateway_ties_summonable", false); // No easy portal bots. People won't be able to evade pvp as easily
                     PropertyManager.ModifyDouble("hot_dungeon_chance", 0.1); // Mitigate lucky gains from relying on hot dungeons being uncontested
                     PropertyManager.ModifyLong("quest_mindelta_rate_longest", 600000); // Just under 1 week for longest quest timers
+                    PropertyManager.ModifyBool("allow_allegiance_passup", false);
 
                     // Hard Mode - PvE Combat
                     PropertyManager.ModifyDouble("customdm_mob_damage_scale", 1.25);
@@ -816,6 +817,7 @@ namespace ACE.Server.Managers
                 ("dekaru_hc_keep_non_equippable_bonded_on_death", new(true, "Toggles whether bonded items are kept on a hardcore death despite being non-equippable")),
                 ("vendor_allow_special_mutations", new(true, "Toggles whether items on vendors can have special mutations like slayer, critical strike, etc.")),
                 ("customdm_mutate_quest_items", new(false, "Toggles whether quest item mutations are enabled")),
+                ("allow_allegiance_passup", new(true, "Toggles whether allegiance passup is enabled")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

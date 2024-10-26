@@ -199,7 +199,10 @@ namespace ACE.Server.Managers
 
         private static void DoPassXP(AllegianceNode vassalNode, ulong amount, bool direct)
         {
-            amount *= 3; // 3x xp 
+            if (!PropertyManager.GetBool("allow_allegiance_passup", true).Item)
+                return;
+
+            // amount *= 3; // 3x xp (end of season 2)
 
             // http://asheron.wikia.com/wiki/Allegiance_Experience
 
