@@ -491,7 +491,7 @@ namespace ACE.Server.Managers
             ));
         }
 
-        const bool SEASON3_DEFAULTS = true;
+        public const bool SEASON3_DEFAULTS = true;
 
         public static void LoadDefaultProperties()
         {
@@ -580,6 +580,7 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyDouble("vitae_penalty", 0.20);
                     PropertyManager.ModifyDouble("vitae_penalty_max", 0.60);
                     PropertyManager.ModifyLong("min_level_drop_wielded_on_death", 20);
+                    PropertyManager.ModifyLong("min_level_eligible_to_drop_items_on_death", 1);
 
                     // Disabling Features
                     PropertyManager.ModifyDouble("elite_mob_spawn_rate", 0.0);
@@ -851,6 +852,7 @@ namespace ACE.Server.Managers
                 ("dekaru_imbue_missile_defense_per_imbue", new(3, "Number of missile defense points to increase per magic defense imbue on an item.")),
                 ("elite_mob_loot_count", new(20, "Number of random items on an elite corpse.")),
                 ("min_level_drop_wielded_on_death", new(35, "Minimum character level before wielded items may drop on player death.")),
+                ("min_level_eligible_to_drop_items_on_death", new(11, "Minimum character level before items may drop on player death.")),
 
                 // Do not edit below this line
                 ("null_long", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

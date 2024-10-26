@@ -1030,8 +1030,11 @@ namespace ACE.Server.WorldObjects
 
             var level = Level ?? 1;
 
-            if (level <= 10 && !IsHardcore)
+            if (level < PropertyManager.GetLong("min_level_eligible_to_drop_items_on_death", 10).Item && !IsHardcore)
                 return 0;
+
+            if (DefaultPropertyManager.SEASON3_DEFAULTS)
+                return 25;
 
             if (level >= 11 && level <= 20 && !IsHardcore)
                 return ThreadSafeRandom.Next(0, 1);
