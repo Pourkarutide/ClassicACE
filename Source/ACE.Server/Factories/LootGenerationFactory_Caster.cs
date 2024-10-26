@@ -33,7 +33,8 @@ namespace ACE.Server.Factories
             return wo;
         }
 
-        private static void MutateCaster(WorldObject wo, TreasureDeath profile, bool isMagical, int? wieldDifficulty = null, TreasureRoll roll = null)
+        private static void MutateCaster(WorldObject wo, TreasureDeath profile, bool isMagical, int? wieldDifficulty = null,
+            TreasureRoll roll = null, bool allowSpecialMutations = true)
         {
             if (wieldDifficulty != null)
             {
@@ -123,7 +124,7 @@ namespace ACE.Server.Factories
                 mutationFilter.TryMutate(wo, profile.Tier, profile.LootQualityMod);
             }
 
-            if (profile.LootQualityMod >= 0)
+            if (profile.LootQualityMod >= 0 && allowSpecialMutations)
             {
                 var counter = 0;
                 if (counter < 2 && RollShieldCleaving(profile, wo))

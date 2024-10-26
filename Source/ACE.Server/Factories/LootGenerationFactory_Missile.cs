@@ -15,7 +15,7 @@ namespace ACE.Server.Factories
         /// <summary>
         /// Creates and optionally mutates a new MissileWeapon
         /// </summary>
-        public static WorldObject CreateMissileWeapon(TreasureDeath profile, bool isMagical, MissileWeaponSkill weaponSkill = MissileWeaponSkill.Undef, bool mutate = true)
+        public static WorldObject CreateMissileWeapon(TreasureDeath profile, bool isMagical, MissileWeaponSkill weaponSkill = MissileWeaponSkill.Undef, bool mutate = true, bool allowSpecialMutations = true)
         {
             int wcid;
 
@@ -55,12 +55,13 @@ namespace ACE.Server.Factories
             WorldObject wo = WorldObjectFactory.CreateNewWorldObject((uint)wcid);
 
             if (wo != null && mutate)
-                MutateMissileWeapon(wo, profile, isMagical, wieldDifficulty);
-
+                MutateMissileWeapon(wo, profile, isMagical, wieldDifficulty, allowSpecialMutations: allowSpecialMutations);
+            
             return wo;
         }
 
-        private static void MutateMissileWeapon(WorldObject wo, TreasureDeath profile, bool isMagical, int? wieldDifficulty = null, TreasureRoll roll = null)
+        private static void MutateMissileWeapon(WorldObject wo, TreasureDeath profile, bool isMagical, int? wieldDifficulty = null,
+            TreasureRoll roll = null, bool allowSpecialMutations = true)
         {
             // new method / mutation scripts
             var isElemental = wo.W_DamageType != DamageType.Undef;
@@ -84,7 +85,7 @@ namespace ACE.Server.Factories
                 wo.WeaponTime = (int)(wo.WeaponTime * weaponSpeedMod);
             }
 
-            if (profile.LootQualityMod >= 0)
+            if (profile.LootQualityMod >= 0 && allowSpecialMutations)
             {
                 var counter = 0;
                 if (counter < 2 && RollShieldCleaving(profile, wo))
