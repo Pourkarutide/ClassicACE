@@ -353,6 +353,9 @@ namespace ACE.Server.Factories
                             break;
                     }
                 }
+                if (starterAreaName == "Hardcore")
+                    starterAreaName = "Holtburg"; // Disable Hardcore
+
                 switch (starterAreaName)
                 {
                     case "Shoushi":
@@ -374,6 +377,7 @@ namespace ACE.Server.Factories
                         else
                             player.Location = new Position(0xA9B00015, 60.108139f, 103.333549f, 64.402885f, 0.000000f, 0.000000f, -0.381155f, -0.924511f); // Holtburg South
                         break;
+                     /*
                     case "Hardcore":
                         if (!PropertyManager.GetBool("allow_custom_gameplay_modes").Item)
                             return CreateResult.CustomGameplayModesDisabled;
@@ -382,6 +386,7 @@ namespace ACE.Server.Factories
                         player.SetProperty(PropertyBool.RecallsDisabled, true);
                         player.GameplayMode = GameplayModes.Limbo;
                         break;
+                        */
                 }
 
                 instantiation = new Position(player.Location);
