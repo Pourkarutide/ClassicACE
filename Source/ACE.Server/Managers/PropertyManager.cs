@@ -552,14 +552,126 @@ namespace ACE.Server.Managers
                 PropertyManager.ModifyBool("useable_gems", false);
                 if (SEASON3_DEFAULTS)
                 {
-                    PropertyManager.ModifyLong("min_level_drop_wielded_on_death", 20);
+                    // Hard Mode - Progression Caps
+                    PropertyManager.ModifyLong("max_level", 40);
+                    PropertyManager.ModifyBool("allow_xp_at_max_level", false);
+
+                    // Hard Mode - Progression Rates
+                    PropertyManager.ModifyDouble("quest_xp_modifier", 0.0);
+                    PropertyManager.ModifyDouble("xp_modifier", 0.25);
+                    PropertyManager.ModifyDouble("surface_bonus_xp", 0.0);
+                    PropertyManager.ModifyDouble("cantrip_drop_rate", 0.25);
+                    PropertyManager.ModifyBool("vendor_allow_special_mutations", false);
+                    PropertyManager.ModifyDouble("salvage_amount_multiplier", 0.4);
+                    PropertyManager.ModifyBool("gateway_ties_summonable", false); // No easy portal bots. People won't be able to evade pvp as easily
+                    PropertyManager.ModifyDouble("hot_dungeon_chance", 0.1); // Mitigate lucky gains from relying on hot dungeons being uncontested
+                    PropertyManager.ModifyLong("quest_mindelta_rate_longest", 600000); // Just under 1 week for longest quest timers
+
+                    // Hard Mode - PvE Combat
                     PropertyManager.ModifyDouble("customdm_mob_damage_scale", 1.25);
                     PropertyManager.ModifyDouble("customdm_player_war_damage_scale_pve", 0.85);
-                    PropertyManager.ModifyBool("vendor_allow_special_mutations", false);
-                    PropertyManager.ModifyBool("customdm_mutate_quest_items", false);
-                    PropertyManager.ModifyDouble("elite_mob_spawn_rate", 0.0);
-                    PropertyManager.ModifyDouble("customdm_mob_war_damage_scale", 1.0);
+                    PropertyManager.ModifyDouble("bleed_pve_dmg_mod", 0.5);
+                    PropertyManager.ModifyDouble("customdm_mob_war_damage_scale", 1.0); // Normally 0.5
 
+                    // Hard Mode - Death penalty
+                    PropertyManager.ModifyDouble("vitae_penalty", 0.20);
+                    PropertyManager.ModifyDouble("vitae_penalty_max", 0.60);
+                    PropertyManager.ModifyLong("min_level_drop_wielded_on_death", 20);
+
+                    // Disabling Features
+                    PropertyManager.ModifyDouble("elite_mob_spawn_rate", 0.0);
+                    PropertyManager.ModifyBool("customdm_mutate_quest_items", false);
+
+                    // Outdoor Nerfs
+                    PropertyManager.ModifyBool("override_encounter_spawn_rates", true);
+                    PropertyManager.ModifyLong("encounter_regen_interval", 1800);
+                    PropertyManager.ModifyDouble("mob_awareness_range", 1.25);
+
+                    // QoL
+                    PropertyManager.ModifyBool("fellow_busy_no_recruit", false);
+                    PropertyManager.ModifyBool("container_opener_name", true);
+                    PropertyManager.ModifyBool("house_15day_account", false);
+                    PropertyManager.ModifyBool("permit_corpse_all", true);
+
+                    // Non-gameplay configs
+                    PropertyManager.ModifyBool("world_closed", true); // require /world open to open server after start
+                    PropertyManager.ModifyBool("block_vpn_connections", true);
+                    PropertyManager.ModifyBool("player_receive_immediate_save", true);
+                    PropertyManager.ModifyBool("house_30day_cooldown", false); // Doesn't matter for apartments but decided to change it
+                    PropertyManager.ModifyLong("player_save_interval", 60); // Less rollback for players on crash
+
+                    // Cosmetic
+                    PropertyManager.ModifyBool("npc_hairstyle_fullrange", true);
+
+                    // PvP
+                    PropertyManager.ModifyBool("pk_server", true);
+                    PropertyManager.ModifyLong("pk_timer", 60);
+                    PropertyManager.ModifyDouble("pk_cast_radius", 8.0);
+
+                    // Scalars: At level 30 (pvp_dmg_mod_low_level), you have low mod for the given weapon
+                    //          At level 40 (pvp_dmg_mod_high_level), you have high mod for the given weapon
+                    //          And the mod goes gradually from low to high proportionally between the level ranges
+                    //          For example, at level 30, you do 1x (pvp_dmg_mod_low_axe) damage with Axe in pvp.
+                    //          At 35, you do 1.25x, and at 40, 1.5x (pvp_dmg_mod_high_axe)
+                    PropertyManager.ModifyLong("pvp_dmg_mod_low_level", 30); // 30-40, from 10-80.
+                    PropertyManager.ModifyLong("pvp_dmg_mod_high_level", 40);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_axe", 1.0); // 1.0-1.5, from 0.85-1.5
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_axe", 1.5);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_mace", 1.2); // 1.0-1.2, from 1.0-1.0
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_spear", 1.15); // 1.15-1.5, from 1.15-1.8
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_spear", 1.5);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_staff", 1.5); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_staff", 1.5);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_sword", 1.5); // 1.0-1.5, from 1.0-2.0
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_dagger", 1.2); // 1.0-1.2, from 1.0-1.5
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_unarmed", 1.3);
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_unarmed", 1.5); // 1.3-1.5, from 1.3-2.2
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_unarmed_war", 0.65); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_unarmed_war", 0.85);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_bow", 1.0); // 1.0-1.7, from 1.45-1.9
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_bow", 1.7);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_crossbow", 1.0); // 1.0-1.5, from 1.5-1.5
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_crossbow", 1.5);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_thrown", 0.90); // 0.90-1.3 from 0.75-1.3
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_thrown", 1.3);
+
+                    
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_dot", 0.75); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_dot", 0.75);
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_void_dot", 0.75); // Same, don't think this actually is in the game anyway
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_void_dot", 0.75);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_war", 1.0); // was 1.2
+
+                    // Grandfathered in from Existing non-default server configs
+                    PropertyManager.ModifyBool("dekaru_dual_wield_speed_mod", false); 
+                    PropertyManager.ModifyBool("craft_exact_msg", true); // QoL crafting success chance, mitigates advantages given to plugin devs/users
+                    PropertyManager.ModifyBool("assess_creature_pve_always_succeed", true); // Fixes loot delays with vtank in some situations
+                    PropertyManager.ModifyBool("house_per_char", true); // Allow multiple houses per account
+                    PropertyManager.ModifyBool("show_discord_chat_ingame", true);
+                    PropertyManager.ModifyBool("spellcast_recoil_queue", true);
+                    PropertyManager.ModifyDouble("spellcast_max_angle", 40.0);
+                    PropertyManager.ModifyBool("useable_gems", true);
+                    PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_1h", 1.6);
+                    PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_dualwield", 1.7);
+                    PropertyManager.ModifyDouble("dekaru_tw_animation_speed", 3.0);
+                    PropertyManager.ModifyDouble("fast_missile_modifier", 3.0);
+
+                    // Not grandathered in, reverting to default
+                    // fall_damage_enabled: true
+                    // fall_damage_multiplier: 1.0
+                    // vpn_account_whitelist
                 }
             }
         }
