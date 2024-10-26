@@ -426,7 +426,10 @@ namespace ACE.Server.WorldObjects
                     return;
                 }
 
-                var chance = Math.Clamp(0.50 + ((spellCount - 1) * 0.1), 0.50, 1.0);
+                var lowChance = Math.Clamp(PropertyManager.GetDouble("spell_extraction_scroll_base_chance", 0.50).Item, 0.0, 1.0);
+                var chancePerExtraSpell = PropertyManager.GetDouble("spell_extraction_scroll_chance_per_extra_spell", 0.1).Item;
+
+                var chance = Math.Clamp(lowChance + ((spellCount - 1) * chancePerExtraSpell), lowChance, 1.0);
 
                 if (target.ItemType == ItemType.Gem && target.ItemUseable == Usable.No)
                     chance = 1; // Non-useable gems have 100% extraction chance.

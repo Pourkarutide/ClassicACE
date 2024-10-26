@@ -9,6 +9,7 @@ using ACE.Entity.Enum.Properties;
 using ACE.Entity.Models;
 using ACE.Server.Command.Handlers;
 using ACE.Server.Entity;
+using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects.Entity;
@@ -172,6 +173,12 @@ namespace ACE.Server.WorldObjects
             {
                 // Gem of Enlightenment
                 case SkillAlterationType.Specialize:
+
+                    if (!PropertyManager.GetBool("allow_skill_specialization").Item)
+                    {
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Skills may not be specialized in this realm.", ChatMessageType.WorldBroadcast));
+                        return false;
+                    }
 
                     // ensure skill is trained
                     if (skill.AdvancementClass != SkillAdvancementClass.Trained)

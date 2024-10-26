@@ -697,6 +697,12 @@ namespace ACE.Server.Entity
             // elites hit for double dmg
             if (attacker.IsElite)
                 Damage *= 2;
+            if (playerDefender != null && playerAttacker == null)
+            {
+                var mobDamageGlobalScale = PropertyManager.GetDouble("customdm_mob_damage_scale", 1.0).Item;
+                if (mobDamageGlobalScale != 1.0)
+                    Damage *= (float)mobDamageGlobalScale;
+            }
             return Damage;
         }
 

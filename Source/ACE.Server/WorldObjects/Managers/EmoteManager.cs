@@ -49,6 +49,24 @@ namespace ACE.Server.WorldObjects.Managers
             _worldObject = worldObject;
         }
 
+        private static readonly HashSet<uint> TradeNoteWeenies = new()
+        {
+            2621,
+            2622,
+            2623,
+            2624,
+            2625,
+            2626,
+            2627,
+            7374,
+            7375,
+            7376,
+            7377,
+            20628,
+            20629,
+            20630
+        };
+
         /// <summary>
         /// Executes an emote
         /// </summary>
@@ -378,6 +396,16 @@ namespace ACE.Server.WorldObjects.Managers
                     bool success = false;
 
                     var stackSize = emote.StackSize ?? 1;
+                    if (stackSize == 0)
+                        stackSize = 1;
+
+                    var itemToGiveWeenieId = emote.WeenieClassId ?? 0;
+                    bool isTradeNote = TradeNoteWeenies.Contains(itemToGiveWeenieId);
+                    if (isTradeNote && PropertyManager.GetBool("neuter_trade_note_rewards").Item)
+                    {
+                        stackSize = 1;
+                        itemToGiveWeenieId = 2621; // I note
+                    }
 
                     if (player != null && emote.WeenieClassId != null)
                     {
@@ -388,7 +416,7 @@ namespace ACE.Server.WorldObjects.Managers
                             delay = creature.Rotate(targetCreature);
                             motionChain.AddDelaySeconds(delay);
                         }
-                        motionChain.AddAction(WorldObject, () => player.GiveFromEmote(WorldObject, emote.WeenieClassId ?? 0, stackSize > 0 ? stackSize : 1, emote.Palette ?? 0, emote.Shade ?? 0));
+                        motionChain.AddAction(WorldObject, () => player.GiveFromEmote(WorldObject, itemToGiveWeenieId, stackSize, emote.Palette ?? 0, emote.Shade ?? 0));
                         motionChain.EnqueueChain();
                     }
 

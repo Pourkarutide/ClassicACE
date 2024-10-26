@@ -149,7 +149,10 @@ namespace ACE.Server.Factories
             {
                 if (useableGem)
                 {
-                    wo.ItemManaCost = (int)_spell.BaseMana;
+                    if (PropertyManager.GetBool("usable_gems_generated_with_1_mana_cost").Item)
+                        wo.ItemManaCost = 1;
+                    else
+                        wo.ItemManaCost = (int)_spell.BaseMana;
 
                     AddActivationRequirements(wo, profile, roll);
                 }

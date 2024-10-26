@@ -18,7 +18,7 @@ namespace ACE.Server.Factories
         /// <summary>
         /// Creates and optionally mutates a new MissileWeapon
         /// </summary>
-        public static WorldObject CreateMissileWeapon(TreasureDeath profile, bool isMagical, bool mutate = true)
+        public static WorldObject CreateMissileWeapon(TreasureDeath profile, bool isMagical, bool mutate = true, bool allowSpecialMutations = true)
         {
             int weaponWeenie;
 
@@ -33,12 +33,13 @@ namespace ACE.Server.Factories
             WorldObject wo = WorldObjectFactory.CreateNewWorldObject((uint)weaponWeenie);
 
             if (wo != null && mutate)
-                MutateMissileWeapon(wo, profile, isMagical, wieldDifficulty);
+                MutateMissileWeapon(wo, profile, isMagical, wieldDifficulty, allowSpecialMutations: allowSpecialMutations);
             
             return wo;
         }
 
-        private static void MutateMissileWeapon(WorldObject wo, TreasureDeath profile, bool isMagical, int? wieldDifficulty = null, TreasureRoll roll = null)
+        private static void MutateMissileWeapon(WorldObject wo, TreasureDeath profile, bool isMagical, int? wieldDifficulty = null,
+            TreasureRoll roll = null, bool allowSpecialMutations = true)
         {
             if (roll == null)
             {
@@ -99,7 +100,7 @@ namespace ACE.Server.Factories
                 wo.WeaponTime = (int)(wo.WeaponTime * weaponSpeedMod);
             }
 
-            if (profile.LootQualityMod >= 0)
+            if (profile.LootQualityMod >= 0 && allowSpecialMutations)
             {
                 var counter = 0;
                 if (counter < 2 && RollHollow(profile, wo))

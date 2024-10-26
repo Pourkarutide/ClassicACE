@@ -48,6 +48,9 @@ namespace ACE.Server.WorldObjects
 
         public string MutateQuestItem()
         {
+            if (ConfigManager.Config.Server.WorldRuleset != Ruleset.CustomDM || !PropertyManager.GetBool("customdm_mutate_quest_items").Item)
+                return "";
+
             //Validate this is not a loot gen item, and that its a caster, weapon, armor or clothing
             // Morosity - adding Ammo check here
             if

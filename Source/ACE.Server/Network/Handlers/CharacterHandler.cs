@@ -78,7 +78,17 @@ namespace ACE.Server.Network.Handlers
                 return;
             }
 
-			if ((characterCreateInfo.Heritage == HeritageGroup.Olthoi || characterCreateInfo.Heritage == HeritageGroup.OlthoiAcid) && PropertyManager.GetBool("olthoi_play_disabled").Item)
+            if (!PropertyManager.GetBool("allow_skill_specialization").Item)
+            {
+                if (characterCreateInfo.SkillAdvancementClasses.Any(s => s == SkillAdvancementClass.Specialized))
+                {
+                    SendCharacterCreateResponse(session, CharacterGenerationVerificationResponse.Pending);
+                    session.Network.EnqueueSend(new GameEvent.Events.GameEventPopupString(session, "You may not specialize any skills in this realm."));
+                    return;
+                }
+            }
+
+            if ((characterCreateInfo.Heritage == HeritageGroup.Olthoi || characterCreateInfo.Heritage == HeritageGroup.OlthoiAcid) && PropertyManager.GetBool("olthoi_play_disabled").Item)
             {
                 SendCharacterCreateResponse(session, CharacterGenerationVerificationResponse.Pending);
                 return;

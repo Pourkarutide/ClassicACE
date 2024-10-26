@@ -50,7 +50,9 @@ namespace ACE.Server.WorldObjects
         {
             var topDamager = DamageHistory.GetTopDamager(false);
 
-            if (!HandlePKDeathBroadcast(lastDamager, topDamager) && IsHardcore && !IsOnArenaLandblock)
+            bool broadcasted = HandlePKDeathBroadcast(lastDamager, topDamager);
+
+            if (!broadcasted && IsHardcore && !IsOnArenaLandblock)
             {
                 string sourceString;
                 if (lastDamager == null || lastDamager.Guid == Guid)
@@ -67,6 +69,7 @@ namespace ACE.Server.WorldObjects
                 PlayerManager.BroadcastToAll(new GameMessageSystemChat(globalPKDe, ChatMessageType.Broadcast));
 
                 _ = TurbineChatHandler.SendWebhookedChat("", webhookMsg, null, "Hardcore PvE");
+                broadcasted = true;
             }
 
             var deathMessage = base.OnDeath(lastDamager, damageType, criticalHit);
@@ -93,6 +96,12 @@ namespace ACE.Server.WorldObjects
                 nearbyMsg = deathMessage.Broadcast;
 
             var broadcastMsg = new GameMessagePlayerKilled(nearbyMsg, Guid, lastDamager?.Guid ?? ObjectGuid.Invalid);
+
+            if (!broadcasted)
+            {
+                _ = TurbineChatHandler.SendWebhookedChat("", nearbyMsg, null, "");
+                broadcasted = true;
+            }
 
             log.Debug("[CORPSE] " + nearbyMsg);
 
@@ -827,7 +836,8 @@ namespace ACE.Server.WorldObjects
                 else if (numItemsDropped > 0 || dropAllWielded)
                 {
                     var level = Level ?? 1;
-                    var canDropWielded = level >= 35;
+
+                    var canDropWielded = level >= PropertyManager.GetLong("min_level_drop_wielded_on_death", 35).Item;
 
                     // get all items in inventory
                     var inventory = GetAllPossessions();
@@ -1029,8 +1039,11 @@ namespace ACE.Server.WorldObjects
 
             var level = Level ?? 1;
 
-            if (level <= 10 && !IsHardcore)
+            if (level < PropertyManager.GetLong("min_level_eligible_to_drop_items_on_death", 10).Item && !IsHardcore)
                 return 0;
+
+            if (DefaultPropertyManager.SEASON3_DEFAULTS)
+                return 25;
 
             if (level >= 11 && level <= 20 && !IsHardcore)
                 return ThreadSafeRandom.Next(0, 1);
