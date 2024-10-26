@@ -1345,8 +1345,15 @@ namespace ACE.Server.WorldObjects
 
         private void AddRandomItem(TreasureItemType_Orig treasureItemType, TreasureArmorType armorType = TreasureArmorType.Undef, TreasureWeaponType weaponType = TreasureWeaponType.Undef, bool isFireSaleItem = false)
         {
+            bool allowSpecialMutations = PropertyManager.GetBool("vendor_allow_special_mutations").Item;
             var itemTier = RollTier(Tier ?? 1);
-            var item = LootGenerationFactory.CreateRandomLootObjects_New(itemTier, ShopQualityMod, (DealMagicalItems ?? false) ? TreasureItemCategory.MagicItem : TreasureItemCategory.Item, treasureItemType, armorType, weaponType, ShopHeritage);
+            var item = LootGenerationFactory.CreateRandomLootObjects_New(
+                itemTier,
+                ShopQualityMod,
+                (DealMagicalItems ?? false) ? TreasureItemCategory.MagicItem : TreasureItemCategory.Item,
+                treasureItemType, armorType, weaponType, ShopHeritage,
+                allowSpecialMutations: allowSpecialMutations);
+
             if (item == null)
                 return;
 
