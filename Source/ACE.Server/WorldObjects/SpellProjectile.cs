@@ -710,7 +710,11 @@ namespace ACE.Server.WorldObjects
                 if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
                 {
                     if (sourcePlayer == null && sourceCreature != null)
-                        baseDamage /= 2; // Monsters do reduced projectile spell damage, traps still do full damage.
+                    {
+                        var mobWarDmgScale = PropertyManager.GetDouble("customdm_mob_war_damage_scale", 1.0).Item;
+                        if (mobWarDmgScale != 1.0)
+                            baseDamage = (int)Math.Round(baseDamage * mobWarDmgScale);
+                    }
                 }
                 else if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
                 {
