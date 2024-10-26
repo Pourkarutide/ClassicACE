@@ -555,6 +555,7 @@ namespace ACE.Server.Managers
                     // Hard Mode - Progression Caps
                     PropertyManager.ModifyLong("max_level", 40);
                     PropertyManager.ModifyBool("allow_xp_at_max_level", false);
+                    PropertyManager.ModifyBool("allow_skill_specialization", false);
 
                     // Hard Mode - Progression Rates
                     PropertyManager.ModifyDouble("quest_xp_modifier", 0.0);
@@ -821,6 +822,7 @@ namespace ACE.Server.Managers
                 ("vendor_allow_special_mutations", new(true, "Toggles whether items on vendors can have special mutations like slayer, critical strike, etc.")),
                 ("customdm_mutate_quest_items", new(false, "Toggles whether quest item mutations are enabled")),
                 ("allow_allegiance_passup", new(true, "Toggles whether allegiance passup is enabled")),
+                ("allow_skill_specialization", new(true, "Toggles whether skill specialization is allowed")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
