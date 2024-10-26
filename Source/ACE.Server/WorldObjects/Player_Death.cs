@@ -50,7 +50,9 @@ namespace ACE.Server.WorldObjects
         {
             var topDamager = DamageHistory.GetTopDamager(false);
 
-            if (!HandlePKDeathBroadcast(lastDamager, topDamager) && IsHardcore && !IsOnArenaLandblock)
+            bool broadcasted = HandlePKDeathBroadcast(lastDamager, topDamager);
+
+            if (!broadcasted && IsHardcore && !IsOnArenaLandblock)
             {
                 string sourceString;
                 if (lastDamager == null || lastDamager.Guid == Guid)
@@ -67,6 +69,7 @@ namespace ACE.Server.WorldObjects
                 PlayerManager.BroadcastToAll(new GameMessageSystemChat(globalPKDe, ChatMessageType.Broadcast));
 
                 _ = TurbineChatHandler.SendWebhookedChat("", webhookMsg, null, "Hardcore PvE");
+                broadcasted = true;
             }
 
             var deathMessage = base.OnDeath(lastDamager, damageType, criticalHit);
@@ -93,6 +96,12 @@ namespace ACE.Server.WorldObjects
                 nearbyMsg = deathMessage.Broadcast;
 
             var broadcastMsg = new GameMessagePlayerKilled(nearbyMsg, Guid, lastDamager?.Guid ?? ObjectGuid.Invalid);
+
+            if (!broadcasted)
+            {
+                _ = TurbineChatHandler.SendWebhookedChat("", nearbyMsg, null, "");
+                broadcasted = true;
+            }
 
             log.Debug("[CORPSE] " + nearbyMsg);
 
