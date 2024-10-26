@@ -553,7 +553,13 @@ namespace ACE.Server.Managers
                 if (SEASON3_DEFAULTS)
                 {
                     PropertyManager.ModifyLong("min_level_drop_wielded_on_death", 20);
-                    PropertyManager.ModifyDouble("customdm_pve_mob_damage_scale", 1.25);
+                    PropertyManager.ModifyDouble("customdm_mob_damage_scale", 1.25);
+                    PropertyManager.ModifyDouble("customdm_player_war_damage_scale_pve", 0.85);
+                    PropertyManager.ModifyBool("vendor_allow_special_mutations", false);
+                    PropertyManager.ModifyBool("customdm_mutate_quest_items", false);
+                    PropertyManager.ModifyDouble("elite_mob_spawn_rate", 0.0);
+                    PropertyManager.ModifyDouble("customdm_mob_war_damage_scale", 1.0);
+
                 }
             }
         }
@@ -696,7 +702,7 @@ namespace ACE.Server.Managers
                 ("fall_damage_enabled", new(true, "Toggles whether fall damage is enabled")),
                 ("dekaru_dual_wield_speed_mod", new(true, "Toggles whether Dekaru's dual wield speed changes (other than for dagger) are enabled")),
                 ("dekaru_hc_keep_non_equippable_bonded_on_death", new(true, "Toggles whether bonded items are kept on a hardcore death despite being non-equippable")),
-                ("vendor_allow_special_mutations", new(false, "Toggles whether items on vendors can have special mutations like slayer, critical strike, etc.")),
+                ("vendor_allow_special_mutations", new(true, "Toggles whether items on vendors can have special mutations like slayer, critical strike, etc.")),
                 ("customdm_mutate_quest_items", new(false, "Toggles whether quest item mutations are enabled")),
 
                 // Do not edit below this line
@@ -1068,9 +1074,9 @@ namespace ACE.Server.Managers
                 ("quest_mutation_tier_1_major_chance", new(0.10, "The % chance a tier 1 quest item cantrip mutation will be a major cantrip (otherwise will be a minor cantrip).")),
                 ("quest_mutation_tier_2_major_chance", new(0.25, "The % chance a tier 2 quest item cantrip mutation will be a major cantrip (otherwise will be a minor cantrip).")),
                 ("quest_mutation_tier_3_major_chance", new(0.90, "The % chance a tier 3 quest item cantrip mutation will be a major cantrip (otherwise will be a minor cantrip).")),
-                ("customdm_mob_war_damage_scale", new(1.0, "Scales creature war damage in CustomDM. A value of 0.75 means 75% of normal damage")),
-                ("customdm_player_war_damage_scale_pve", new(0.85, "Scales player war damage in CustomDM, in PvE. A value of 0.75 means 75% of normal damage")),
-                ("customdm_pve_mob_damage_scale", new(1.0, "Scales mob damage vs players in CustomDM. A value of 0.75 means 75% of normal damage")),
+                ("customdm_mob_war_damage_scale", new(0.5, "Scales creature war damage in CustomDM. A value of 0.75 means 75% of normal damage")),
+                ("customdm_player_war_damage_scale_pve", new(1.0, "Scales player war damage in CustomDM, in PvE. A value of 0.75 means 75% of normal damage")),
+                ("customdm_mob_damage_scale", new(1.0, "Scales mob damage vs players in CustomDM. A value of 0.75 means 75% of normal damage")),
 
                 // Do not edit below this line
                 ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
