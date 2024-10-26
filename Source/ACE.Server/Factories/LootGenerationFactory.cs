@@ -1768,6 +1768,10 @@ namespace ACE.Server.Factories
             // flat rng range, according to magloot corpse logs
             var rng = ThreadSafeRandom.Next(tierRange.min, tierRange.max);
 
+            var mult = PropertyManager.GetDouble("coin_stack_multiplier", 1.0).Item;
+            if (mult != 1.0)
+                rng = Math.Clamp((int)(rng * mult), 1, wo.MaxStackSize ?? 25000);
+
             wo.SetStackSize(rng);
         }
 
