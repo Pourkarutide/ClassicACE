@@ -99,7 +99,7 @@ namespace ACE.Server.WorldObjects
 
             if (!broadcasted)
             {
-                PlayerManager.BroadcastToAll(new GameMessageSystemChat("$[Global] " + nearbyMsg, ChatMessageType.Broadcast));
+                PlayerManager.BroadcastToAll(new GameMessageSystemChat("[Global] " + nearbyMsg, ChatMessageType.Broadcast));
                 _ = TurbineChatHandler.SendWebhookedChat("", nearbyMsg, null, "Hard Mode");
                 broadcasted = true;
             }
