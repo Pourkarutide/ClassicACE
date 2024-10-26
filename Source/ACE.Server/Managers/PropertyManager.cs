@@ -571,6 +571,7 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyDouble("spell_extraction_scroll_base_chance", 0.25);
                     PropertyManager.ModifyDouble("spell_extraction_scroll_chance_per_extra_spell", 0.05);
                     PropertyManager.ModifyDouble("coin_stack_multiplier", 0.5);
+                    PropertyManager.ModifyBool("neuter_trade_note_rewards", true);
 
                     // Hard Mode - PvE Combat
                     PropertyManager.ModifyDouble("customdm_mob_damage_scale", 1.25);
@@ -826,6 +827,7 @@ namespace ACE.Server.Managers
                 ("allow_allegiance_passup", new(true, "Toggles whether allegiance passup is enabled")),
                 ("allow_skill_specialization", new(true, "Toggles whether skill specialization is allowed")),
                 ("usable_gems_generated_with_1_mana_cost", new(false, "Toggles whether usable gems are generated with a cost of 1 mana, for virtually unlimited use, instead of the normal amount. Gems should cost at least 1 mana to mitigate any compatibility issues with plugins or other logic")),
+                ("neuter_trade_note_rewards", new(false, "If enabled, trade note quest rewards will be reduced to a single I note")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
