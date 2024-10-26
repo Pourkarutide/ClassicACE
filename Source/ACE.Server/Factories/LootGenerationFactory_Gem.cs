@@ -4,7 +4,9 @@ using ACE.Entity.Enum;
 using ACE.Server.Entity;
 using ACE.Server.Factories.Entity;
 using ACE.Server.Factories.Tables;
+using ACE.Server.Managers;
 using ACE.Server.WorldObjects;
+using System;
 using System.Collections.Generic;
 
 namespace ACE.Server.Factories
@@ -70,19 +72,39 @@ namespace ACE.Server.Factories
             wo.SpellDID = (uint)spellId;
 
             var _spell = new Server.Entity.Spell(spellId);
+            bool useableGem = PropertyManager.GetBool("useable_gems").Item;
+
+            if (useableGem)
+            {
+                // retail spellcraft was capped at 370
+                wo.ItemSpellcraft = Math.Min(GetSpellPower(_spell), 370);
+            }
+
+            var castableMana = (int)_spell.BaseMana * 5;
+
+            wo.ItemMaxMana = RollItemMaxMana(wo, roll, castableMana);
+            wo.ItemCurMana = wo.ItemMaxMana;
 
             if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
             {
-                var castableMana = (int)_spell.BaseMana * 5;
-
-                wo.ItemMaxMana = RollItemMaxMana(wo, roll, castableMana);
-                wo.ItemCurMana = wo.ItemMaxMana;
-
-                // verified
-                wo.ItemManaCost = castableMana;
+                if (useableGem)
+                {
+                    // verified
+                    wo.ItemManaCost = castableMana;
+                }
             }
             else
             {
+                if (useableGem)
+                {
+                    if (PropertyManager.GetBool("usable_gems_generated_with_1_mana_cost").Item)
+                        wo.ItemManaCost = 1;
+                    else
+                        wo.ItemManaCost = (int)_spell.BaseMana;
+                }
+                else
+                    wo.Use = "Use a Spell Extraction Scroll to extract this gem's spell without chance of failure.\n";
+
                 wo.MaxStructure = RollItemMaxStructure(wo);
                 wo.Structure = wo.MaxStructure;
             }
