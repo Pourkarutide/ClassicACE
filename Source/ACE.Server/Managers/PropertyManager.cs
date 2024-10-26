@@ -567,6 +567,8 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyDouble("hot_dungeon_chance", 0.1); // Mitigate lucky gains from relying on hot dungeons being uncontested
                     PropertyManager.ModifyLong("quest_mindelta_rate_longest", 600000); // Just under 1 week for longest quest timers
                     PropertyManager.ModifyBool("allow_allegiance_passup", false);
+                    PropertyManager.ModifyDouble("spell_extraction_scroll_base_chance", 0.25);
+                    PropertyManager.ModifyDouble("spell_extraction_scroll_chance_per_extra_spell", 0.05);
 
                     // Hard Mode - PvE Combat
                     PropertyManager.ModifyDouble("customdm_mob_damage_scale", 1.25);
@@ -1191,6 +1193,8 @@ namespace ACE.Server.Managers
                 ("customdm_mob_war_damage_scale", new(0.5, "Scales creature war damage in CustomDM. A value of 0.75 means 75% of normal damage")),
                 ("customdm_player_war_damage_scale_pve", new(1.0, "Scales player war damage in CustomDM, in PvE. A value of 0.75 means 75% of normal damage")),
                 ("customdm_mob_damage_scale", new(1.0, "Scales mob damage vs players in CustomDM. A value of 0.75 means 75% of normal damage")),
+                ("spell_extraction_scroll_base_chance", new(0.5, "The base chance of a spell extraction scroll to successfully extract a spell. A value of 0.50 means 50%")),
+                ("spell_extraction_scroll_chance_per_extra_spell", new(0.1, "The additional spell extraction chance added per spell starting from the 2nd spell. A value of 0.1 means 10%")),
 
                 // Do not edit below this line
                 ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
