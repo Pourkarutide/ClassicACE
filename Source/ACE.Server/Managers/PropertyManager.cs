@@ -598,6 +598,7 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyBool("container_opener_name", true);
                     PropertyManager.ModifyBool("house_15day_account", false);
                     PropertyManager.ModifyBool("permit_corpse_all", true);
+                    PropertyManager.ModifyBool("usable_gems_generated_with_1_mana_cost", true);
 
                     // Non-gameplay configs
                     PropertyManager.ModifyBool("world_closed", true); // require /world open to open server after start
@@ -824,6 +825,7 @@ namespace ACE.Server.Managers
                 ("customdm_mutate_quest_items", new(false, "Toggles whether quest item mutations are enabled")),
                 ("allow_allegiance_passup", new(true, "Toggles whether allegiance passup is enabled")),
                 ("allow_skill_specialization", new(true, "Toggles whether skill specialization is allowed")),
+                ("usable_gems_generated_with_1_mana_cost", new(false, "Toggles whether usable gems are generated with a cost of 1 mana, for virtually unlimited use, instead of the normal amount. Gems should cost at least 1 mana to mitigate any compatibility issues with plugins or other logic")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
