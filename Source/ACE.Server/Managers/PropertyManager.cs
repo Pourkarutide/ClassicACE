@@ -1061,6 +1061,7 @@ namespace ACE.Server.Managers
                 ("quest_mutation_tier_2_major_chance", new(0.25, "The % chance a tier 2 quest item cantrip mutation will be a major cantrip (otherwise will be a minor cantrip).")),
                 ("quest_mutation_tier_3_major_chance", new(0.90, "The % chance a tier 3 quest item cantrip mutation will be a major cantrip (otherwise will be a minor cantrip).")),
                 ("customdm_mob_war_damage_scale", new(1.0, "Scales creature war damage in CustomDM. A value of 0.75 means 75% of normal damage")),
+                ("customdm_player_war_damage_scale_pve", new(0.85, "Scales player war damage in CustomDM, in PvE. A value of 0.75 means 75% of normal damage")),
 
                 // Do not edit below this line
                 ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

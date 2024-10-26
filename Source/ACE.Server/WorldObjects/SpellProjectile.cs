@@ -715,6 +715,12 @@ namespace ACE.Server.WorldObjects
                         if (mobWarDmgScale != 1.0)
                             baseDamage = (int)Math.Round(baseDamage * mobWarDmgScale);
                     }
+                    else if (sourcePlayer != null && !isPvP)
+                    {
+                        var playerWarDmgScale = PropertyManager.GetDouble("customdm_player_war_damage_scale_pve", 1.0).Item;
+                        if (playerWarDmgScale != 1.0)
+                            baseDamage = (int)Math.Round(baseDamage * playerWarDmgScale);
+                    }
                 }
                 else if (Common.ConfigManager.Config.Server.WorldRuleset <= Common.Ruleset.Infiltration)
                 {
