@@ -30,7 +30,7 @@ VALUES (20985,  22, True ) /* Inscribable */
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (20985,   1, 'Salvaged Granite') /* Name */
-     , (20985,  14, 'Apply this material to a treasure-generated weapon to improve the weapon''s variance by 20%.') /* Use */
+     , (20985,  14, 'Apply this material to a treasure-generated weapon to improve the weapon''s variance by 50%.') /* Use */
      , (20985,  15, 'A brick of granite material salvaged from old items.') /* ShortDesc */;
 
 INSERT INTO `weenie_properties_d_i_d` (`object_Id`, `type`, `value`)

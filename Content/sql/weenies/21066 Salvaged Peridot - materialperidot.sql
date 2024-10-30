@@ -30,7 +30,7 @@ VALUES (21066,  22, True ) /* Inscribable */
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (21066,   1, 'Salvaged Peridot') /* Name */
-     , (21066,  14, 'Apply this material to treasure-generated armor to imbue the target with a +1 bonus to Melee Defense.') /* Use */
+     , (21066,  14, 'Apply this material to treasure-generated armor to imbue the target with a +3 bonus to Effective Melee Defense (weapon and other bonuses do not apply to this).') /* Use */
      , (21066,  15, 'Chips of peridot material salvaged from old items.') /* ShortDesc */;
 
 INSERT INTO `weenie_properties_d_i_d` (`object_Id`, `type`, `value`)

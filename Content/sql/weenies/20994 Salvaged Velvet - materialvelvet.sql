@@ -30,7 +30,7 @@ VALUES (20994,  22, True ) /* Inscribable */
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (20994,   1, 'Salvaged Velvet') /* Name */
-     , (20994,  14, 'Apply this material to a treasure-generated weapon to increase the weapon''s attack skill bonus by 1%.') /* Use */
+     , (20994,  14, 'Apply this material to a treasure-generated weapon to increase the weapon''s attack skill bonus by 5%.') /* Use */
      , (20994,  15, 'A bolt of velvet material salvaged from old items.') /* ShortDesc */;
 
 INSERT INTO `weenie_properties_d_i_d` (`object_Id`, `type`, `value`)
