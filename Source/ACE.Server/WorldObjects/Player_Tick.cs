@@ -853,10 +853,13 @@ namespace ACE.Server.WorldObjects
                         .ToList();
                 }
                 else
-                    possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.HardcorePK && e.Level >= Level && e.Level <= Level + 5).ToList();
+                    possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid &&
+                    e.GameplayMode == GameplayModes.HardcorePK &&
+                    e.Level >= Level &&
+                    e.Level <= Level + 5 && e.Account.AccessLevel == 0).ToList();
             }
             else
-                possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && e.Level >= Level && e.Level <= Level + 5 && !e.IsOvertlyPlussed).ToList();
+                possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && e.Level >= Level && e.Level <= Level + 5 && e.Account.AccessLevel == 0 && !e.IsOvertlyPlussed).ToList();
 
             if (possiblePlayers.Count() > 0)
             {
