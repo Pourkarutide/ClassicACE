@@ -30,7 +30,7 @@ VALUES (20993,  22, True ) /* Inscribable */
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (20993,   1, 'Salvaged Steel') /* Name */
-     , (20993,  14, 'Apply this material to treasure-generated armor to increase the armor''s armor level by 20. This material cannot be used on Covenant Armor.') /* Use */
+     , (20993,  14, 'Apply this material to treasure-generated armor to increase the armor''s armor level by 80. This material cannot be used on Covenant Armor.') /* Use */
      , (20993,  15, 'A bar of steel material salvaged from old items.') /* ShortDesc */;
 
 INSERT INTO `weenie_properties_d_i_d` (`object_Id`, `type`, `value`)

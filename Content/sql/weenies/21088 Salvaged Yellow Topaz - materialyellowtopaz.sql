@@ -30,7 +30,7 @@ VALUES (21088,  22, True ) /* Inscribable */
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (21088,   1, 'Salvaged Yellow Topaz') /* Name */
-     , (21088,  14, 'Apply this material to treasure-generated armor to imbue the target with a +1 bonus to Missile Defense.') /* Use */
+     , (21088,  14, 'Apply this material to treasure-generated armor to imbue the target with a +3 bonus to Effective Missile Defense (weapon and other bonuses do not apply to this).') /* Use */
      , (21088,  15, 'Chips of yellow topaz material salvaged from old items.') /* ShortDesc */;
 
 INSERT INTO `weenie_properties_d_i_d` (`object_Id`, `type`, `value`)

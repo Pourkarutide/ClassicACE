@@ -30,7 +30,7 @@ VALUES (21062,  22, True ) /* Inscribable */
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (21062,   1, 'Salvaged Moonstone') /* Name */
-     , (21062,  14, 'Apply this material to a treasure-generated item to increase its maximum mana by 500.') /* Use */
+     , (21062,  14, 'Apply this material to a treasure-generated item to increase its maximum mana by 1500.') /* Use */
      , (21062,  15, 'Chips of moonstone material salvaged from old items.') /* ShortDesc */;
 
 INSERT INTO `weenie_properties_d_i_d` (`object_Id`, `type`, `value`)

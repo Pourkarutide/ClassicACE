@@ -30,7 +30,7 @@ VALUES (21089,  22, True ) /* Inscribable */
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (21089,   1, 'Salvaged Zircon') /* Name */
-     , (21089,  14, 'Apply this material to treasure-generated armor to imbue the target with a +1 bonus to Magic Defense.') /* Use */
+     , (21089,  14, 'Apply this material to treasure-generated armor to imbue the target with a +3 bonus to Effective Magic Defense (weapon and other bonuses do not apply to this).') /* Use */
      , (21089,  15, 'Chips of zircon material salvaged from old items.') /* ShortDesc */;
 
 INSERT INTO `weenie_properties_d_i_d` (`object_Id`, `type`, `value`)

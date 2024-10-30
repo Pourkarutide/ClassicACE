@@ -30,7 +30,7 @@ VALUES (20984,  22, True ) /* Inscribable */
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (20984,   1, 'Salvaged Gold') /* Name */
-     , (20984,  14, 'Apply this material to a treasure-generated item to raise the item''s value by 25%.') /* Use */
+     , (20984,  14, 'Apply this material to a treasure-generated item to raise the item''s value by 30,000.') /* Use */
      , (20984,  15, 'A bar of gold material salvaged from old items.') /* ShortDesc */;
 
 INSERT INTO `weenie_properties_d_i_d` (`object_Id`, `type`, `value`)
