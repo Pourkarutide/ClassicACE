@@ -317,7 +317,7 @@ VALUES (0x701EF081,  1291, 0x01EF03AF, 10, -64.755, 0, 0, 0, 0, -1, False, '2005
 /* @teleloc 0x01EF03AF [10.000000 -64.754997 0.000000] 0.000000 0.000000 0.000000 -1.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF082,  7106, 0x01EF03B2, 10.2943, -67.0709, 0, 0.260505, 0, 0, -0.965473, False, '2005-02-09 10:00:00'); /* Sewer Rat(7106/ratsewer) - Level: 32 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF082,  1625, 0x01EF03B2, 10.2943, -67.0709, 0, 0.260505, 0, 0, -0.965473, False, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x01EF03B2 [10.294300 -67.070900 0.000000] 0.260505 0.000000 0.000000 -0.965473 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -433,19 +433,19 @@ VALUES (0x701EF0A5,  7087, 0x01EF0449, 118.71, -28.2503, 6.0077, 1, 0, 0, 0,  Tr
 /* @teleloc 0x01EF0449 [118.709999 -28.250299 6.007700] 1.000000 0.000000 0.000000 0.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0A7,  7106, 0x01EF0130, 80, -170, -53.988, -0.21335, 0, 0, -0.976976,  True, '2005-02-09 10:00:00'); /* Sewer Rat(7106/ratsewer) - Level: 32 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0A7,  1625, 0x01EF0130, 80, -170, -53.988, -0.21335, 0, 0, -0.976976,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x01EF0130 [80.000000 -170.000000 -53.987999] -0.213350 0.000000 0.000000 -0.976976 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0A8,  7106, 0x01EF013A, 80, -200, -53.988, 0.530105, 0, 0, -0.847932,  True, '2005-02-09 10:00:00'); /* Sewer Rat(7106/ratsewer) - Level: 32 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0A8,  1625, 0x01EF013A, 80, -200, -53.988, 0.530105, 0, 0, -0.847932,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x01EF013A [80.000000 -200.000000 -53.987999] 0.530105 0.000000 0.000000 -0.847932 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0A9,  1626, 0x01EF0174, 38.6625, -191.739, -35.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0A9,   218, 0x01EF0174, 38.6625, -191.739, -35.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0174 [38.662498 -191.738998 -35.987999] 0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0AA,  1626, 0x01EF0174, 38.5287, -187.566, -35.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0AA,   218, 0x01EF0174, 38.5287, -187.566, -35.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0174 [38.528702 -187.565994 -35.987999] 0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -453,59 +453,59 @@ VALUES (0x701EF0AB,  1484, 0x01EF0230, 128.796, -99.3045, -23.9923, 0.450098, 0,
 /* @teleloc 0x01EF0230 [128.796005 -99.304497 -23.992300] 0.450098 0.000000 0.000000 -0.892979 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0AC,  1626, 0x01EF0273, 40, -150, -17.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0AC,   218, 0x01EF0273, 40, -150, -17.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0273 [40.000000 -150.000000 -17.988001] 0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0AD,  1626, 0x01EF027A, 46.8301, -119.519, -17.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0AD,   218, 0x01EF027A, 46.8301, -119.519, -17.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF027A [46.830101 -119.518997 -17.988001] 0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0AE,  1626, 0x01EF0282, 47.9386, -132.446, -17.988, 0.985296, 0, 0, -0.170854,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0AE,   218, 0x01EF0282, 47.9386, -132.446, -17.988, 0.985296, 0, 0, -0.170854,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0282 [47.938599 -132.445999 -17.988001] 0.985296 0.000000 0.000000 -0.170854 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0AF,  1626, 0x01EF0289, 60.8025, -150.441, -17.988, -0.957728, 0, 0, -0.287674,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0AF,   218, 0x01EF0289, 60.8025, -150.441, -17.988, -0.957728, 0, 0, -0.287674,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0289 [60.802502 -150.440994 -17.988001] -0.957728 0.000000 0.000000 -0.287674 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0B0,  1626, 0x01EF02D3, 138.354, -78.6623, -17.988, 0.917711, 0, 0, -0.397248,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0B0,   218, 0x01EF02D3, 138.354, -78.6623, -17.988, 0.917711, 0, 0, -0.397248,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF02D3 [138.354004 -78.662300 -17.988001] 0.917711 0.000000 0.000000 -0.397248 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0B1,  1626, 0x01EF02D3, 139.626, -81.6719, -17.988, 1, 0, 0, 0,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0B1,   220, 0x01EF02D3, 139.626, -81.6719, -17.988, 1, 0, 0, 0,  True, '2005-02-09 10:00:00'); /* Brown Rat(220/ratbrown) - Level: 8 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Brown Rat Tail(3682/rattailbrown) */
 /* @teleloc 0x01EF02D3 [139.626007 -81.671898 -17.988001] 1.000000 0.000000 0.000000 0.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0B2,  1626, 0x01EF02D3, 141.431, -79.1039, -17.988, -0.88223, 0, 0, -0.470819,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0B2,   218, 0x01EF02D3, 141.431, -79.1039, -17.988, -0.88223, 0, 0, -0.470819,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF02D3 [141.431000 -79.103897 -17.988001] -0.882230 0.000000 0.000000 -0.470819 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0B3,  1626, 0x01EF0308, 47.4989, -122.207, -11.988, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0B3,   218, 0x01EF0308, 47.4989, -122.207, -11.988, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0308 [47.498901 -122.207001 -11.988000] 0.000000 0.000000 0.000000 -1.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0B4,  1626, 0x01EF0317, 67.4588, -132.755, -11.988, 0.916363, 0, 0, -0.400349,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0B4,   218, 0x01EF0317, 67.4588, -132.755, -11.988, 0.916363, 0, 0, -0.400349,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0317 [67.458801 -132.755005 -11.988000] 0.916363 0.000000 0.000000 -0.400349 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0B5,  1626, 0x01EF0323, 81.0967, -139.599, -11.988, 1, 0, 0, 0,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0B5,   218, 0x01EF0323, 81.0967, -139.599, -11.988, 1, 0, 0, 0,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0323 [81.096703 -139.598999 -11.988000] 1.000000 0.000000 0.000000 0.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0B6,  1626, 0x01EF0323, 79.8796, -142.434, -11.988, 1, 0, 0, 0,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0B6,   218, 0x01EF0323, 79.8796, -142.434, -11.988, 1, 0, 0, 0,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0323 [79.879601 -142.434006 -11.988000] 1.000000 0.000000 0.000000 0.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0B7,  1626, 0x01EF0336, 99.1975, -117.151, -11.988, 0.343045, 0, 0, -0.939319,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0B7,   218, 0x01EF0336, 99.1975, -117.151, -11.988, 0.343045, 0, 0, -0.939319,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0336 [99.197502 -117.151001 -11.988000] 0.343045 0.000000 0.000000 -0.939319 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0B8,  1626, 0x01EF0368, 67.967, -139.371, -5.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0B8,   218, 0x01EF0368, 67.967, -139.371, -5.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0368 [67.967003 -139.371002 -5.988000] 0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0B9,  1626, 0x01EF0368, 71.4203, -141.91, -5.988, 0.977692, 0, 0, -0.210045,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0B9,   218, 0x01EF0368, 71.4203, -141.91, -5.988, 0.977692, 0, 0, -0.210045,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0368 [71.420303 -141.910004 -5.988000] 0.977692 0.000000 0.000000 -0.210045 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -521,59 +521,59 @@ VALUES (0x701EF0BC,  1608, 0x01EF036D, 78.8378, -88.3619, -5.9958, 0.696383, 0, 
 /* @teleloc 0x01EF036D [78.837799 -88.361900 -5.995800] 0.696383 0.000000 0.000000 -0.717671 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0BD,  1626, 0x01EF036F, 81.2305, -109.197, -5.988, -0.667182, 0, 0, -0.744894,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0BD,   218, 0x01EF036F, 81.2305, -109.197, -5.988, -0.667182, 0, 0, -0.744894,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF036F [81.230499 -109.196999 -5.988000] -0.667182 0.000000 0.000000 -0.744894 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0BE,  1626, 0x01EF036F, 77.4588, -113.573, -5.988, 1, 0, 0, 0,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0BE,   218, 0x01EF036F, 77.4588, -113.573, -5.988, 1, 0, 0, 0,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF036F [77.458801 -113.572998 -5.988000] 1.000000 0.000000 0.000000 0.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0BF,  1626, 0x01EF0376, 80, -130, -5.988, -0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0BF,   218, 0x01EF0376, 80, -130, -5.988, -0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0376 [80.000000 -130.000000 -5.988000] -0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0C0,  1626, 0x01EF0380, 92.0347, -132.726, -5.988, -0.787677, 0, 0, -0.616088,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0C0,   218, 0x01EF0380, 92.0347, -132.726, -5.988, -0.787677, 0, 0, -0.616088,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0380 [92.034698 -132.725998 -5.988000] -0.787677 0.000000 0.000000 -0.616088 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0C1,  1626, 0x01EF0381, 99.5319, -11.0031, -5.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0C1,   218, 0x01EF0381, 99.5319, -11.0031, -5.988, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF0381 [99.531898 -11.003100 -5.988000] 0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0C2,  7106, 0x01EF038B, 100.015, -116.71, -5.988, -0.456128, 0, 0, -0.889914,  True, '2005-02-09 10:00:00'); /* Sewer Rat(7106/ratsewer) - Level: 32 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0C2,  1625, 0x01EF038B, 100.015, -116.71, -5.988, -0.456128, 0, 0, -0.889914,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x01EF038B [100.014999 -116.709999 -5.988000] -0.456128 0.000000 0.000000 -0.889914 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0C3,  1626, 0x01EF039E, 121.618, -58.8202, -5.988, -0.360302, 0, 0, -0.932836,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0C3,   218, 0x01EF039E, 121.618, -58.8202, -5.988, -0.360302, 0, 0, -0.932836,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF039E [121.617996 -58.820202 -5.988000] -0.360302 0.000000 0.000000 -0.932836 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0C4,  1626, 0x01EF039E, 119.419, -62.795, -5.988, 1, 0, 0, 0,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0C4,   218, 0x01EF039E, 119.419, -62.795, -5.988, 1, 0, 0, 0,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF039E [119.418999 -62.794998 -5.988000] 1.000000 0.000000 0.000000 0.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0C5,  1626, 0x01EF039F, 131.351, -0.842625, -5.988, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0C5,   218, 0x01EF039F, 131.351, -0.842625, -5.988, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF039F [131.350998 -0.842625 -5.988000] 0.000000 0.000000 0.000000 -1.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0C6,  1626, 0x01EF039F, 128.984, 1.8725, -5.988, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0C6,   218, 0x01EF039F, 128.984, 1.8725, -5.988, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF039F [128.983994 1.872500 -5.988000] 0.000000 0.000000 0.000000 -1.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0C7,  1626, 0x01EF03A2, 130.508, -11.4044, -5.988, -0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0C7,   218, 0x01EF03A2, 130.508, -11.4044, -5.988, -0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF03A2 [130.507996 -11.404400 -5.988000] -0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0C8,  1626, 0x01EF03A3, 130.201, -28.2612, -5.988, -0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0C8,   218, 0x01EF03A3, 130.201, -28.2612, -5.988, -0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF03A3 [130.201004 -28.261200 -5.988000] -0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0C9,  7106, 0x01EF03A3, 128.489, -32.0731, -5.988, -0.945979, 0, 0, -0.324227,  True, '2005-02-09 10:00:00'); /* Sewer Rat(7106/ratsewer) - Level: 32 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0C9,  1625, 0x01EF03A3, 128.489, -32.0731, -5.988, -0.945979, 0, 0, -0.324227,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x01EF03A3 [128.488998 -32.073101 -5.988000] -0.945979 0.000000 0.000000 -0.324227 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0CA,  1626, 0x01EF03A7, 149.836, -10.642, -5.988, -0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0CA,   218, 0x01EF03A7, 149.836, -10.642, -5.988, -0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF03A7 [149.835999 -10.642000 -5.988000] -0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -585,11 +585,11 @@ VALUES (0x701EF0CC,  1608, 0x01EF03A8, -0.4815, -37.9937, 0.0042, 0.330617, 0, 0
 /* @teleloc 0x01EF03A8 [-0.481500 -37.993698 0.004200] 0.330617 0.000000 0.000000 -0.943765 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0CD,  7106, 0x01EF03A9, -0.77575, -72.4075, 0.012, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Sewer Rat(7106/ratsewer) - Level: 32 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0CD,  1625, 0x01EF03A9, -0.77575, -72.4075, 0.012, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x01EF03A9 [-0.775750 -72.407501 0.012000] 0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0CE,  1626, 0x01EF03A9, 0.414625, -68.3281, 0.012, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0CE,   218, 0x01EF03A9, 0.414625, -68.3281, 0.012, 0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF03A9 [0.414625 -68.328102 0.012000] 0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -597,11 +597,11 @@ VALUES (0x701EF0CF,  1608, 0x01EF03AC, 10.6693, -38.3921, 0.0042, 0.389626, 0, 0
 /* @teleloc 0x01EF03AC [10.669300 -38.392101 0.004200] 0.389626 0.000000 0.000000 -0.920973 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0D0,  1626, 0x01EF03AD, 10, -60, 0.012, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0D0,   218, 0x01EF03AD, 10, -60, 0.012, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF03AD [10.000000 -60.000000 0.012000] 0.000000 0.000000 0.000000 -1.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0D1,  1626, 0x01EF03AD, 11.1259, -57.2757, 0.012, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0D1,   218, 0x01EF03AD, 11.1259, -57.2757, 0.012, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF03AD [11.125900 -57.275700 0.012000] 0.000000 0.000000 0.000000 -1.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -629,22 +629,22 @@ VALUES (0x701EF0D5, 0x701EF019, '2005-02-09 10:00:00')/* Lich (204/zombielich) -
      , (0x701EF0D5, 0x701EF02E, '2005-02-09 10:00:00')/* Banderling Chief (50072/banderlingchiefhigh) - Level: 20 T1_General - Random Loot: Tier 1 - DeathTreasureType: 453(T1_General) - Generates - Banderling Scalp(3693/banderlingscalp) */
      , (0x701EF0D5, 0x701EF034, '2005-02-09 10:00:00')/* Banderling Striker (7345/banderlingstriker) - Level: 21 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Banderling Scalp(3693/banderlingscalp) / Sturdy Iron Key(6876/keychesthigh) / Brown Beans(7825/cacaobeans) / Ruined Amulet of the Bow(15762/amuletruinedbow) */
      , (0x701EF0D5, 0x701EF043, '2005-02-09 10:00:00')/* Banderling Ogre (7087/banderlingogre) - Level: 15 T1_General - Random Loot: Tier 1 - DeathTreasureType: 453(T1_General) - Generates - Banderling Scalp(3693/banderlingscalp) */
-     , (0x701EF0D5, 0x701EF0AC, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0AD, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0AE, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0AF, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0B0, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0B1, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0B2, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0BD, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0BE, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0C3, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0C4, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0C6, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0C7, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0C8, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0C9, '2005-02-09 10:00:00')/* Sewer Rat (7106/ratsewer) - Level: 32 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D5, 0x701EF0CA, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x701EF0D5, 0x701EF0AC, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0AD, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0AE, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0AF, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0B0, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0B1, '2005-02-09 10:00:00')/* Brown Rat (220/ratbrown) - Level: 8 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Brown Rat Tail(3682/rattailbrown) */
+     , (0x701EF0D5, 0x701EF0B2, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0BD, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0BE, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0C3, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0C4, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0C6, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0C7, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0C8, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D5, 0x701EF0C9, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
+     , (0x701EF0D5, 0x701EF0CA, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
      , (0x701EF0D5, 0x701EF0CB, '2005-02-09 10:00:00')/* Drudge Lurker (1608/drudgelurker) - Level: 24 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Brown Beans(7825/cacaobeans) / Ruined Amulet of the Atlatl(15760/amuletruinedatlatl) / Drudge Fight(27390/gemquestfightdrudge) */;
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -665,18 +665,18 @@ VALUES (0x701EF0D6, 0x701EF002, '2005-02-09 10:00:00')/* Granite Golem (195/gole
      , (0x701EF0D6, 0x701EF0BA, '2005-02-09 10:00:00')/* Drudge Lurker (1608/drudgelurker) - Level: 24 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Brown Beans(7825/cacaobeans) / Ruined Amulet of the Atlatl(15760/amuletruinedatlatl) / Drudge Fight(27390/gemquestfightdrudge) */
      , (0x701EF0D6, 0x701EF0BB, '2005-02-09 10:00:00')/* Drudge Lurker (1608/drudgelurker) - Level: 24 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Brown Beans(7825/cacaobeans) / Ruined Amulet of the Atlatl(15760/amuletruinedatlatl) / Drudge Fight(27390/gemquestfightdrudge) */
      , (0x701EF0D6, 0x701EF0BC, '2005-02-09 10:00:00')/* Drudge Lurker (1608/drudgelurker) - Level: 24 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Brown Beans(7825/cacaobeans) / Ruined Amulet of the Atlatl(15760/amuletruinedatlatl) / Drudge Fight(27390/gemquestfightdrudge) */
-     , (0x701EF0D6, 0x701EF0C1, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D6, 0x701EF0C5, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x701EF0D6, 0x701EF0C1, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D6, 0x701EF0C5, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
      , (0x701EF0D6, 0x701EF0CC, '2005-02-09 10:00:00')/* Drudge Lurker (1608/drudgelurker) - Level: 24 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Brown Beans(7825/cacaobeans) / Ruined Amulet of the Atlatl(15760/amuletruinedatlatl) / Drudge Fight(27390/gemquestfightdrudge) */
-     , (0x701EF0D6, 0x701EF0CD, '2005-02-09 10:00:00')/* Sewer Rat (7106/ratsewer) - Level: 32 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D6, 0x701EF0CE, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x701EF0D6, 0x701EF0CD, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
+     , (0x701EF0D6, 0x701EF0CE, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
      , (0x701EF0D6, 0x701EF0CF, '2005-02-09 10:00:00')/* Drudge Lurker (1608/drudgelurker) - Level: 24 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Brown Beans(7825/cacaobeans) / Ruined Amulet of the Atlatl(15760/amuletruinedatlatl) / Drudge Fight(27390/gemquestfightdrudge) */
-     , (0x701EF0D6, 0x701EF0D0, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D6, 0x701EF0D1, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x701EF0D6, 0x701EF0D0, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D6, 0x701EF0D1, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
      , (0x701EF0D6, 0x701EF0D2, '2005-02-09 10:00:00')/* Drudge Lurker (1608/drudgelurker) - Level: 24 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Brown Beans(7825/cacaobeans) / Ruined Amulet of the Atlatl(15760/amuletruinedatlatl) / Drudge Fight(27390/gemquestfightdrudge) */
      , (0x701EF0D6, 0x701EF0D4, '2005-02-09 10:00:00')/* Drudge Lurker (1608/drudgelurker) - Level: 24 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Brown Beans(7825/cacaobeans) / Ruined Amulet of the Atlatl(15760/amuletruinedatlatl) / Drudge Fight(27390/gemquestfightdrudge) */
-     , (0x701EF0D6, 0x701EF0DA, '2005-02-09 10:00:00')/* Sewer Rat (7106/ratsewer) - Level: 32 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D6, 0x701EF0DB, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */;
+     , (0x701EF0D6, 0x701EF0DA, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
+     , (0x701EF0D6, 0x701EF0DB, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */;
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
 VALUES (0x701EF0D7,  4219, 0x01EF03DD, 72.7214, -68.0239, 0.005, 0.697912, 0, 0, -0.716184, False, '2005-02-09 10:00:00'); /* Linkable Monster Generator ( 7 Min.)(4219/linkmonstergen7minutes) - Generates - Place Holder Object(3666/placeholder) */
@@ -693,20 +693,20 @@ VALUES (0x701EF0D7, 0x701EF000, '2005-02-09 10:00:00')/* Injured Olthoi (1620/ol
      , (0x701EF0D7, 0x701EF037, '2005-02-09 10:00:00')/* Banderling Bandit (22809/banderlingbandit) - Level: 24 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Brown Beans(7825/cacaobeans) / Banderling Head(8144/banderlinghead) */
      , (0x701EF0D7, 0x701EF039, '2005-02-09 10:00:00')/* Banderling Striker (7345/banderlingstriker) - Level: 21 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Banderling Scalp(3693/banderlingscalp) / Sturdy Iron Key(6876/keychesthigh) / Brown Beans(7825/cacaobeans) / Ruined Amulet of the Bow(15762/amuletruinedbow) */
      , (0x701EF0D7, 0x701EF03C, '2005-02-09 10:00:00')/* Banderling Striker (7345/banderlingstriker) - Level: 21 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Banderling Scalp(3693/banderlingscalp) / Sturdy Iron Key(6876/keychesthigh) / Brown Beans(7825/cacaobeans) / Ruined Amulet of the Bow(15762/amuletruinedbow) */
-     , (0x701EF0D7, 0x701EF0A7, '2005-02-09 10:00:00')/* Sewer Rat (7106/ratsewer) - Level: 32 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0A8, '2005-02-09 10:00:00')/* Sewer Rat (7106/ratsewer) - Level: 32 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0A9, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0AA, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0B3, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0B4, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0B5, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0B6, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0B7, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0B8, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0B9, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0BF, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0C0, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x701EF0D7, 0x701EF0C2, '2005-02-09 10:00:00')/* Sewer Rat (7106/ratsewer) - Level: 32 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x701EF0D7, 0x701EF0A7, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
+     , (0x701EF0D7, 0x701EF0A8, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
+     , (0x701EF0D7, 0x701EF0A9, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D7, 0x701EF0AA, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D7, 0x701EF0B3, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D7, 0x701EF0B4, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D7, 0x701EF0B5, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D7, 0x701EF0B6, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D7, 0x701EF0B7, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D7, 0x701EF0B8, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D7, 0x701EF0B9, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D7, 0x701EF0BF, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D7, 0x701EF0C0, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
+     , (0x701EF0D7, 0x701EF0C2, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
      , (0x701EF0D7, 0x701EF0D9, '2005-02-09 10:00:00')/* Gold Phyntos Wasp (217/phyntoswaspgold) - Level: 27 T2_Magic - Random Loot: Tier 2 - DeathTreasureType: 463(T2_Magic) - Generates - Gold Phyntos Wasp Wing(3700/waspwinggold) */;
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -737,9 +737,9 @@ VALUES (0x701EF0D9,   217, 0x01EF040D, 128.502, -30.9898, 0.012, 0, 0, 0, -1,  T
 /* @teleloc 0x01EF040D [128.501999 -30.989799 0.012000] 0.000000 0.000000 0.000000 -1.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0DA,  7106, 0x01EF0445, 109.639, -59.7592, 6.012, 0.920973, 0, 0, -0.389626,  True, '2005-02-09 10:00:00'); /* Sewer Rat(7106/ratsewer) - Level: 32 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0DA,  1625, 0x01EF0445, 109.639, -59.7592, 6.012, 0.920973, 0, 0, -0.389626,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x01EF0445 [109.639000 -59.759201 6.012000] 0.920973 0.000000 0.000000 -0.389626 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x701EF0DB,  1626, 0x01EF044D, 119.759, -48.8631, 6.012, -0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x701EF0DB,   218, 0x01EF044D, 119.759, -48.8631, 6.012, -0.707107, 0, 0, -0.707107,  True, '2005-02-09 10:00:00'); /* Black Rat(218/ratblack) - Level: 6 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
 /* @teleloc 0x01EF044D [119.759003 -48.863098 6.012000] -0.707107 0.000000 0.000000 -0.707107 */

@@ -72,11 +72,11 @@ VALUES (0x7014A01A,   194, 0x014A0123, 45.4811, -60.1847, -5.989, -0.538404, 0, 
 /* @teleloc 0x014A0123 [45.481098 -60.184700 -5.989000] -0.538404 0.000000 0.000000 -0.842687 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7014A01B,  1626, 0x014A0129, 59.0202, -17.5476, -5.988, 0.995547, 0, 0, -0.094264,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7014A01B,  1625, 0x014A0129, 59.0202, -17.5476, -5.988, 0.995547, 0, 0, -0.094264,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x014A0129 [59.020199 -17.547600 -5.988000] 0.995547 0.000000 0.000000 -0.094264 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7014A01C,  1626, 0x014A0129, 61.429, -23.1519, -5.988, -0.996538, 0, 0, 0.083143,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7014A01C,  1625, 0x014A0129, 61.429, -23.1519, -5.988, -0.996538, 0, 0, 0.083143,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x014A0129 [61.429001 -23.151899 -5.988000] -0.996538 0.000000 0.000000 0.083143 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -134,8 +134,8 @@ VALUES (0x7014A026, 0x7014A00D, '2005-02-09 10:00:00')/* Iron Golem (197/golemir
      , (0x7014A026, 0x7014A018, '2005-02-09 10:00:00')/* Granite Golem (195/golemgranite) - Level: 17 T2_Magic - Random Loot: Tier 2 - DeathTreasureType: 463(T2_Magic) - Generates - Granite Heart(3671/golemheartgranite) / Pyreal Mote(6353/pyrealmote) */
      , (0x7014A026, 0x7014A019, '2005-02-09 10:00:00')/* Unstable Magma Golem (6645/golemunstablemagma) - Level: 23 T2_Magic - Random Loot: Tier 2 - DeathTreasureType: 463(T2_Magic) - Generates - Black Rock(3686/rockblack) / Pyreal Mote(6353/pyrealmote) */
      , (0x7014A026, 0x7014A01A, '2005-02-09 10:00:00')/* Copper Golem (194/golemcopper) - Level: 19 T2_Magic - Random Loot: Tier 2 - DeathTreasureType: 463(T2_Magic) - Generates - Copper Heart(3670/golemheartcopper) / Pyreal Mote(6353/pyrealmote) */
-     , (0x7014A026, 0x7014A01B, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x7014A026, 0x7014A01C, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x7014A026, 0x7014A01B, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
+     , (0x7014A026, 0x7014A01C, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
      , (0x7014A026, 0x7014A01D, '2005-02-09 10:00:00')/* Copper Golem (194/golemcopper) - Level: 19 T2_Magic - Random Loot: Tier 2 - DeathTreasureType: 463(T2_Magic) - Generates - Copper Heart(3670/golemheartcopper) / Pyreal Mote(6353/pyrealmote) */
      , (0x7014A026, 0x7014A01E, '2005-02-09 10:00:00')/* Unstable Magma Golem (6645/golemunstablemagma) - Level: 23 T2_Magic - Random Loot: Tier 2 - DeathTreasureType: 463(T2_Magic) - Generates - Black Rock(3686/rockblack) / Pyreal Mote(6353/pyrealmote) */
      , (0x7014A026, 0x7014A01F, '2005-02-09 10:00:00')/* Unstable Magma Golem (6645/golemunstablemagma) - Level: 23 T2_Magic - Random Loot: Tier 2 - DeathTreasureType: 463(T2_Magic) - Generates - Black Rock(3686/rockblack) / Pyreal Mote(6353/pyrealmote) */

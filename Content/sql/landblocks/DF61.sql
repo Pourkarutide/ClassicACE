@@ -84,7 +84,7 @@ VALUES (0x7DF61086,  7334, 0xDF610000, 88.0119, 19.7939, 28.005, -0.707107, 0, 0
 /* @teleloc 0xDF610000 [88.011902 19.793900 28.004999] -0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7DF6108F,  1626, 0xDF610115, 101.614, 13.6088, 18.012, -0.726424, 0, 0, 0.687247,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7DF6108F,  1625, 0xDF610115, 101.614, 13.6088, 18.012, -0.726424, 0, 0, 0.687247,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0xDF610115 [101.613998 13.608800 18.011999] -0.726424 0.000000 0.000000 0.687247 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -92,7 +92,7 @@ VALUES (0x7DF61090,  7121, 0xDF610117, 84.0292, 7.01054, 28.005, -0.999988, 0, 0
 /* @teleloc 0xDF610117 [84.029198 7.010540 28.004999] -0.999988 0.000000 0.000000 0.004929 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7DF61093,  1626, 0xDF610113, 108.128, 18.5412, 18.012, -0.464711, 0, 0, -0.885462,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7DF61093,  1625, 0xDF610113, 108.128, 18.5412, 18.012, -0.464711, 0, 0, -0.885462,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0xDF610113 [108.127998 18.541201 18.011999] -0.464711 0.000000 0.000000 -0.885462 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -108,15 +108,15 @@ VALUES (0x7DF61099,  7121, 0xDF610000, 88.0441, 15.98, 28.005, -0.707107, 0, 0, 
 /* @teleloc 0xDF610000 [88.044098 15.980000 28.004999] -0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7DF6109F,  7106, 0xDF610115, 100.321, 12.9987, 18.012, -0.697711, 0, 0, 0.716379,  True, '2005-02-09 10:00:00'); /* Sewer Rat(7106/ratsewer) - Level: 32 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7DF6109F,  1624, 0xDF610115, 100.321, 12.9987, 18.012, -0.697711, 0, 0, 0.716379,  True, '2005-02-09 10:00:00'); /* Swamp Rat(1624/ratswamp) - Level: 13 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) */
 /* @teleloc 0xDF610115 [100.320999 12.998700 18.011999] -0.697711 0.000000 0.000000 0.716379 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7DF610A2,  7106, 0xDF610114, 104.864, 14.6952, 18.012, -0.929129, 0, 0, 0.369756,  True, '2005-02-09 10:00:00'); /* Sewer Rat(7106/ratsewer) - Level: 32 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7DF610A2,  1624, 0xDF610114, 104.864, 14.6952, 18.012, -0.929129, 0, 0, 0.369756,  True, '2005-02-09 10:00:00'); /* Swamp Rat(1624/ratswamp) - Level: 13 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) */
 /* @teleloc 0xDF610114 [104.863998 14.695200 18.011999] -0.929129 0.000000 0.000000 0.369756 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7DF610A3,  7106, 0xDF610115, 102.195, 12.2844, 18.012, -0.923297, 0, 0, 0.384086,  True, '2005-02-09 10:00:00'); /* Sewer Rat(7106/ratsewer) - Level: 32 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7DF610A3,  1624, 0xDF610115, 102.195, 12.2844, 18.012, -0.923297, 0, 0, 0.384086,  True, '2005-02-09 10:00:00'); /* Swamp Rat(1624/ratswamp) - Level: 13 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) */
 /* @teleloc 0xDF610115 [102.195000 12.284400 18.011999] -0.923297 0.000000 0.000000 0.384086 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -142,11 +142,11 @@ VALUES (0x7DF610A6, 0x7DF61035, '2005-02-09 10:00:00')/* Skeleton Warrior (1760/
      , (0x7DF610A6, 0x7DF61071, '2005-02-09 10:00:00')/* Skeleton Wraith (22208/skeletonwraith) - Level: 28 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / Skeletal Arm(22027/armskeletal) / Skeletal Leg(22031/legskeletal) / Skeletal Torso(22047/torsoskeletal) */
      , (0x7DF610A6, 0x7DF6107B, '2005-02-09 10:00:00')/* Skeleton Bone Knight (7334/skeletonboneknight) - Level: 33 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / Sturdy Iron Key(6876/keychesthigh) / A Large Mnemosyne(9310/pyramidgreenlarge) / Skull Stamp(22100/stampsymbolskull) */
      , (0x7DF610A6, 0x7DF61081, '2005-02-09 10:00:00')/* Skeleton Bone Lord (7121/skeletonbonelord) - Level: 36 T3_General - Random Loot: Tier 3 - DeathTreasureType: 450(T3_General) - Generates - Skeleton's Skull(3687/skull) / Sturdy Iron Key(6876/keychesthigh) / A Large Mnemosyne(9310/pyramidgreenlarge) / Skull Stamp(22100/stampsymbolskull) */
-     , (0x7DF610A6, 0x7DF6108F, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x7DF610A6, 0x7DF61093, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x7DF610A6, 0x7DF6109F, '2005-02-09 10:00:00')/* Sewer Rat (7106/ratsewer) - Level: 32 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x7DF610A6, 0x7DF610A2, '2005-02-09 10:00:00')/* Sewer Rat (7106/ratsewer) - Level: 32 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x7DF610A6, 0x7DF610A3, '2005-02-09 10:00:00')/* Sewer Rat (7106/ratsewer) - Level: 32 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x7DF610A6, 0x7DF6108F, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
+     , (0x7DF610A6, 0x7DF61093, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
+     , (0x7DF610A6, 0x7DF6109F, '2005-02-09 10:00:00')/* Swamp Rat (1624/ratswamp) - Level: 13 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) */
+     , (0x7DF610A6, 0x7DF610A2, '2005-02-09 10:00:00')/* Swamp Rat (1624/ratswamp) - Level: 13 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) */
+     , (0x7DF610A6, 0x7DF610A3, '2005-02-09 10:00:00')/* Swamp Rat (1624/ratswamp) - Level: 13 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) */
      , (0x7DF610A6, 0x7DF610B7, '2005-02-09 10:00:00')/* Skeleton Captain (1761/skeletoncaptain) - Level: 18 T1_General - Random Loot: Tier 1 - DeathTreasureType: 453(T1_General) - Generates - Skeleton's Skull(3687/skull) / A Tiny Mnemosyne(9314/pyramidgreentiny) / Skull Stamp(22100/stampsymbolskull) */
      , (0x7DF610A6, 0x7DF610BD, '2005-02-09 10:00:00')/* Skeleton Wraith (22208/skeletonwraith) - Level: 28 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / Skeletal Arm(22027/armskeletal) / Skeletal Leg(22031/legskeletal) / Skeletal Torso(22047/torsoskeletal) */
      , (0x7DF610A6, 0x7DF610C0, '2005-02-09 10:00:00')/* Skeleton Bone Lord (7121/skeletonbonelord) - Level: 36 T3_General - Random Loot: Tier 3 - DeathTreasureType: 450(T3_General) - Generates - Skeleton's Skull(3687/skull) / Sturdy Iron Key(6876/keychesthigh) / A Large Mnemosyne(9310/pyramidgreenlarge) / Skull Stamp(22100/stampsymbolskull) */
@@ -215,7 +215,7 @@ VALUES (0x7DF610C1,  7334, 0xDF610124, 76.9525, 13.477, 18.005, -0.28852, 0, 0, 
 /* @teleloc 0xDF610124 [76.952499 13.477000 18.004999] -0.288520 0.000000 0.000000 -0.957474 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7DF610C3,  1925, 0xDF610115, 101.121, 10.8245, 18.005, 0, 0, 0, -1, False, '2005-02-09 10:00:00'); /* Chest(1925/chestmagicmed) - Content - Random Loot: Tier 3 - DeathTreasureType: 462(T3_Magic) */
+VALUES (0x7DF610C3,  1924, 0xDF610115, 101.121, 10.8245, 18.005, 0, 0, 0, -1, False, '2005-02-09 10:00:00'); /* Chest(1924/chestmagiclow) - Content - Random Loot: Tier 2 - DeathTreasureType: 463(T2_Magic) */
 /* @teleloc 0xDF610115 [101.121002 10.824500 18.004999] 0.000000 0.000000 0.000000 -1.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -223,7 +223,7 @@ VALUES (0x7DF610C7,  7334, 0xDF610117, 81.7347, 10.1655, 28.005, 0.998362, 0, 0,
 /* @teleloc 0xDF610117 [81.734703 10.165500 28.004999] 0.998362 0.000000 0.000000 -0.057216 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7DF610CA,  1947, 0xDF610124, 79.263, 10.847, 18.005, 0, 0, 0, -1, False, '2005-02-09 10:00:00'); /* Chest(1947/chestwarriormed) - Content - Random Loot: Tier 3 - DeathTreasureType: 3(T3_Chest_Warrior) */
+VALUES (0x7DF610CA,  1946, 0xDF610124, 79.263, 10.847, 18.005, 0, 0, 0, -1, False, '2005-02-09 10:00:00'); /* Chest(1946/chestwarriorlow) - Content - Random Loot: Tier 2 - DeathTreasureType: 4(T2_Chest_Warrior) */
 /* @teleloc 0xDF610124 [79.263000 10.847000 18.004999] 0.000000 0.000000 0.000000 -1.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)

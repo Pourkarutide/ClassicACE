@@ -93,11 +93,11 @@ VALUES (0x7018404C,   218, 0x0184010A, 10.5552, -109.019, 0.012, 0.041098, 0, 0,
 /* @teleloc 0x0184010A [10.555200 -109.018997 0.012000] 0.041098 0.000000 0.000000 0.999155 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7018404D,  1626, 0x0184010B, 10.0033, -119.96, 0.012, -0.989241, 0, 0, -0.146298,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7018404D,   220, 0x0184010B, 10.0033, -119.96, 0.012, -0.989241, 0, 0, -0.146298,  True, '2005-02-09 10:00:00'); /* Brown Rat(220/ratbrown) - Level: 8 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Brown Rat Tail(3682/rattailbrown) */
 /* @teleloc 0x0184010B [10.003300 -119.959999 0.012000] -0.989241 0.000000 0.000000 -0.146298 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7018404E,  1626, 0x0184010B, 8.8946, -122.281, 0.012, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7018404E,   220, 0x0184010B, 8.8946, -122.281, 0.012, 0, 0, 0, -1,  True, '2005-02-09 10:00:00'); /* Brown Rat(220/ratbrown) - Level: 8 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Brown Rat Tail(3682/rattailbrown) */
 /* @teleloc 0x0184010B [8.894600 -122.280998 0.012000] 0.000000 0.000000 0.000000 -1.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -165,7 +165,7 @@ VALUES (0x7018405E,   218, 0x0184013A, 39.9096, -127.48, 0.0084, 0.707107, 0, 0,
 /* @teleloc 0x0184013A [39.909599 -127.480003 0.008400] 0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7018405F,  1626, 0x0184013A, 40, -130, 0.012, 0.957288, 0, 0, -0.289137,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7018405F,   220, 0x0184013A, 40, -130, 0.012, 0.957288, 0, 0, -0.289137,  True, '2005-02-09 10:00:00'); /* Brown Rat(220/ratbrown) - Level: 8 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Brown Rat Tail(3682/rattailbrown) */
 /* @teleloc 0x0184013A [40.000000 -130.000000 0.012000] 0.957288 0.000000 0.000000 -0.289137 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -179,8 +179,8 @@ VALUES (0x70184061,  7924, 0x0184015D, 70.3301, -78.994, 0.005, -0.034797, 0, 0,
 INSERT INTO `landblock_instance_link` (`parent_GUID`, `child_GUID`, `last_Modified`)
 VALUES (0x70184061, 0x7018404B, '2005-02-09 10:00:00')/* Drudge Slave (1632/drudgehighslave) - Level: 10 T1_General - Random Loot: Tier 1 - DeathTreasureType: 453(T1_General) - Generates - Drudge Charm(3669/drudgecharm) / Brown Beans(7825/cacaobeans) / Lucky Gold Letter(8701/lettergoldnewbiequest) / Scarlet Red Letter(8702/letterrednewbiequest) / Peppermint Stick(13222/peppermintstick) / Academy Stamp(20854/stampsymbol1) */
      , (0x70184061, 0x7018404C, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
-     , (0x70184061, 0x7018404D, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x70184061, 0x7018404E, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x70184061, 0x7018404D, '2005-02-09 10:00:00')/* Brown Rat (220/ratbrown) - Level: 8 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Brown Rat Tail(3682/rattailbrown) */
+     , (0x70184061, 0x7018404E, '2005-02-09 10:00:00')/* Brown Rat (220/ratbrown) - Level: 8 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Brown Rat Tail(3682/rattailbrown) */
      , (0x70184061, 0x7018404F, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
      , (0x70184061, 0x70184050, '2005-02-09 10:00:00')/* Drudge Servant (1631/drudgelowslave) - Level: 7 T1_General - Random Loot: Tier 1 - DeathTreasureType: 453(T1_General) - Generates - Drudge Charm(3669/drudgecharm) / Brown Beans(7825/cacaobeans) / Lucky Gold Letter(8701/lettergoldnewbiequest) / Scarlet Red Letter(8702/letterrednewbiequest) / Peppermint Stick(13222/peppermintstick) / Academy Stamp(20854/stampsymbol1) */
      , (0x70184061, 0x70184051, '2005-02-09 10:00:00')/* Drudge Slave (1632/drudgehighslave) - Level: 10 T1_General - Random Loot: Tier 1 - DeathTreasureType: 453(T1_General) - Generates - Drudge Charm(3669/drudgecharm) / Brown Beans(7825/cacaobeans) / Lucky Gold Letter(8701/lettergoldnewbiequest) / Scarlet Red Letter(8702/letterrednewbiequest) / Peppermint Stick(13222/peppermintstick) / Academy Stamp(20854/stampsymbol1) */
@@ -197,7 +197,7 @@ VALUES (0x70184061, 0x7018404B, '2005-02-09 10:00:00')/* Drudge Slave (1632/drud
      , (0x70184061, 0x7018405C, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
      , (0x70184061, 0x7018405D, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
      , (0x70184061, 0x7018405E, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
-     , (0x70184061, 0x7018405F, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x70184061, 0x7018405F, '2005-02-09 10:00:00')/* Brown Rat (220/ratbrown) - Level: 8 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Brown Rat Tail(3682/rattailbrown) */
      , (0x70184061, 0x70184060, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
      , (0x70184061, 0x70184062, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */
      , (0x70184061, 0x70184063, '2005-02-09 10:00:00')/* Black Rat (218/ratblack) - Level: 6 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Black Rat Tail(3681/rattailblack) */

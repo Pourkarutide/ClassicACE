@@ -141,11 +141,11 @@ VALUES (0x7013E03E,  1762, 0x013E013A, 21.7594, -103.592, -11.995, 0.999702, 0, 
 /* @teleloc 0x013E013A [21.759399 -103.592003 -11.995000] 0.999702 0.000000 0.000000 -0.024426 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7013E03F,  1626, 0x013E013B, 22.7124, -117.374, -11.988, -0.509113, 0, 0, -0.8607,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7013E03F,  1625, 0x013E013B, 22.7124, -117.374, -11.988, -0.509113, 0, 0, -0.8607,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x013E013B [22.712400 -117.374001 -11.988000] -0.509113 0.000000 0.000000 -0.860700 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7013E040,  1626, 0x013E013B, 19.7185, -122.696, -11.988, -0.983656, 0, 0, -0.180058,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7013E040,  1625, 0x013E013B, 19.7185, -122.696, -11.988, -0.983656, 0, 0, -0.180058,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x013E013B [19.718500 -122.695999 -11.988000] -0.983656 0.000000 0.000000 -0.180058 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -189,7 +189,7 @@ VALUES (0x7013E04A,  1630, 0x013E01AC, 45.1293, -54.1596, -11.9475, 0.707107, 0,
 /* @teleloc 0x013E01AC [45.129299 -54.159599 -11.947500] 0.707107 0.000000 0.000000 -0.707107 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7013E04B,  1626, 0x013E01B5, 53.5334, -72.6234, -11.988, -0.713752, 0, 0, -0.700399,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7013E04B,  1625, 0x013E01B5, 53.5334, -72.6234, -11.988, -0.713752, 0, 0, -0.700399,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x013E01B5 [53.533401 -72.623398 -11.988000] -0.713752 0.000000 0.000000 -0.700399 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -301,7 +301,7 @@ VALUES (0x7013E065,   950, 0x013E024F, 68.3336, -68.2766, -5.9925, -0.01805, 0, 
 /* @teleloc 0x013E024F [68.333603 -68.276604 -5.992500] -0.018050 0.000000 0.000000 0.999837 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7013E066,  1626, 0x013E0259, 2.28971, -41.0896, -5.988, 0.742352, 0, 0, 0.67001,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7013E066,  1625, 0x013E0259, 2.28971, -41.0896, -5.988, 0.742352, 0, 0, 0.67001,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x013E0259 [2.289710 -41.089600 -5.988000] 0.742352 0.000000 0.000000 0.670010 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -309,7 +309,7 @@ VALUES (0x7013E067,  8673, 0x013E025C, 5.83555, -40.0156, 0.00825, -0.709684, 0,
 /* @teleloc 0x013E025C [5.835550 -40.015598 0.008250] -0.709684 0.000000 0.000000 0.704520 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7013E068,  1626, 0x013E026B, 29.5781, -9.07533, -5.988, -0.033815, 0, 0, -0.999428,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7013E068,  1625, 0x013E026B, 29.5781, -9.07533, -5.988, -0.033815, 0, 0, -0.999428,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x013E026B [29.578100 -9.075330 -5.988000] -0.033815 0.000000 0.000000 -0.999428 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -331,8 +331,8 @@ VALUES (0x7013E06A, 0x7013E026, '2005-02-09 10:00:00')/* Skeleton Warrior (1760/
      , (0x7013E06A, 0x7013E03C, '2005-02-09 10:00:00')/* Shadow Wisp (1989/wispshadow) - Level: 31 T2_Magic - Random Loot: Tier 2 - DeathTreasureType: 463(T2_Magic) - Generates - Pulsating Wisp Heart(8666/wispheart) */
      , (0x7013E06A, 0x7013E03D, '2005-02-09 10:00:00')/* Skeleton Lord (1762/skeletonlord) - Level: 23 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / A Small Mnemosyne(9312/pyramidgreensmall) / Skull Stamp(22100/stampsymbolskull) */
      , (0x7013E06A, 0x7013E03E, '2005-02-09 10:00:00')/* Skeleton Lord (1762/skeletonlord) - Level: 23 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / A Small Mnemosyne(9312/pyramidgreensmall) / Skull Stamp(22100/stampsymbolskull) */
-     , (0x7013E06A, 0x7013E03F, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x7013E06A, 0x7013E040, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x7013E06A, 0x7013E03F, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
+     , (0x7013E06A, 0x7013E040, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
      , (0x7013E06A, 0x7013E041, '2005-02-09 10:00:00')/* Skeleton Lord (1762/skeletonlord) - Level: 23 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / A Small Mnemosyne(9312/pyramidgreensmall) / Skull Stamp(22100/stampsymbolskull) */
      , (0x7013E06A, 0x7013E042, '2005-02-09 10:00:00')/* Shadow Wisp (1989/wispshadow) - Level: 31 T2_Magic - Random Loot: Tier 2 - DeathTreasureType: 463(T2_Magic) - Generates - Pulsating Wisp Heart(8666/wispheart) */
      , (0x7013E06A, 0x7013E043, '2005-02-09 10:00:00')/* Skeleton Lord (7822/skeletonlord_melee) - Level: 23 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / A Small Mnemosyne(9312/pyramidgreensmall) / Skull Stamp(22100/stampsymbolskull) */
@@ -343,7 +343,7 @@ VALUES (0x7013E06A, 0x7013E026, '2005-02-09 10:00:00')/* Skeleton Warrior (1760/
      , (0x7013E06A, 0x7013E048, '2005-02-09 10:00:00')/* Shadow Wisp (1989/wispshadow) - Level: 31 T2_Magic - Random Loot: Tier 2 - DeathTreasureType: 463(T2_Magic) - Generates - Pulsating Wisp Heart(8666/wispheart) */
      , (0x7013E06A, 0x7013E049, '2005-02-09 10:00:00')/* Skeleton Lord (1762/skeletonlord) - Level: 23 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / A Small Mnemosyne(9312/pyramidgreensmall) / Skull Stamp(22100/stampsymbolskull) */
      , (0x7013E06A, 0x7013E04A, '2005-02-09 10:00:00')/* Lich Lord (1630/zombielichlord) - Level: 21 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Undead Thighbone(7041/lichthighbone) / A Small Mnemosyne(9312/pyramidgreensmall) / Ruined Amulet of the Staff(15770/amuletruinedstaff) / Undead Femur bone(19477/lichfemurbone) / Zombie Head(12225/zombiehead) / Undead Arm(22028/armundead) / Undead Leg(22032/legundead) / Undead Torso(22048/torsoundead) */
-     , (0x7013E06A, 0x7013E04B, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x7013E06A, 0x7013E04B, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
      , (0x7013E06A, 0x7013E04C, '2005-02-09 10:00:00')/* Skeleton Lord (1762/skeletonlord) - Level: 23 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / A Small Mnemosyne(9312/pyramidgreensmall) / Skull Stamp(22100/stampsymbolskull) */
      , (0x7013E06A, 0x7013E04D, '2005-02-09 10:00:00')/* Skeleton Lord (1762/skeletonlord) - Level: 23 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / A Small Mnemosyne(9312/pyramidgreensmall) / Skull Stamp(22100/stampsymbolskull) */
      , (0x7013E06A, 0x7013E04E, '2005-02-09 10:00:00')/* Lich Lord (1630/zombielichlord) - Level: 21 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Undead Thighbone(7041/lichthighbone) / A Small Mnemosyne(9312/pyramidgreensmall) / Ruined Amulet of the Staff(15770/amuletruinedstaff) / Undead Femur bone(19477/lichfemurbone) / Zombie Head(12225/zombiehead) / Undead Arm(22028/armundead) / Undead Leg(22032/legundead) / Undead Torso(22048/torsoundead) */
@@ -367,14 +367,14 @@ VALUES (0x7013E06A, 0x7013E026, '2005-02-09 10:00:00')/* Skeleton Warrior (1760/
      , (0x7013E06A, 0x7013E063, '2005-02-09 10:00:00')/* Zombie (950/zombie) - Level: 9 T1_General - Random Loot: Tier 1 - DeathTreasureType: 453(T1_General) */
      , (0x7013E06A, 0x7013E064, '2005-02-09 10:00:00')/* Zombie (950/zombie) - Level: 9 T1_General - Random Loot: Tier 1 - DeathTreasureType: 453(T1_General) */
      , (0x7013E06A, 0x7013E065, '2005-02-09 10:00:00')/* Zombie (950/zombie) - Level: 9 T1_General - Random Loot: Tier 1 - DeathTreasureType: 453(T1_General) */
-     , (0x7013E06A, 0x7013E066, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x7013E06A, 0x7013E066, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
      , (0x7013E06A, 0x7013E067, '2005-02-09 10:00:00')/* Risen Knight (8673/zombierisenknight) - Level: 27 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x7013E06A, 0x7013E068, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x7013E06A, 0x7013E068, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
      , (0x7013E06A, 0x7013E069, '2005-02-09 10:00:00')/* Skeleton Lord (7822/skeletonlord_melee) - Level: 23 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / A Small Mnemosyne(9312/pyramidgreensmall) / Skull Stamp(22100/stampsymbolskull) */
      , (0x7013E06A, 0x7013E06C, '2005-02-09 10:00:00')/* Skeleton Lord (7822/skeletonlord_melee) - Level: 23 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Skeleton's Skull(3687/skull) / A Small Mnemosyne(9312/pyramidgreensmall) / Skull Stamp(22100/stampsymbolskull) */
-     , (0x7013E06A, 0x7013E06D, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+     , (0x7013E06A, 0x7013E06D, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
      , (0x7013E06A, 0x7013E06E, '2005-02-09 10:00:00')/* Risen Knight (8673/zombierisenknight) - Level: 27 T2_General - Random Loot: Tier 2 - DeathTreasureType: 451(T2_General) - Generates - Sturdy Iron Key(6876/keychesthigh) */
-     , (0x7013E06A, 0x7013E06F, '2005-02-09 10:00:00')/* Silver Rat (1626/ratsilver) - Level: 28 T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */;
+     , (0x7013E06A, 0x7013E06F, '2005-02-09 10:00:00')/* Mountain Rat (1625/ratmountain) - Level: 16 T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */;
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
 VALUES (0x7013E06B,  7923, 0x013E0275, 31.6303, -39.3978, 0.005, 0.026424, 0, 0, 0.999651, False, '2005-02-09 10:00:00'); /* Linkable Monster Generator ( 3 Min.)(7923/linkmonstergen3minutes) - Generates - Place Holder Object(3666/placeholder) */
@@ -390,7 +390,7 @@ VALUES (0x7013E06C,  7822, 0x013E027C, 29.96, -64.7626, 0.005, 1, 0, 0, 0,  True
 /* @teleloc 0x013E027C [29.959999 -64.762604 0.005000] 1.000000 0.000000 0.000000 0.000000 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7013E06D,  1626, 0x013E027D, 29.8928, -68.5353, -5.988, 0.194548, 0, 0, -0.980893,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7013E06D,  1625, 0x013E027D, 29.8928, -68.5353, -5.988, 0.194548, 0, 0, -0.980893,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x013E027D [29.892799 -68.535301 -5.988000] 0.194548 0.000000 0.000000 -0.980893 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
@@ -398,5 +398,5 @@ VALUES (0x7013E06E,  8673, 0x013E028E, 53.4451, -40.0183, 0.00825, -0.702713, 0,
 /* @teleloc 0x013E028E [53.445099 -40.018299 0.008250] -0.702713 0.000000 0.000000 -0.711473 */
 
 INSERT INTO `landblock_instance` (`guid`, `weenie_Class_Id`, `obj_Cell_Id`, `origin_X`, `origin_Y`, `origin_Z`, `angles_W`, `angles_X`, `angles_Y`, `angles_Z`, `is_Link_Child`, `last_Modified`)
-VALUES (0x7013E06F,  1626, 0x013E028F, 62.2526, -40.1597, -5.988, 0.731689, 0, 0, 0.681639,  True, '2005-02-09 10:00:00'); /* Silver Rat(1626/ratsilver) - Level: 28 - T2_Warrior - Random Loot: Tier 2 - DeathTreasureType: 457(T2_Warrior) - Generates - Sturdy Iron Key(6876/keychesthigh) */
+VALUES (0x7013E06F,  1625, 0x013E028F, 62.2526, -40.1597, -5.988, 0.731689, 0, 0, 0.681639,  True, '2005-02-09 10:00:00'); /* Mountain Rat(1625/ratmountain) - Level: 16 - T1_Warrior - Random Loot: Tier 1 - DeathTreasureType: 459(T1_Warrior) - Generates - Hot Pepper(5794/hotpepper) */
 /* @teleloc 0x013E028F [62.252602 -40.159698 -5.988000] 0.731689 0.000000 0.000000 0.681639 */
