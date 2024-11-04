@@ -328,7 +328,7 @@ namespace ACE.Server.Entity
                             if (playerDefender == null)
                             {
                                 SneakAttackMod = 3.0f;
-                                DefenderStunned = true;
+                                defender.StunFor(5, playerAttacker);
                             }
                         }
                         else if (attackerTechniqueId == TacticAndTechniqueType.Opportunist)

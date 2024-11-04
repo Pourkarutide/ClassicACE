@@ -510,10 +510,13 @@ namespace ACE.Server.WorldObjects
         private double NextStunEffectTimestamp;
         private static double StunEffectFrequency = 0.5;
 
-        public void StunFor(double seconds)
+        public void StunFor(double seconds, Player sourcePlayer = null)
         {
             StunnedUntilTimestamp = Time.GetFutureUnixTime(seconds);
             NextStunEffectTimestamp = 0;
+
+            if (sourcePlayer != null && sourcePlayer.Session != null)
+                sourcePlayer.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your attack stuns {Name}!", ChatMessageType.CombatEnemy));
         }
     }
 }
