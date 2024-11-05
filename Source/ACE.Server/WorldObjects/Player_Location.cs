@@ -878,6 +878,7 @@ namespace ACE.Server.WorldObjects
 
             CheckMonsters();
             CheckHouse();
+            CheckExplorationLandblock();
 
             EnqueueBroadcastPhysicsState();
 
