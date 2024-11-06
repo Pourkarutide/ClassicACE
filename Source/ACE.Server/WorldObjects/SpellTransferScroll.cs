@@ -716,7 +716,7 @@ namespace ACE.Server.WorldObjects
             if (isGem)
             {
                 target.ItemUseable = Usable.Contained;
-                target.ItemManaCost = (int)spellToAdd.BaseMana;
+                target.ItemManaCost = 1;
                 var baseWeenie = DatabaseManager.World.GetCachedWeenie(target.WeenieClassId);
                 if (baseWeenie != null)
                 {
