@@ -396,8 +396,6 @@ namespace ACE.Server.WorldObjects.Managers
                     bool success = false;
 
                     var stackSize = emote.StackSize ?? 1;
-                    if (stackSize == 0)
-                        stackSize = 1;
 
                     var itemToGiveWeenieId = emote.WeenieClassId ?? 0;
                     bool isTradeNote = TradeNoteWeenies.Contains(itemToGiveWeenieId);
@@ -406,6 +404,25 @@ namespace ACE.Server.WorldObjects.Managers
                         stackSize = 1;
                         itemToGiveWeenieId = 2621; // I note
                     }
+
+                    bool stackable = stackSize > 1;
+                    if (player != null && stackable && PropertyManager.GetBool("stackable_trophy_rewards_use_tar").Item)
+                    {
+                        var trophyWeenie = emoteSet?.WeenieClassId;
+                        if (trophyWeenie.HasValue)
+                        {
+                            var multiplier = player.CampManager.CurrentTrophyCampMultiplier(trophyWeenie.Value);
+                            stackSize = (int)Math.Round(stackSize * multiplier);
+                            log.Info($"[STACKABLE_TROPHY] 0x{player.Guid}:{player.Name} Receiving {stackSize} count of {itemToGiveWeenieId} for trophy {trophyWeenie.Value}. Multiplier {multiplier}. Emote {emote.DatabaseRecordId}.");
+                        }
+                        else
+                        {
+                            log.Warn($"[STACKABLE_TROPHY] Warning: Null emoteset. 0x{player.Guid}:{player.Name} Receiving {stackSize} count of {itemToGiveWeenieId} for unknown trophy. Emote {emote?.DatabaseRecordId ?? 0}.");
+                        }
+                    }
+
+                    if (stackSize < 1)
+                        stackSize = 1;
 
                     if (player != null && emote.WeenieClassId != null)
                     {

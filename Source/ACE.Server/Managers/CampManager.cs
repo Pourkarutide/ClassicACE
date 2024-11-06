@@ -378,6 +378,27 @@ namespace ACE.Server.Managers
             }
         }
 
+        public float CurrentTrophyCampMultiplier(uint weenieId)
+        {
+            if (weenieId == 0)
+                return 1f;
+
+            var typeCampId = weenieId ^ 0xFFFF0000;
+            if (typeCampId == 0)
+                return 1f;
+
+            var typeCamp = GetOrCreateCamp(typeCampId, out _);
+            if (typeCamp == null)
+                return 1f;
+
+            CheckDecay(typeCamp, true);
+            var typeCampBonus = 1.2f - ((float)typeCamp.NumInteractions / GetMaxInteractions(typeCamp.CampId));
+            if (typeCampBonus > 1.2f)
+                typeCampBonus = 1.2f;
+
+            return typeCampBonus;
+        }
+
         public void HandleCampInteraction(uint typeCampId, Landblock landblock, uint incrementAmount, out float typeCampBonus, out float areaCampBonus, out float restCampBonus)
         {
             typeCampBonus = 1.0f;
