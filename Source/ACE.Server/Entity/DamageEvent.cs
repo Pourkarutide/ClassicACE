@@ -354,6 +354,8 @@ namespace ACE.Server.Entity
 
             if (playerDefender != null && (playerDefender.IsLoggingOut || playerDefender.PKLogout) && (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM || (!playerDefender.IsPK && !playerDefender.IsPKL)))
                 CriticalChance = 1.0f;
+            if (ConfigManager.Config.Server.WorldRuleset == Ruleset.CustomDM && playerAttacker != null && playerDefender != null && playerDefender.IsPK)
+                CriticalChance = 1.0f;
 
             if (CriticalChance > ThreadSafeRandom.Next(0.0f, 1.0f))
             {

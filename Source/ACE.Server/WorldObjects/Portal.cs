@@ -161,6 +161,12 @@ namespace ACE.Server.WorldObjects
                 return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
             }
 
+            if (!player.PKRecallAllowed && !PortalIgnoresPkAttackTimer)
+            {
+                player.Session.Network.EnqueueSend(new GameMessageSystemChat($"(PvP Anti-Recall Warden) You may not use portals at this time.", ChatMessageType.Broadcast));
+                return new ActivationResult(false);
+            }
+
             if (!player.IgnorePortalRestrictions)
             {
                 if (!player.VerifyGameplayMode(this))

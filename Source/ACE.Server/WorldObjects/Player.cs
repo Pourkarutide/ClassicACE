@@ -547,48 +547,70 @@ namespace ACE.Server.WorldObjects
 
         public bool IsLoggingOut;
 
+        public bool PKRecallAllowed
+        {
+            get
+            {
+                if (Account.AccessLevel > 0)
+                    return true;
+                if (ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                    return true;
+                if (!IsPK && !IsPKL)
+                    return true;
+                if (PKTimerActive)
+                    return false;
+                if (LandblockManager.apartmentLandblocks.Contains((uint)Location.LandblockId.Landblock << 16 ^ 0x0000FFFF))
+                    return true;
+                if (NoDamage_Landblocks.Contains(Location.LandblockId.Landblock))
+                    return true;
+                if (IsOnArenaLandblock)
+                    return true;
+
+                var currentTime = Time.GetUnixTime();
+                var timeSinceLastPortal = currentTime - (LastPortalTeleportTimestamp ?? 0);
+                if (Teleporting || timeSinceLastPortal < 10)
+                    return false;
+
+                var levelMaybe = Level;
+                if (!levelMaybe.HasValue)
+                    return false;
+
+                var level = levelMaybe.Value;
+                long maxLevelDifference = PropertyManager.GetLong("pk_escape_max_level_difference", 10).Item;
+
+                var possiblePlayers = PhysicsObj.ObjMaint.GetVisiblePlayersValuesAsPlayer()
+                    .Where(e =>
+                        e.Guid != Guid &&
+                        Math.Abs(level - (e.Level ?? 1)) <= maxLevelDifference
+                        && e.Account.AccessLevel == 0);
+
+                List<Player> visiblePlayers;
+                if (GameplayMode == GameplayModes.HardcorePK)
+                    visiblePlayers = possiblePlayers.Where(e => e.GameplayMode == GameplayModes.HardcorePK).ToList();
+                else
+                    visiblePlayers = possiblePlayers.Where(e => e.GameplayMode == GameplayModes.Regular).ToList();
+
+                if (visiblePlayers.Count == 0)
+                    return true;
+
+                foreach (var entry in visiblePlayers)
+                {
+                    if (Fellowship == null || entry.Fellowship != Fellowship)
+                        if (Allegiance == null || entry.Allegiance != Allegiance)
+                            return false;
+                }
+
+                return true;
+            }
+        }
+
         /// <summary>
         /// Do the player log out work.<para />
         /// If you want to force a player to logout, use Session.LogOffPlayer().
         /// </summary>
         public bool LogOut(bool clientSessionTerminatedAbruptly = false, bool forceImmediate = false)
         {
-            var isHardcoreLogout = false;
-            if (ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && (IsPK || IsPKL))
-            {
-                if (!LandblockManager.apartmentLandblocks.Contains((uint)Location.LandblockId.Landblock << 16 ^ 0x0000FFFF) && !NoDamage_Landblocks.Contains(Location.LandblockId.Landblock))
-                {
-                    var currentTime = Time.GetUnixTime();
-                    var timeSinceLastPortal = currentTime - (LastPortalTeleportTimestamp ?? 0);
-                    if (Teleporting || timeSinceLastPortal < 10)
-                        isHardcoreLogout = true;
-                    else
-                    {
-                        List<Player> visiblePlayers;
-                        if (GameplayMode == GameplayModes.HardcorePK)
-                            visiblePlayers = PhysicsObj.ObjMaint.GetVisiblePlayersValuesAsPlayer().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.HardcorePK && Math.Abs((Level ?? 1) - (e.Level ?? 1)) <= 10).ToList();
-                        else
-                            visiblePlayers = PhysicsObj.ObjMaint.GetVisiblePlayersValuesAsPlayer().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && Math.Abs((Level ?? 1) - (e.Level ?? 1)) <= 10).ToList();
-
-                        if (visiblePlayers.Count() > 0)
-                        {
-                            foreach (var entry in visiblePlayers)
-                            {
-                                if (Fellowship == null || entry.Fellowship != Fellowship)
-                                {
-                                    if (Allegiance == null || entry.Allegiance != Allegiance)
-                                    {
-                                        isHardcoreLogout = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if ((PKLogoutActive || isHardcoreLogout) && !forceImmediate)
+            if (!PKRecallAllowed && !forceImmediate)
             {
                 var timer = PropertyManager.GetLong("pk_timer").Item;
                 Session.Network.EnqueueSend(new GameMessageSystemChat($"You will logout in {timer} seconds...", ChatMessageType.Broadcast));

@@ -3562,7 +3562,7 @@ namespace ACE.Server.Command.Handlers
                     PlayerManager.AddOfflinePlayer(player);
                     session.Characters.Add(player.Character);
 
-                    session.LogOffPlayer();
+                    session.LogOffPlayer(true);
                 });
                 actionChain.EnqueueChain();
             });
@@ -4066,7 +4066,7 @@ namespace ACE.Server.Command.Handlers
 
                     CommandHandlerHelper.WriteOutputInfo(session, $"Player named \"{oldName}\" renamed to \"{newName}\" successfully!", ChatMessageType.Broadcast);
 
-                    onlinePlayer.Session.LogOffPlayer();
+                    onlinePlayer.Session.LogOffPlayer(true);
                 });
             }
             else if (offlinePlayer != null)

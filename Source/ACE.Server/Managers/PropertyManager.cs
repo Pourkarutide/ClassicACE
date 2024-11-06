@@ -860,6 +860,7 @@ namespace ACE.Server.Managers
                 ("elite_mob_loot_count", new(20, "Number of random items on an elite corpse.")),
                 ("min_level_drop_wielded_on_death", new(35, "Minimum character level before wielded items may drop on player death.")),
                 ("min_level_eligible_to_drop_items_on_death", new(11, "Minimum character level before items may drop on player death.")),
+                ("pk_escape_max_level_difference", new(10, "The maximum level difference, in either direction, where a player may fast escape from another player in pvp. This includes logouts, portals, and recalls.")),
 
                 // Do not edit below this line
                 ("null_long", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

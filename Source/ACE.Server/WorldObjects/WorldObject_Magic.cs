@@ -1232,6 +1232,12 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            if (!player.PKRecallAllowed)
+            {
+                player.Session.Network.EnqueueSend(new GameMessageSystemChat($"(PvP Anti-Recall Warden) You may not recall at this time.", ChatMessageType.Broadcast));
+                return;
+            }
+
             PositionType recall = PositionType.Undef;
             uint? recallDID = null;
 
@@ -1367,6 +1373,12 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            if (!player.PKRecallAllowed)
+            {
+                player.Session.Network.EnqueueSend(new GameMessageSystemChat($"(PvP Anti-Recall Warden) You may not recall at this time.", ChatMessageType.Broadcast));
+                return;
+            }
+
             var source = player ?? itemCaster;
 
             uint portalId = 0;
@@ -1495,6 +1507,12 @@ namespace ACE.Server.WorldObjects
                     return;
                 }
 
+                if (!targetPlayer.PKRecallAllowed)
+                {
+                    targetPlayer.Session.Network.EnqueueSend(new GameMessageSystemChat($"(PvP Anti-Recall Warden) You may not recall at this time.", ChatMessageType.Broadcast));
+                    return;
+                }
+
                 ActionChain portalSendingChain = new ActionChain();
                 //portalSendingChain.AddDelaySeconds(2.0f);  // 2 second delay
                 portalSendingChain.AddAction(targetPlayer, () => targetPlayer.DoPreTeleportHide());
@@ -1535,6 +1553,12 @@ namespace ACE.Server.WorldObjects
             if (targetPlayer.PKTimerActive)
             {
                 targetPlayer.Session.Network.EnqueueSend(new GameEventWeenieError(targetPlayer.Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
+                return false;
+            }
+
+            if (!targetPlayer.PKRecallAllowed)
+            {
+                targetPlayer.Session.Network.EnqueueSend(new GameMessageSystemChat($"(PvP Anti-Recall Warden) You may not recall at this time.", ChatMessageType.Broadcast));
                 return false;
             }
 
