@@ -132,6 +132,13 @@ namespace ACE.Server.WorldObjects
                     Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveMovedTooFar));
                     return;
                 }
+
+                if (PKTimerActive)
+                {
+                    Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
+                    return;
+                }
+
                 Teleport(house.SlumLord.Location);
             });
 
@@ -206,6 +213,12 @@ namespace ACE.Server.WorldObjects
                     return;
                 }
 
+                if (PKTimerActive)
+                {
+                    Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
+                    return;
+                }
+
                 Teleport(Sanctuary);
             });
 
@@ -275,6 +288,12 @@ namespace ACE.Server.WorldObjects
                 if (startPos.SquaredDistanceTo(endPos) > RecallMoveThresholdSq)
                 {
                     Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveMovedTooFar));
+                    return;
+                }
+
+                if (PKTimerActive)
+                {
+                    Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
                     return;
                 }
 
@@ -353,6 +372,12 @@ namespace ACE.Server.WorldObjects
                 if (startPos.SquaredDistanceTo(endPos) > RecallMoveThresholdSq)
                 {
                     Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveMovedTooFar));
+                    return;
+                }
+
+                if (PKTimerActive)
+                {
+                    Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
                     return;
                 }
 
@@ -454,6 +479,12 @@ namespace ACE.Server.WorldObjects
                 if (startPos.SquaredDistanceTo(endPos) > RecallMoveThresholdSq)
                 {
                     Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveMovedTooFar));
+                    return;
+                }
+
+                if (PKTimerActive)
+                {
+                    Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
                     return;
                 }
 
@@ -579,6 +610,12 @@ namespace ACE.Server.WorldObjects
                     return;
                 }
 
+                if (PKTimerActive)
+                {
+                    Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
+                    return;
+                }
+
                 var rng = ThreadSafeRandom.Next(0, pkArenaLocs.Count - 1);
                 var loc = pkArenaLocs[rng];
 
@@ -666,6 +703,12 @@ namespace ACE.Server.WorldObjects
                 if (startPos.SquaredDistanceTo(endPos) > RecallMoveThresholdSq)
                 {
                     Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveMovedTooFar));
+                    return;
+                }
+
+                if (PKTimerActive)
+                {
+                    Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
                     return;
                 }
 
