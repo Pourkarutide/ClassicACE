@@ -562,7 +562,9 @@ namespace ACE.Server.Entity
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_dagger", "pvp_dmg_mod_high_dagger", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
                             pvpDamageCapPercentageMaxHealth = 0.65f;
                             break;
-                        case Skill.MissileWeapons:
+                        default:
+                            break;
+                        /*case Skill.MissileWeapons:
                         case Skill.Bow:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_bow", "pvp_dmg_mod_high_bow", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
                             pvpDamageCapPercentageMaxHealth = 0.85f;
@@ -574,7 +576,7 @@ namespace ACE.Server.Entity
                         case Skill.ThrownWeapon:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_thrown", "pvp_dmg_mod_high_thrown", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
                             pvpDamageCapPercentageMaxHealth = 0.85f;
-                            break;
+                            break;*/
                     }
 
                     if (Weapon != null)
