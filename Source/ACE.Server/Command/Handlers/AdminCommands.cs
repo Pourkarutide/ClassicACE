@@ -4177,7 +4177,7 @@ namespace ACE.Server.Command.Handlers
 
                     CommandHandlerHelper.WriteOutputInfo(session, $"Player named \"{oldName}\" renamed to \"{newName}\" successfully!", ChatMessageType.Broadcast);
 
-                    onlinePlayer.Session.LogOffPlayer();
+                    onlinePlayer.Session.LogOffPlayer(true);
                 });
             }
             else if (offlinePlayer != null)

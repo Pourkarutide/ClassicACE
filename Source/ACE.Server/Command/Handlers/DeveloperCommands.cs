@@ -2551,7 +2551,7 @@ namespace ACE.Server.Command.Handlers
                 else if (player.CurrentLandblock != null && foundOnLandblock)
                 {
                     player.ForcedLogOffRequested = true;
-                    player.LogOut();
+                    player.LogOut(forceImmediate: true);
                     msg += "player.ForcedLogOffRequested = true | player.LogOut()";
                 }
                 else if (player.IsInDeathProcess)
