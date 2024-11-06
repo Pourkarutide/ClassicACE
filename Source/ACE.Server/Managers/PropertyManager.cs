@@ -829,6 +829,7 @@ namespace ACE.Server.Managers
                 ("usable_gems_generated_with_1_mana_cost", new(false, "Toggles whether usable gems are generated with a cost of 1 mana, for virtually unlimited use, instead of the normal amount. Gems should cost at least 1 mana to mitigate any compatibility issues with plugins or other logic")),
                 ("neuter_trade_note_rewards", new(false, "If enabled, trade note quest rewards will be reduced to a single I note")),
                 ("stackable_trophy_rewards_use_tar", new(false, "If enabled, stackable quest rewards from trophies will be modified by TAR, scaling from 120% to 20%")),
+                ("drop_all_coins_on_death", new(false, "If enabled, all coins will drop on death instead of half")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

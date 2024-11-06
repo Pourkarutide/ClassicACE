@@ -720,6 +720,7 @@ namespace ACE.Server.WorldObjects
                 return new List<WorldObject>();
 
             bool onDropAllPyrealsLandblock = corpse.IsOnDropAllPyrealsLandblock;
+            bool dropAllCoins = onDropAllPyrealsLandblock || PropertyManager.GetBool("drop_all_coins_on_death", false).Item || IsHardcore;
             bool onDropRecentlyPurchasedLandblock = corpse.IsOnDropRecentlyPurchasedLandblock;
             bool onNoDropLandblock = corpse.IsOnNoDropLandblock;
 
@@ -730,7 +731,7 @@ namespace ACE.Server.WorldObjects
             var dropItems = new List<WorldObject>();
             var destroyedItems = new List<WorldObject>();
 
-            var numCoinsDropped = GetNumCoinsDropped(onDropAllPyrealsLandblock || IsHardcore);
+            var numCoinsDropped = GetNumCoinsDropped(dropAllCoins);
             if(onDropAllPyrealsLandblock || !onNoDropLandblock)
             {
                 if (numCoinsDropped > 0)
