@@ -492,6 +492,7 @@ namespace ACE.Server.Managers
         }
 
         public const bool SEASON3_DEFAULTS = true;
+        public const bool SEASON3_PATCH_1 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -680,6 +681,25 @@ namespace ACE.Server.Managers
                     // fall_damage_enabled: true
                     // fall_damage_multiplier: 1.0
                     // vpn_account_whitelist
+
+                    if (SEASON3_PATCH_1)
+                    {
+                        // New properties as of this patch
+                        PropertyManager.ModifyLong("pk_escape_max_level_difference", 20);
+                        PropertyManager.ModifyBool("stackable_trophy_rewards_use_tar", true);
+                        PropertyManager.ModifyBool("drop_all_coins_on_death", true);
+
+                        // Existing properties, needs manual modify as admin for servers that are not new
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_spear", 1.4); // From 1.5, -6.7%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_axe", 1.4); // From 1.5, -6.7%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_sword", 1.65); // From 1.5, +10%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_unarmed", 1.65); // From 1.5, +10%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_crossbow", 1.7); // From 1.5, +13%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_dagger", 1.25); // From 1.2, +4%
+                        PropertyManager.ModifyDouble("pvp_dmg_mod_high_thrown", 1.4); // From 1.3, + 7%
+                        PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_dualwield", 1.6); // From 1.8, -12%
+                        PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_1h", 1.7); // From 1.6, +6%
+                    }
                 }
             }
         }
