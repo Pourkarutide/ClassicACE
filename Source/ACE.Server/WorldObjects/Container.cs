@@ -1078,6 +1078,9 @@ namespace ACE.Server.WorldObjects
             3671, // Granite Heart
             3672, // Iron Heart
             3673, // Wood Heart
+            3675, // Ivory Gromnie Tooth
+            3676, // Jade Gromnie Tooth
+            3677, // Swamp Gromnie Tooth
             3681, // Black Rat Tail
             3682, // Brown Rat Tail
             3683, // Grey Rat Tail
@@ -1134,12 +1137,16 @@ namespace ACE.Server.WorldObjects
             11354, // Water Golem Heart
             11366, // Littoral Siraluun Claw
             11369, // Tidal Siraluun Claw
+            12215, // Flaming Pumpkin Head
             12689, // Diamond Powder
             19476, // Grievver Tibia
             19477, // Undead Femur Bone
             22950, // Hoary Armoredillo Spine
             22951, // Plate Armoredillo Spine
             23201, // Glacial Golem Heart
+            25798, // Scold's Heart
+            28209, // Rust Gromnie Tooth
+            28205, // Azure Gromnie Tooth
             28520, // Gold Golem Heart
         };
         public virtual void ExtraItemChecks(WorldObject worldObject)
