@@ -238,6 +238,7 @@ namespace ACE.Server.WorldObjects
                     rewardAmount = ThreadSafeRandom.Next(3, 5);
                     for (int i = 0; i < rewardAmount; i++)
                         TryGiveRandomSalvage(sourceObject, rewardTier);
+                    TryGiveContractPyreals(sourceObject);
 
                     Exploration1LandblockId = 0;
                     Exploration1KillProgressTracker = 0;
@@ -249,6 +250,7 @@ namespace ACE.Server.WorldObjects
                     rewardAmount = ThreadSafeRandom.Next(3, 5);
                     for (int i = 0; i < rewardAmount; i++)
                         TryGiveRandomSalvage(sourceObject, rewardTier);
+                    TryGiveContractPyreals(sourceObject);
 
                     Exploration2LandblockId = 0;
                     Exploration2KillProgressTracker = 0;
@@ -260,6 +262,7 @@ namespace ACE.Server.WorldObjects
                     rewardAmount = ThreadSafeRandom.Next(3, 5);
                     for (int i = 0; i < rewardAmount; i++)
                         TryGiveRandomSalvage(sourceObject, rewardTier);
+                    TryGiveContractPyreals(sourceObject);
 
                     Exploration3LandblockId = 0;
                     Exploration3KillProgressTracker = 0;
@@ -272,6 +275,27 @@ namespace ACE.Server.WorldObjects
             {
                 GiveFromEmote(sourceObject, (uint)Factories.Enum.WeenieClassName.explorationContract); // Return contract if there's still unfinished contracts.
             }
+        }
+
+        public bool TryGiveContractPyreals(WorldObject giver = null)
+        {
+            uint weenieClassId = 273;
+
+            var item = WorldObjectFactory.CreateNewWorldObject(weenieClassId);
+            var amount = Math.Min((Level ?? 1) * 500, item.MaxStackSize ?? 50000);
+            
+            item.SetStackSize(amount);
+
+            bool success;
+            if (giver != null)
+                success = TryCreateForGive(giver, item);
+            else
+                success = TryCreateInInventoryWithNetworking(item, out _, true);
+
+            if (!success)
+                item.Destroy();
+
+            return success;
         }
 
         public bool TryGiveRandomSalvage(WorldObject giver = null, int tier = 1, float qualityMod = 0.0f)
