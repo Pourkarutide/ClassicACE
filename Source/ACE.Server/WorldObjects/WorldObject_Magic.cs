@@ -1251,7 +1251,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (!player.PKRecallAllowed)
+            if (player != null && !player.PKRecallAllowed)
             {
                 player.Session.Network.EnqueueSend(new GameMessageSystemChat($"(PvP Anti-Recall Warden) You may not recall at this time.", ChatMessageType.Broadcast));
                 return;
@@ -1392,7 +1392,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (!player.PKRecallAllowed)
+            if (player != null && !player.PKRecallAllowed)
             {
                 player.Session.Network.EnqueueSend(new GameMessageSystemChat($"(PvP Anti-Recall Warden) You may not recall at this time.", ChatMessageType.Broadcast));
                 return;
