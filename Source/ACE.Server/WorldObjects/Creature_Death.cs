@@ -288,7 +288,7 @@ namespace ACE.Server.WorldObjects
                 var playerDamagerLevel = playerDamager.Level ?? 1;
                 levelDifference = Math.Abs(victimLevel - playerDamagerLevel);
 
-                if (!playerDamager.IsOnArenaLandblock && (victimLevel < playerDamagerLevel && victim.Level < 80 && levelDifference > 10))
+                if (!playerDamager.IsOnArenaLandblock && (victimLevel < playerDamagerLevel && victim.Level < 80 && levelDifference > PropertyManager.GetLong("pk_escape_max_level_difference", 20).Item))
                 {
                     var penalty = (int)Math.Ceiling((double)levelDifference * damagePercent);
                     playerDamager.InflictVitaePenalty(penalty);
