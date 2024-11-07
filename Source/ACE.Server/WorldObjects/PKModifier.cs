@@ -260,6 +260,7 @@ namespace ACE.Server.WorldObjects
                 }
 
                 player.UpdateCoinValue();
+                player.UpdateTradeNoteValue();
             }
 
             if (setStarterLocation)
