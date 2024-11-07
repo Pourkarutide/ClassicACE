@@ -257,7 +257,7 @@ namespace ACE.Server.WorldObjects
              Ultimately, we decided to resolve the situation through our changes to the treasure system this month. From now on, missile launchers will have a chance of having an innate defensive bonus, but not an offensive one.
              While many old quest weapons still retain their (useless) attack bonus, we will not be putting any new ones into the system.
              */
-            if (weapon == null || weapon.IsRanged /* see note above */)
+            if (weapon == null || (weapon.IsRanged && !weapon.IsThrownWeapon) /* see note above */)
                 return defaultModifier;
 
             var offenseMod = (float)(weapon.WeaponOffense ?? defaultModifier) + weapon.EnchantmentManager.GetAttackMod();
@@ -323,6 +323,15 @@ namespace ACE.Server.WorldObjects
             }
 
             return (uint)Math.Max(0, baseSpeed + speedMod + auraSpeedMod);
+        }
+
+        /// <summary>
+        /// Crushing Blow
+        /// </summary>
+        public double? CriticalMultiplier
+        {
+            get => GetProperty(PropertyFloat.CriticalMultiplier);
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.CriticalMultiplier); else SetProperty(PropertyFloat.CriticalMultiplier, value.Value); }
         }
 
         /// <summary>
