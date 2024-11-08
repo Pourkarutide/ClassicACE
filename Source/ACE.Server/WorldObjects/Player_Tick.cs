@@ -835,7 +835,7 @@ namespace ACE.Server.WorldObjects
                     possiblePlayers =
                         PlayerManager
                         .FindAllByGameplayMode(GameplayMode)
-                        .Where(x => x.Account.AccessLevel == 0)
+                        .Where(x => !x.IsOvertlyPlussed)
                         .OrderByDescending(x => x.GetProperty(PropertyInt64.TotalExperience) ?? 0)
                         .Take(15)
                         .Where(x => x is Player) // Filter by online
@@ -849,7 +849,7 @@ namespace ACE.Server.WorldObjects
                     e.Level <= Level + 5 && e.Account.AccessLevel == 0).ToList();
             }
             else
-                possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && e.Account.AccessLevel == 0 && e.Level.HasValue && Math.Abs(e.Level.Value - Level.Value) < levelDifference).ToList();
+                possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && && !e.IsOvertlyPlussed && e.Level.HasValue && Math.Abs(e.Level.Value - Level.Value) < levelDifference).ToList();
 
             if (possiblePlayers.Count() > 0)
             {
