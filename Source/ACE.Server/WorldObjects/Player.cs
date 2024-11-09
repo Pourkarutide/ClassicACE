@@ -586,9 +586,9 @@ namespace ACE.Server.WorldObjects
 
                 List<Player> visiblePlayers;
                 if (GameplayMode == GameplayModes.HardcorePK)
-                    visiblePlayers = possiblePlayers.Where(e => e.GameplayMode == GameplayModes.HardcorePK).ToList();
+                    visiblePlayers = possiblePlayers.Where(e => e.GameplayMode == GameplayModes.HardcorePK && e.PlayerKillerStatus == PlayerKillerStatus.PKLite).ToList();
                 else
-                    visiblePlayers = possiblePlayers.Where(e => e.GameplayMode == GameplayModes.Regular).ToList();
+                    visiblePlayers = possiblePlayers.Where(e => e.GameplayMode == GameplayModes.Regular && e.PlayerKillerStatus == PlayerKillerStatus.PK).ToList();
 
                 if (visiblePlayers.Count == 0)
                     return true;
