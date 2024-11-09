@@ -43,7 +43,7 @@ namespace ACE.Server.WorldObjects
 
         private double PvPInciteTickTimestamp;
         private const double PvPInciteTickInterval = 600;
-        private const double PvPInciteInitialDelay = 3600;
+        private const double PvPInciteInitialDelay = 900;
 
         public void Player_Tick(double currentUnixTime)
         {
@@ -819,12 +819,16 @@ namespace ACE.Server.WorldObjects
             if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                 return;
 
-            if ((!IsPK && !IsPKL) || ThreadSafeRandom.Next(0.0f, 1.0f) > 0.2f)
+            var chance = PropertyManager.GetDouble("bz_snitch_chance", 0.3).Item;
+
+            if ((!IsPK && !IsPKL) || ThreadSafeRandom.Next(0.0f, 1.0f) > chance)
+                return;
+            if (!Level.HasValue)
                 return;
 
             List<Player> possiblePlayers;
-
-            if(GameplayMode == GameplayModes.HardcorePK)
+            var levelDifference = PropertyManager.GetLong("bz_snitch_level_difference", 10).Item;
+            if (GameplayMode == GameplayModes.HardcorePK)
             {
                 if (PropertyManager.GetBool("bz_snitch_hcpk_top10").Item)
                 {
@@ -845,7 +849,7 @@ namespace ACE.Server.WorldObjects
                     e.Level <= Level + 5 && e.Account.AccessLevel == 0).ToList();
             }
             else
-                possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && e.Level >= Level && e.Level <= Level + 5 && e.Account.AccessLevel == 0).ToList();
+                possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && e.Account.AccessLevel == 0 && e.Level.HasValue && Math.Abs(e.Level.Value - Level.Value) < levelDifference).ToList();
 
             if (possiblePlayers.Count() > 0)
             {

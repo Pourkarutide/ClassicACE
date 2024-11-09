@@ -883,6 +883,7 @@ namespace ACE.Server.Managers
                 ("min_level_drop_wielded_on_death", new(35, "Minimum character level before wielded items may drop on player death.")),
                 ("min_level_eligible_to_drop_items_on_death", new(11, "Minimum character level before items may drop on player death.")),
                 ("pk_escape_max_level_difference", new(10, "The maximum level difference, in either direction, where a player may fast escape from another player in pvp. This includes logouts, portals, and recalls.")),
+                ("bz_snitch_level_difference", new(10, "The maximum level difference, in either direction, where a player may receive a bz snitch (location reveal). Doesn't affect hardcore mode.")),
 
                 // Do not edit below this line
                 ("null_long", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
@@ -1228,6 +1229,7 @@ namespace ACE.Server.Managers
                 ("spell_extraction_scroll_base_chance", new(0.5, "The base chance of a spell extraction scroll to successfully extract a spell. A value of 0.50 means 50%")),
                 ("spell_extraction_scroll_chance_per_extra_spell", new(0.1, "The additional spell extraction chance added per spell starting from the 2nd spell. A value of 0.1 means 10%")),
                 ("coin_stack_multiplier", new(1.0, "Scales the amount of pyreals awarded from mob kills.")),
+                ("bz_snitch_chance", new(0.3, "The chance to proc a bz snitch per tick (PvP player location reveal).")),
 
                 // Do not edit below this line
                 ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
