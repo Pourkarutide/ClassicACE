@@ -689,6 +689,8 @@ namespace ACE.Server.WorldObjects
                     message += $"\nYou will earn another skill credit at level {nextLevelWithCredits}.";
                 }
 
+                ReachedLevelTimestamp = (int)Common.Time.GetUnixTime();
+
                 if (Fellowship != null)
                     Fellowship.OnFellowLevelUp(this);
 

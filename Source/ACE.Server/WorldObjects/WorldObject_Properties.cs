@@ -1704,6 +1704,12 @@ namespace ACE.Server.WorldObjects
             set { if (!value.HasValue) RemoveProperty(PropertyInt.Level); else SetProperty(PropertyInt.Level, value.Value); }
         }
 
+        public int? ReachedLevelTimestamp
+        {
+            get => GetProperty(PropertyInt.ReachedLevelTimestamp);
+            set { if (!value.HasValue) RemoveProperty(PropertyInt.ReachedLevelTimestamp); else SetProperty(PropertyInt.ReachedLevelTimestamp, value.Value); }
+        }
+
         public int? UseRequiresLevel
         {
             get => GetProperty(PropertyInt.UseRequiresLevel);

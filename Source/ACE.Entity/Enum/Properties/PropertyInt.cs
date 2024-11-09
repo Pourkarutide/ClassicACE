@@ -686,6 +686,10 @@ namespace ACE.Entity.Enum.Properties
         //Elite Implementation
         [ServerOnly]
         MirrorMobCount                           = 9079,
+
+        // FlaggAC Custom Properties
+        [ServerOnly]
+        ReachedLevelTimestamp                    = 30000
     }
 
     public static class PropertyIntExtensions

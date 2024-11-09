@@ -1426,6 +1426,7 @@ namespace ACE.Server.Command.Handlers
             public int HardcoreKills;
             public int PKKills;
             public long XP;
+            public int ReachedLevelTimestamp;
             public bool Living;
             public bool isPK;
         }
@@ -1447,6 +1448,7 @@ namespace ACE.Server.Command.Handlers
                 leaderboardEntry.Name = entry.GetProperty(PropertyString.Name);
                 leaderboardEntry.Level = level;
                 leaderboardEntry.XP = entry.GetProperty(PropertyInt64.TotalExperience) ?? 0;
+                leaderboardEntry.ReachedLevelTimestamp = entry.GetProperty(PropertyInt.ReachedLevelTimestamp) ?? 0;
                 leaderboardEntry.HardcoreKills = entry.GetProperty(PropertyInt.PlayerKillsPkl) ?? 0;
                 leaderboardEntry.PKKills = entry.GetProperty(PropertyInt.PlayerKillsPk) ?? 0;
                 leaderboardEntry.isPK = entry.GetProperty(PropertyInt.PlayerKillerStatus) == (int)PlayerKillerStatus.PKLite || entry.GetProperty(PropertyInt.PlayerKillerStatus) == (int)PlayerKillerStatus.PK;
@@ -1664,7 +1666,7 @@ namespace ACE.Server.Command.Handlers
             if (parameters.Length > 1 && parameters[0] == "discord")
                 ulong.TryParse(parameters[1], out discordChannel);
 
-            var leaderboard = PrepareLeaderboard(GameplayModes.Regular, true).OrderByDescending(b => b.XP).ToList();
+            var leaderboard = PrepareLeaderboard(GameplayModes.Regular, true).OrderByDescending(b => b.XP).ThenBy(x => x.ReachedLevelTimestamp).ToList();
 
             StringBuilder message = new StringBuilder();
             message.Append($"Top Characters by XP: \n");
