@@ -323,7 +323,7 @@ namespace ACE.Server.WorldObjects
                     if (isGem)
                     {
                         target.ItemUseable = Usable.Contained;
-                        target.ItemManaCost = (int)spellToAdd.BaseMana;
+                        target.ItemManaCost = 1;
                         target.ItemMaxMana = newMaxMana;
                         target.ItemCurMana = Math.Clamp(target.ItemCurMana ?? 0, 0, target.ItemMaxMana ?? 0);
 
