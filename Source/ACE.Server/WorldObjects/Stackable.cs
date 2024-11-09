@@ -44,6 +44,12 @@ namespace ACE.Server.WorldObjects
                 else
                     StackUnitEncumbrance = EncumbranceVal;
             }
+            else
+            {
+                // Ammo has reduced burden
+                if (WeenieType == ACE.Entity.Enum.WeenieType.Ammunition && !IsThrownWeapon && StackUnitEncumbrance <= 25 && StackUnitEncumbrance > 2)
+                    StackUnitEncumbrance = 2;
+            }
 
             if (!StackUnitValue.HasValue)
             {
