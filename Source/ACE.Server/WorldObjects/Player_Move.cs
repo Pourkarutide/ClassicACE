@@ -271,14 +271,17 @@ namespace ACE.Server.WorldObjects
                 //var damage = ratio * 40.0f;
                 var damage = ratio * 87.293810f;
 
-                damage *= (float)PropertyManager.GetDouble("fall_damage_multiplier").Item;
-                //Console.WriteLine($"Damage: {damage}");
+                if (damage < 400f) // Hopefully prevents some glitch deaths, normal fall damage doesn't get this high
+                {
+                    damage *= (float)PropertyManager.GetDouble("fall_damage_multiplier").Item;
+                    //Console.WriteLine($"Damage: {damage}");
 
-                // bludgeon damage
-                // impact damage
-                //if (damage > 0.0f && (FastTick || StartJump == null || StartJump.PositionZ - PhysicsObj.Position.Frame.Origin.Z > 10.0f))
-                if (PropertyManager.GetBool("fall_damage_enabled").Item && damage > 0.0f)
-                    TakeDamage_Falling(damage);
+                    // bludgeon damage
+                    // impact damage
+                    //if (damage > 0.0f && (FastTick || StartJump == null || StartJump.PositionZ - PhysicsObj.Position.Frame.Origin.Z > 10.0f))
+                    if (PropertyManager.GetBool("fall_damage_enabled").Item && damage > 0.0f)
+                        TakeDamage_Falling(damage);
+                }
             }
         }
 
