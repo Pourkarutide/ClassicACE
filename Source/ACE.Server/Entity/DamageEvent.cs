@@ -1081,6 +1081,8 @@ namespace ACE.Server.Entity
 
             info += $"IsAttackFromSneaking: {IsAttackFromSneaking}\n";
 
+            info += $"IsAttackFromSneaking: {IsAttackFromSneaking}\n";
+
             info += "----";
 
             targetInfo.Session.Network.EnqueueSend(new GameMessageSystemChat(info, ChatMessageType.Broadcast));
