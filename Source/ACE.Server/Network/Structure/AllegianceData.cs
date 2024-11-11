@@ -76,8 +76,8 @@ namespace ACE.Server.Network.Structure
                 if (!node.IsMonarch && node.Player.ExistedBeforeAllegianceXpChanges)
                     bitfield |= AllegianceIndex.MayPassupExperience;
 
-                gender = (Gender)player.Gender;
-                hg = (HeritageGroup)player.Heritage;
+                gender = player.Gender.HasValue ? (Gender)player.Gender.Value : Gender.Male;
+                hg = player.Heritage.HasValue ? (HeritageGroup)player.Heritage.Value : HeritageGroup.Shadowbound;
                 rank = (ushort)node.Rank;
                 level = (uint)player.Level;
                 loyalty = (ushort)player.GetCurrentLoyalty();
