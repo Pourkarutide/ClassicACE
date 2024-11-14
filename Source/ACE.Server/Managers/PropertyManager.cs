@@ -23,6 +23,8 @@ namespace ACE.Server.Managers
 
         private static Timer _workerThread;
 
+        internal static bool IsLoaded { get; private set; }
+
         /// <summary>
         /// Initializes the PropertyManager.
         /// Run this only once per server instance.
@@ -42,6 +44,7 @@ namespace ACE.Server.Managers
             _workerThread.Elapsed += DoWork;
             _workerThread.AutoReset = true;
             _workerThread.Start();
+            IsLoaded = true;
         }
 
 
@@ -86,6 +89,12 @@ namespace ACE.Server.Managers
         }
 
 
+        private static void AssertLoaded()
+        {
+            if (!IsLoaded)
+                throw new InvalidOperationException("PropertyManager not loaded yet");
+        }
+
         /// <summary>
         /// Retrieves a boolean property from the cache or database
         /// </summary>
@@ -95,6 +104,8 @@ namespace ACE.Server.Managers
         /// <returns>A boolean value representing the property</returns>
         public static Property<bool> GetBool(string key, bool fallback = false, bool cacheFallback = true)
         {
+            AssertLoaded();
+
             // first, check the cache. If the key exists in the cache, grab it regardless of its modified value
             // then, check the database. if the key exists in the database, grab it and cache it
             // finally, set it to a default of false.
@@ -149,6 +160,8 @@ namespace ACE.Server.Managers
         /// <returns>An integer value representing the property</returns>
         public static Property<long> GetLong(string key, long fallback = 0, bool cacheFallback = true)
         {
+            AssertLoaded();
+
             if (CachedLongSettings.ContainsKey(key))
                 return new Property<long>(CachedLongSettings[key].Item, CachedLongSettings[key].Description);
 
@@ -197,8 +210,11 @@ namespace ACE.Server.Managers
         /// <param name="fallback">The value to return if the property cannot be found.</param>
         /// <param name="cacheFallback">Whether or not the fallpack property should be cached</param>
         /// <returns>A float value representing the property</returns>
-        public static Property<double> GetDouble(string key, double fallback = 0.0f, bool cacheFallback = true)
+        public static Property<double> GetDouble(string key, double fallback = 0.0f, bool cacheFallback = true, bool allowWhileInitializing = false)
         {
+            if (!allowWhileInitializing)
+                AssertLoaded();
+
             if (CachedDoubleSettings.ContainsKey(key))
                 return new Property<double>(CachedDoubleSettings[key].Item, CachedDoubleSettings[key].Description);
 
@@ -254,7 +270,7 @@ namespace ACE.Server.Managers
                 switch (key)
                 {
                     case "cantrip_drop_rate":
-                        Factories.Tables.CantripChance.ApplyNumCantripsMod();
+                        Factories.Tables.CantripChance.ApplyNumCantripsMod(newVal);
                         break;
                     case "minor_cantrip_drop_rate":
                     case "major_cantrip_drop_rate":
@@ -284,6 +300,8 @@ namespace ACE.Server.Managers
         /// <returns>A string value representing the property</returns>
         public static Property<string> GetString(string key, string fallback = "", bool cacheFallback = true)
         {
+            AssertLoaded();
+
             if (CachedStringSettings.ContainsKey(key))
                 return new Property<string>(CachedStringSettings[key].Item, CachedStringSettings[key].Description);
 

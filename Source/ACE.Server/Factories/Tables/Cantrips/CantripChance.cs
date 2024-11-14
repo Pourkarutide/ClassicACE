@@ -173,10 +173,10 @@ namespace ACE.Server.Factories.Tables
 
         private static List<ChanceTable<int>> robeNumCantrips = _robeNumCantrips;
 
-        public static void ApplyNumCantripsMod(bool showResults = true)
+        public static void ApplyNumCantripsMod(double newVal, bool showResults = true)
         {
             // scales NumCantrips, no chance vs. chance, relative to each other
-            var cantrip_drop_rate = (float)Math.Max(0.0f, PropertyManager.GetDouble("cantrip_drop_rate").Item);
+            var cantrip_drop_rate = (float)Math.Max(0.0f, newVal);
 
             if (cantrip_drop_rate != 1.0f)
             {
@@ -256,10 +256,10 @@ namespace ACE.Server.Factories.Tables
         public static void ApplyCantripLevelsMod(bool showResults = true)
         {
             // scales CantripLevels, relative to each other
-            var minor_cantrip_drop_rate = (float)Math.Max(0.0f, PropertyManager.GetDouble("minor_cantrip_drop_rate").Item);
-            var major_cantrip_drop_rate = (float)Math.Max(0.0f, PropertyManager.GetDouble("major_cantrip_drop_rate").Item);
-            var epic_cantrip_drop_rate = (float)Math.Max(0.0f, PropertyManager.GetDouble("epic_cantrip_drop_rate").Item);
-            var legendary_cantrip_drop_rate = (float)Math.Max(0.0f, PropertyManager.GetDouble("legendary_cantrip_drop_rate").Item);
+            var minor_cantrip_drop_rate = (float)Math.Max(0.0f, PropertyManager.GetDouble("minor_cantrip_drop_rate", allowWhileInitializing: true).Item);
+            var major_cantrip_drop_rate = (float)Math.Max(0.0f, PropertyManager.GetDouble("major_cantrip_drop_rate", allowWhileInitializing: true).Item);
+            var epic_cantrip_drop_rate = (float)Math.Max(0.0f, PropertyManager.GetDouble("epic_cantrip_drop_rate", allowWhileInitializing: true).Item);
+            var legendary_cantrip_drop_rate = (float)Math.Max(0.0f, PropertyManager.GetDouble("legendary_cantrip_drop_rate", allowWhileInitializing: true).Item);
 
             if (minor_cantrip_drop_rate != 1.0f || major_cantrip_drop_rate != 1.0f || epic_cantrip_drop_rate != 1.0f || legendary_cantrip_drop_rate != 1.0f)
             {
@@ -509,7 +509,7 @@ namespace ACE.Server.Factories.Tables
                 };
             }
 
-            ApplyNumCantripsMod(false);
+            ApplyNumCantripsMod(PropertyManager.GetDouble("cantrip_drop_rate", allowWhileInitializing: true).Item, false);
             ApplyCantripLevelsMod(false);
         }
 
