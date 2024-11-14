@@ -233,6 +233,12 @@ namespace ACE.Server.WorldObjects
                 if (Time.GetUnixTime() >= DeathTimestamp + 300)
                     return true;
             }
+            else if (DefaultPropertyManager.SEASON3_PATCH_2)
+            {
+                // Free for all after 2 hours
+                if (Time.GetUnixTime() >= DeathTimestamp + 7200)
+                    return true;
+            }
 
             // players can loot corpses of creatures they killed or corpses that have previously been looted by killer, hardcore PvP kills can only be looted by the killer until they are opened to everyone.
             if (KillerId != null && player.Guid.Full == KillerId || (IsLooted && !IsHardcore))
