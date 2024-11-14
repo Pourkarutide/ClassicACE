@@ -194,7 +194,7 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
-            if (CurrentAttack != CombatType.Missile || Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && PropertyManager.GetBool("ai_custom_pathfind").Item)
+            if (CurrentAttack != CombatType.Missile || (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && PropertyManager.GetBool("ai_custom_pathfind").Item))
             {
                 if (targetDist > MaxRange || (!IsFacing(AttackTarget) && !IsSelfCast()))
                 {
@@ -203,7 +203,7 @@ namespace ACE.Server.WorldObjects
                         StartTurn();
                     else
                     {
-                        if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                        if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && PropertyManager.GetBool("ai_custom_pathfind").Item)
                         {
                             if (HasRangedWeapon && CurrentAttack == CombatType.Melee && (targetDist > 20 || PhysicsObj.MovementManager.MoveToManager.FailProgressCount > 10) && !SwitchWeaponsPending && LastWeaponSwitchTime + 5 < currentUnixTime)
                                 TrySwitchToMissileAttack();
