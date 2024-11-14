@@ -388,7 +388,7 @@ namespace ACE.Server.WorldObjects
             if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.EoR)
             {
                 // patron must currently be greater or equal level
-                if (target.Level < Level)
+                if (target.Level < Level && PropertyManager.GetBool("allow_allegiance_passup").Item)
                 {
                     //Console.WriteLine(Name + " tried to swear to a lower level character");
                     Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot swear to a lower level character.", ChatMessageType.Broadcast));
