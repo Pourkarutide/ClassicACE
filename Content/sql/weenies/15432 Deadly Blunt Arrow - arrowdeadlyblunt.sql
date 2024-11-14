@@ -25,7 +25,7 @@ VALUES (15432,   1,        256) /* ItemType - MissileWeapon */
      , (15432, 151,          2) /* HookType - Wall */
      , (15432, 158,          2) /* WieldRequirements - RawSkill */
      , (15432, 159,          2) /* WieldSkillType - Bow */
-     , (15432, 160,        260) /* WieldDifficulty */;
+     , (15432, 160,        235) /* WieldDifficulty */;
 
 INSERT INTO `weenie_properties_bool` (`object_Id`, `type`, `value`)
 VALUES (15432,  17, True ) /* Inelastic */
