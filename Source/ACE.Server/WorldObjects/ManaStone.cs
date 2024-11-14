@@ -81,6 +81,13 @@ namespace ACE.Server.WorldObjects
                 target = invTarget;
             }
 
+            if (MaxLevel.HasValue && player.Level > MaxLevel.Value)
+            {
+                player.Session.Network.EnqueueSend(new GameMessageSystemChat("You are no longer permitted to use this item.", ChatMessageType.Broadcast));
+                player.Session.Network.EnqueueSend(new GameEventUseDone(player.Session, WeenieError.ActionCancelled));
+                return;
+            }
+
             if (!ItemCurMana.HasValue)
             {
                 if (target == player)
