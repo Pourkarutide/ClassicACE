@@ -99,9 +99,12 @@ namespace ACE.Server.WorldObjects
 
             if (!broadcasted)
             {
-                PlayerManager.BroadcastToAll(new GameMessageSystemChat("[Global] " + nearbyMsg, ChatMessageType.Broadcast));
-                _ = TurbineChatHandler.SendWebhookedChat("", nearbyMsg, null, "Hard Mode");
-                broadcasted = true;
+                if (Level > 3)
+                {
+                    PlayerManager.BroadcastToAll(new GameMessageSystemChat("[Global] " + nearbyMsg, ChatMessageType.Broadcast));
+                    _ = TurbineChatHandler.SendWebhookedChat("", nearbyMsg, null, "Hard Mode");
+                    broadcasted = true;
+                }
             }
 
             log.Debug("[CORPSE] " + nearbyMsg);
@@ -145,6 +148,9 @@ namespace ACE.Server.WorldObjects
 
             if (IsPKDeath(topDamager))
             {
+                if (lastDamager == null || topDamager == null || Level <= 3)
+                    return false;
+
                 pkPlayer.PkTimestamp = Time.GetUnixTime();
 
                 var globalPKDe = $"{lastDamager.Name} has defeated {Name}!";
