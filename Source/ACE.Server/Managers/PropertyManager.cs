@@ -728,6 +728,7 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyBool("ai_anti_perch", false);
                         PropertyManager.ModifyBool("ai_custom_pathfind", false);
                         PropertyManager.ModifyDouble("spelltransfer_over_tier_success_chance", 0.5);
+                        PropertyManager.ModifyBool("die_command_enabled", false);
                     }
                 }
             }
@@ -883,6 +884,7 @@ namespace ACE.Server.Managers
                 ("dekarutide_season3_alternate_loot_valuations", new(false, "If enabled, use Dekarutide''s Alternate Loot Valuation formula for Season 3")),
                 ("ai_anti_perch", new(true, "If enabled, use Dekaru''s anti-perch AI")),
                 ("ai_custom_pathfind", new(true, "If enabled, use custom pathfinding AI")),
+                ("die_command_enabled", new(true, "If disabled, prevents the use of /die")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

@@ -538,6 +538,12 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public void HandleActionDie()
         {
+            if (!PropertyManager.GetBool("die_command_enabled").Item)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat($"The /die command has been disabled on this server.", ChatMessageType.Broadcast));
+                Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.ActionCancelled));
+                return;
+            }
             if (IsDead || Teleporting)
             {
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
@@ -758,7 +764,7 @@ namespace ACE.Server.WorldObjects
 
             if (IsHardcore || !onNoDropLandblock)
             {
-                var numItemsDropped = GetNumItemsDropped(corpse);
+                var numItemsDropped = GetNumItemsDropped(corpse, wasPvP);
 
                 bool dropAllWielded = false;
                 bool dropAllTradeNotes = false;
@@ -1018,7 +1024,7 @@ namespace ACE.Server.WorldObjects
         /// Rolls for the # of items to drop for a player death
         /// </summary>
         /// <returns></returns>
-        public int GetNumItemsDropped(Corpse corpse)
+        public int GetNumItemsDropped(Corpse corpse, bool isPvP)
         {
             // Original formula:
 
@@ -1045,7 +1051,13 @@ namespace ACE.Server.WorldObjects
                 return 0;
 
             if (DefaultPropertyManager.SEASON3_DEFAULTS)
-                return 25;
+            {
+                if (isPvP || Level >= 20)
+                    return 25;
+                else
+                    return 0;
+            }
+
 
             if (level >= 11 && level <= 20 && !IsHardcore)
                 return ThreadSafeRandom.Next(0, 1);
