@@ -727,6 +727,7 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyBool("dekarutide_season3_alternate_loot_valuations", true);
                         PropertyManager.ModifyBool("ai_anti_perch", false);
                         PropertyManager.ModifyBool("ai_custom_pathfind", false);
+                        PropertyManager.ModifyDouble("spelltransfer_over_tier_success_chance", 0.5);
                     }
                 }
             }
@@ -1262,6 +1263,7 @@ namespace ACE.Server.Managers
                 ("spell_extraction_scroll_chance_per_extra_spell", new(0.1, "The additional spell extraction chance added per spell starting from the 2nd spell. A value of 0.1 means 10%")),
                 ("coin_stack_multiplier", new(1.0, "Scales the amount of pyreals awarded from mob kills.")),
                 ("bz_snitch_chance", new(0.3, "The chance to proc a bz snitch per tick (PvP player location reveal).")),
+                ("spelltransfer_over_tier_success_chance", new(1.0, "The chance to successfully transfer a spell that is higher than the tier of the target item without destroying the target")),
 
                 // Do not edit below this line
                 ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

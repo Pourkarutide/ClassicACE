@@ -235,26 +235,57 @@ namespace ACE.Server.WorldObjects
                     }
                 }
 
+                bool isSafeForTier = true;
+                if (target.Workmanship.HasValue && target.Tier.HasValue)
+                {
+                    if (!spellToAdd.IsCantrip && spellToAdd.Level > target.Tier)
+                        isSafeForTier = false; // Item destruction chance if spell is over the item's tier
+                    if (isProc && target.ProcSpell.HasValue)
+                    {
+                        var currentProc = new Spell(target.ProcSpell.Value);
+                        if (spellToAdd.Level <= currentProc.Level)
+                            isSafeForTier = true; // Allow for swapping CoS builds
+                    }
+                }
+
+                double chance = 1.0;
+                if (!isSafeForTier)
+                    chance = Math.Clamp(PropertyManager.GetDouble("spelltransfer_over_tier_success_chance").Item, 0.0, 1.0);
+                if (chance > 0.99999)
+                {
+                    isSafeForTier = true;
+                    chance = 1.0;
+                }
+
+                var percent = Math.Round(chance * 100, 2);
+
                 if (!confirmed)
                 {
                     var extraMessage = "";
                     if (isProc && target.ProcSpell != null)
                     {
                         var currentProc = new Spell(target.ProcSpell ?? 0);
-                        extraMessage = $"\nThis will replace {currentProc.Name}!\n";
+                        extraMessage = $"\nThis will replace {currentProc.Name}!\n\n";
                     }
                     else if (isGem && target.SpellDID != null)
                     {
                         var currentGemSpell = new Spell(target.SpellDID ?? 0);
-                        extraMessage = $"\nThis will replace {currentGemSpell.Name}!\n";
+                        extraMessage = $"\nThis will replace {currentGemSpell.Name}!\n\n";
                     }
                     else if (spellToReplace != null)
-                        extraMessage = $"\nThis will replace {spellToReplace.Name}!\n";
+                        extraMessage = $"\nThis will replace {spellToReplace.Name}!\n\n";
 
-                    if (!player.ConfirmationManager.EnqueueSend(new Confirmation_CraftInteration(player.Guid, source.Guid, target.Guid), $"Transfering {spellToAdd.Name} to {target.NameWithMaterial}.\n{(extraMessage.Length > 0 ? extraMessage : "")}\n"))
+                    if (!player.ConfirmationManager.EnqueueSend(new Confirmation_CraftInteration(player.Guid, source.Guid, target.Guid), $"Transfering {spellToAdd.Name} to {target.NameWithMaterial}.\n{(extraMessage.Length > 0 ? extraMessage : "")}You determine that you have a {percent.Round()} percent chance to succeed.\n\n"))
                         player.SendUseDoneEvent(WeenieError.ConfirmationInProgress);
                     else
                         player.SendUseDoneEvent();
+
+                    if (percent < 99.998 || !isSafeForTier)
+                    {
+                        var exactMsg = $"The powerful spell ({spellToAdd.Name}) you are attempting to transfer to the weaker {target.NameWithMaterial} has a chance of causing the item's destruction. You have a {(float)percent}% chance of success.";
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat(exactMsg, ChatMessageType.Craft));
+                    }
+
                     return;
                 }
 
@@ -276,6 +307,7 @@ namespace ACE.Server.WorldObjects
 
                 actionChain.AddAction(player, () =>
                 {
+
                     if (!RecipeManager.VerifyUse(player, source, target, true))
                     {
                         // No longer valid, abort
@@ -283,87 +315,100 @@ namespace ACE.Server.WorldObjects
                         return;
                     }
 
-                    if (isProc)
-                    {
-                        HandleExtraSpellList(target, spellToAddId, target.ProcSpell ?? 0);
+                    bool success;
 
-                        target.ProcSpellRate = 0.15f;
-                        target.ProcSpell = spellToAddId;
-                        target.ProcSpellSelfTargeted = spellToAdd.IsSelfTargeted;
-                    }
-                    else if (isGem)
-                    {
-                        HandleExtraSpellList(target, spellToAddId, target.SpellDID ?? 0);
-
-                        target.SpellDID = spellToAddId;
-                    }
+                    if (isSafeForTier)
+                        success = true;
                     else
+                        success = ThreadSafeRandom.Next(0.0f, 1.0f) < chance;
+
+                    if (success)
                     {
-                        if (spellToReplace != null)
+
+                        if (isProc)
                         {
-                            HandleExtraSpellList(target, spellToAddId, spellToReplace.Id);
-                            target.Biota.TryRemoveKnownSpell((int)spellToReplace.Id, target.BiotaDatabaseLock);
+                            HandleExtraSpellList(target, spellToAddId, target.ProcSpell ?? 0);
+
+                            target.ProcSpellRate = 0.15f;
+                            target.ProcSpell = spellToAddId;
+                            target.ProcSpellSelfTargeted = spellToAdd.IsSelfTargeted;
+                        }
+                        else if (isGem)
+                        {
+                            HandleExtraSpellList(target, spellToAddId, target.SpellDID ?? 0);
+
+                            target.SpellDID = spellToAddId;
                         }
                         else
-                            HandleExtraSpellList(target, spellToAddId);
-                        target.Biota.GetOrAddKnownSpell((int)spellToAddId, target.BiotaDatabaseLock, out _);
-                    }
-
-                    var newMaxBaseMana = LootGenerationFactory.GetMaxBaseMana(target);
-                    var newManaRate = LootGenerationFactory.CalculateManaRate(newMaxBaseMana);
-                    var newMaxMana = (int)spellToAdd.BaseMana * 15;
-
-                    if (target.TinkerLog != null)
-                    {
-                        var tinkers = target.TinkerLog.Split(",");
-                        var appliedMoonstoneCount = tinkers.Count(s => s == "31");
-                        newMaxMana += 500 * appliedMoonstoneCount;
-                    }
-
-                    if (isGem)
-                    {
-                        target.ItemUseable = Usable.Contained;
-                        target.ItemManaCost = 1;
-                        target.ItemMaxMana = newMaxMana;
-                        target.ItemCurMana = Math.Clamp(target.ItemCurMana ?? 0, 0, target.ItemMaxMana ?? 0);
-
-                        var baseWeenie = DatabaseManager.World.GetCachedWeenie(target.WeenieClassId);
-                        if (baseWeenie != null)
                         {
-                            target.Name = baseWeenie.GetName(); // Reset to base name before rebuilding suffix.
-                            target.LongDesc = LootGenerationFactory.GetLongDesc(target);
-                            target.Name = target.LongDesc;
+                            if (spellToReplace != null)
+                            {
+                                HandleExtraSpellList(target, spellToAddId, spellToReplace.Id);
+                                target.Biota.TryRemoveKnownSpell((int)spellToReplace.Id, target.BiotaDatabaseLock);
+                            }
+                            else
+                                HandleExtraSpellList(target, spellToAddId);
+                            target.Biota.GetOrAddKnownSpell((int)spellToAddId, target.BiotaDatabaseLock, out _);
                         }
+
+                        var newMaxBaseMana = LootGenerationFactory.GetMaxBaseMana(target);
+                        var newManaRate = LootGenerationFactory.CalculateManaRate(newMaxBaseMana);
+                        var newMaxMana = (int)spellToAdd.BaseMana * 15;
+
+                        if (target.TinkerLog != null)
+                        {
+                            var tinkers = target.TinkerLog.Split(",");
+                            var appliedMoonstoneCount = tinkers.Count(s => s == "31");
+                            newMaxMana += 500 * appliedMoonstoneCount;
+                        }
+
+                        if (isGem)
+                        {
+                            target.ItemUseable = Usable.Contained;
+                            target.ItemManaCost = 1;
+                            target.ItemMaxMana = newMaxMana;
+                            target.ItemCurMana = Math.Clamp(target.ItemCurMana ?? 0, 0, target.ItemMaxMana ?? 0);
+
+                            var baseWeenie = DatabaseManager.World.GetCachedWeenie(target.WeenieClassId);
+                            if (baseWeenie != null)
+                            {
+                                target.Name = baseWeenie.GetName(); // Reset to base name before rebuilding suffix.
+                                target.LongDesc = LootGenerationFactory.GetLongDesc(target);
+                                target.Name = target.LongDesc;
+                            }
+                        }
+                        else if (newMaxMana > (target.ItemMaxMana ?? 0))
+                        {
+                            target.ItemMaxMana = newMaxMana;
+                            target.ItemCurMana = Math.Clamp(target.ItemCurMana ?? 0, 0, target.ItemMaxMana ?? 0);
+
+                            target.ManaRate = newManaRate;
+                            target.LongDesc = LootGenerationFactory.GetLongDesc(target);
+                        }
+
+                        if (isProc)
+                        {
+                            // Don't use a spell slot for Cast on Strike
+                        }
+                        else if (spellToReplace == null)
+                        {
+                            target.ExtraSpellsCount = (target.ExtraSpellsCount ?? 0) + 1;
+                        }
+
+                        var newRollDiff = LootGenerationFactory.RollEnchantmentDifficulty(enchantments);
+                        newRollDiff += LootGenerationFactory.RollCantripDifficulty(cantrips);
+                        UpdateArcaneLoreAndSpellCraft(target, newRollDiff);
+
+                        if (!target.UiEffects.HasValue) // Elemental effects take precendence over magical as it is more important to know the element of a weapon than if it has spells.
+                            target.UiEffects = ACE.Entity.Enum.UiEffects.Magical;
+
+                        player.EnqueueBroadcast(new GameMessageUpdateObject(target));
                     }
-                    else if (newMaxMana > (target.ItemMaxMana ?? 0))
-                    {
-                        target.ItemMaxMana = newMaxMana;
-                        target.ItemCurMana = Math.Clamp(target.ItemCurMana ?? 0, 0, target.ItemMaxMana ?? 0);
-
-                        target.ManaRate = newManaRate;
-                        target.LongDesc = LootGenerationFactory.GetLongDesc(target);
-                    }
-
-                    if (isProc)
-                    {
-                        // Don't use a spell slot for Cast on Strike
-                    }
-                    else if (spellToReplace == null)
-                    {
-                        target.ExtraSpellsCount = (target.ExtraSpellsCount ?? 0) + 1;
-                    }
-
-                    var newRollDiff = LootGenerationFactory.RollEnchantmentDifficulty(enchantments);
-                    newRollDiff += LootGenerationFactory.RollCantripDifficulty(cantrips);
-                    UpdateArcaneLoreAndSpellCraft(target, newRollDiff);
-
-                    if (!target.UiEffects.HasValue) // Elemental effects take precendence over magical as it is more important to know the element of a weapon than if it has spells.
-                        target.UiEffects = ACE.Entity.Enum.UiEffects.Magical;
-
-                    player.EnqueueBroadcast(new GameMessageUpdateObject(target));
+                    else
+                        player.TryConsumeFromInventoryWithNetworking(target); // Destroy the item on failure.
 
                     player.TryConsumeFromInventoryWithNetworking(source); // Consume the scroll.
-                    BroadcastSpellTransfer(player, spellToAdd.Name, target);
+                    BroadcastSpellTransfer(player, spellToAdd.Name, target, chance, success);
                 });
 
                 player.EnqueueMotion(actionChain, MotionCommand.Ready);
