@@ -1682,68 +1682,160 @@ namespace ACE.Server.Factories
                     wo.WieldSkillType3 = (int)wo.ConvertToMoASkill((Skill)wo.WieldSkillType3);
                 if (wo.WieldSkillType4.HasValue)
                     wo.WieldSkillType4 = (int)wo.ConvertToMoASkill((Skill)wo.WieldSkillType4);
-
-                if (treasureDeath.Tier == 4)
-                    PushWieldReq(wo, WieldRequirement.Level, 40);
-                if (treasureDeath.Tier == 5)
-                    PushWieldReq(wo, WieldRequirement.Level, 41);
-                if (treasureDeath.Tier == 6)
-                    PushWieldReq(wo, WieldRequirement.Level, 60);
             }
 
             return wo;
         }
 
-        private static void PushWieldReq(WorldObject wo, WieldRequirement req, int wieldDifficulty)
+        private static bool AssignAlternateWieldReq(WorldObject wo, TreasureDeath treasureDeath, Skill wieldSkill = Skill.None)
         {
-            if (req == WieldRequirement.Invalid)
-                return;
+            if (ConfigManager.Config.Server.WorldRuleset != Ruleset.CustomDM)
+                return false;
+            if (!PropertyManager.GetBool("dekarutide_season3_alternate_weapon_wield_reqs").Item)
+                return false;
+            if (!(wo.WeenieType == WeenieType.Clothing || wo.WeenieType == WeenieType.MeleeWeapon || wo.WeenieType == WeenieType.MissileLauncher || wo.WeenieType == WeenieType.Missile || wo.WeenieType == WeenieType.Caster || wo.WeenieType == WeenieType.Generic))
+                return false;
 
-            if (wo.WieldRequirements == req && wo.WieldDifficulty < wieldDifficulty)
+            if (wo.WieldSkillType.HasValue)
+                wo.WieldSkillType = (int)wo.ConvertToMoASkill((Skill)wo.WieldSkillType);
+            if (wo.WieldSkillType2.HasValue)
+                wo.WieldSkillType2 = (int)wo.ConvertToMoASkill((Skill)wo.WieldSkillType2);
+            if (wo.WieldSkillType3.HasValue)
+                wo.WieldSkillType3 = (int)wo.ConvertToMoASkill((Skill)wo.WieldSkillType3);
+            if (wo.WieldSkillType4.HasValue)
+                wo.WieldSkillType4 = (int)wo.ConvertToMoASkill((Skill)wo.WieldSkillType4);
+
+            if (wieldSkill == Skill.None)
             {
+                if (wo.WeenieType == WeenieType.Caster)
+                {
+                    var roll = Random.Shared.NextDouble();
+                    if (roll < 0.75)
+                        wieldSkill = Skill.WarMagic;
+                    else
+                        wieldSkill = Skill.LifeMagic;
+                }
+                else if (wo.WeenieType == WeenieType.MeleeWeapon || wo.WeenieType == WeenieType.MissileLauncher || wo.WeenieType == WeenieType.Missile)
+                {
+                    if (wo.WeaponSkill != Skill.None)
+                        wieldSkill = wo.WeaponSkill;
+                }
+            }
+            wieldSkill = wo.ConvertToMoASkill(wieldSkill);
+
+            var level = treasureDeath.Tier switch
+            {
+                1 => 1,
+                2 => 15,
+                3 => 25,
+                4 => 40,
+                5 => 41,
+                6 => 60,
+                7 => 60,
+                _ => 0
+            };
+
+            if (level < 1 || !PushWieldReq(wo, WieldRequirement.Level, level))
+                return false;
+
+            int weaponWieldDiff;
+            if (wo.WeenieType == WeenieType.MeleeWeapon)
+            {
+                weaponWieldDiff = treasureDeath.Tier switch
+                {
+                    1 => 30,
+                    2 => 115,
+                    3 => 165,
+                    4 => 225,
+                    5 => 240,
+                    6 => 275,
+                    7 => 290,
+                    _ => 0
+                };
+            }
+            else if (wo.WeenieType == WeenieType.Caster || wo.WeenieType == WeenieType.MissileLauncher || wo.WeenieType == WeenieType.Missile)
+            {
+                weaponWieldDiff = treasureDeath.Tier switch
+                {
+                    1 => 25,
+                    2 => 100,
+                    3 => 150,
+                    4 => 200,
+                    5 => 225,
+                    6 => 250,
+                    7 => 265,
+                    _ => 0
+                };
+            }
+            else
+                return true;
+
+            if (wieldSkill == Skill.None)
+                return false;
+
+            return PushWieldReq(wo, WieldRequirement.RawSkill, weaponWieldDiff, wieldSkill);
+        }
+
+        private static bool PushWieldReq(WorldObject wo, WieldRequirement req, int wieldDifficulty, Skill wieldSkill = Skill.None)
+        {
+            if (req != WieldRequirement.Level && req != WieldRequirement.RawSkill)
+                return false;
+            if (wieldSkill == Skill.None && req == WieldRequirement.RawSkill)
+                return false;
+
+            var skilltype = 0;
+            if (req == WieldRequirement.Level)
+                skilltype = 1;
+            else if (req == WieldRequirement.RawSkill)
+                skilltype = (int)wieldSkill;
+
+            if (wo.WieldRequirements == req)
+            {
+                wo.WieldSkillType = skilltype;
                 wo.WieldDifficulty = wieldDifficulty;
-                return;
             }
-            if (wo.WieldRequirements2 == req && wo.WieldDifficulty2 < wieldDifficulty)
+            else if (wo.WieldRequirements2 == req)
             {
+                wo.WieldSkillType2 = skilltype;
                 wo.WieldDifficulty2 = wieldDifficulty;
-                return;
             }
-            if (wo.WieldRequirements3 == req && wo.WieldDifficulty3 < wieldDifficulty)
+            else if (wo.WieldRequirements3 == req)
             {
+                wo.WieldSkillType3 = skilltype;
                 wo.WieldDifficulty3 = wieldDifficulty;
-                return;
             }
-            if (wo.WieldRequirements4 == req && wo.WieldDifficulty4 < wieldDifficulty)
+            else if (wo.WieldRequirements4 == req)
             {
+                wo.WieldSkillType4 = skilltype;
                 wo.WieldDifficulty4 = wieldDifficulty;
-                return;
             }
-
-            if (wo.WieldRequirements == WieldRequirement.Invalid)
+            else if (wo.WieldRequirements == WieldRequirement.Invalid)
             {
                 wo.WieldRequirements = req;
+                wo.WieldSkillType = skilltype;
                 wo.WieldDifficulty = wieldDifficulty;
-                return;
             }
-            if (wo.WieldRequirements2 == WieldRequirement.Invalid)
+            else if (wo.WieldRequirements2 == WieldRequirement.Invalid)
             {
                 wo.WieldRequirements2 = req;
+                wo.WieldSkillType2 = skilltype;
                 wo.WieldDifficulty2 = wieldDifficulty;
-                return;
             }
-            if (wo.WieldRequirements3 == WieldRequirement.Invalid)
+            else if (wo.WieldRequirements3 == WieldRequirement.Invalid)
             {
                 wo.WieldRequirements3 = req;
+                wo.WieldSkillType3 = skilltype;
                 wo.WieldDifficulty3 = wieldDifficulty;
-                return;
             }
-            if (wo.WieldRequirements4 == WieldRequirement.Invalid)
+            else if (wo.WieldRequirements4 == WieldRequirement.Invalid)
             {
                 wo.WieldRequirements4 = req;
+                wo.WieldSkillType4 = skilltype;
                 wo.WieldDifficulty4 = wieldDifficulty;
-                return;
             }
+            else
+                return false;
+            return true;
         }
 
         /// <summary>

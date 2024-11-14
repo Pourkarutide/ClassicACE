@@ -74,6 +74,8 @@ namespace ACE.Server.Factories
             if (profile.Tier > 6)
                 RollWieldLevelReq_T7_T8(wo, profile);
 
+            AssignAlternateWieldReq(wo, profile);
+
             // assign magic
             if (isMagical)
                 AssignMagic(wo, profile, roll);

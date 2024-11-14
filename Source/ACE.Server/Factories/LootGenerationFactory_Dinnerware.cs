@@ -51,6 +51,8 @@ namespace ACE.Server.Factories
             // workmanship
             wo.ItemWorkmanship = WorkmanshipChance.Roll(profile.Tier, profile.LootQualityMod);
 
+            AssignAlternateWieldReq(wo, profile);
+
             // "Empty Flask" was the only dinnerware that never received spells
             if (isMagical && wo.WeenieClassId != (uint)WeenieClassName.flasksimple)
                 AssignMagic(wo, profile, roll);

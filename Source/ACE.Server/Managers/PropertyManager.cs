@@ -491,8 +491,10 @@ namespace ACE.Server.Managers
             ));
         }
 
+        // For Dekarutide
         public const bool SEASON3_DEFAULTS = true;
         public const bool SEASON3_PATCH_1 = true;
+        public const bool SEASON3_PATCH_2 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -700,6 +702,11 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_dualwield", 1.6); // From 1.8, -12%
                         PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_1h", 1.7); // From 1.6, +6%
                     }
+
+                    if (SEASON3_PATCH_2)
+                    {
+                        PropertyManager.ModifyBool("dekarutide_season3_alternate_weapon_wield_reqs", true);
+                    }
                 }
             }
         }
@@ -850,6 +857,7 @@ namespace ACE.Server.Managers
                 ("neuter_trade_note_rewards", new(false, "If enabled, trade note quest rewards will be reduced to a single I note")),
                 ("stackable_trophy_rewards_use_tar", new(false, "If enabled, stackable quest rewards from trophies will be modified by TAR, scaling from 120% to 20%")),
                 ("drop_all_coins_on_death", new(false, "If enabled, all coins will drop on death instead of half")),
+                ("dekarutide_season3_alternate_weapon_wield_reqs", new(false, "If enabled, use Dekarutide''s Alternate Weapon Wield Requirements formula for Season 3")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

@@ -99,18 +99,21 @@ namespace ACE.Server.Factories
                 if (elementalDamageMod > 1.0f)
                     wo.ElementalDamageMod = elementalDamageMod;
 
-                // WieldRequirements
-                if (wieldDifficulty > 0 || wieldRequirement == WieldRequirement.Level)
+                if (!AssignAlternateWieldReq(wo, profile, wieldSkillType))
                 {
-                    wo.WieldRequirements = wieldRequirement;
-                    wo.WieldSkillType = (int)wieldSkillType;
-                    wo.WieldDifficulty = wieldDifficulty;
-                }
-                else
-                {
-                    wo.WieldRequirements = WieldRequirement.Invalid;
-                    wo.WieldSkillType = null;
-                    wo.WieldDifficulty = null;
+                    // WieldRequirements
+                    if (wieldDifficulty > 0 || wieldRequirement == WieldRequirement.Level)
+                    {
+                        wo.WieldRequirements = wieldRequirement;
+                        wo.WieldSkillType = (int)wieldSkillType;
+                        wo.WieldDifficulty = wieldDifficulty;
+                    }
+                    else
+                    {
+                        wo.WieldRequirements = WieldRequirement.Invalid;
+                        wo.WieldSkillType = null;
+                        wo.WieldDifficulty = null;
+                    }
                 }
 
                 // WeaponDefense
@@ -132,12 +135,15 @@ namespace ACE.Server.Factories
                 mutationFilter.TryMutate(wo, profile.Tier, profile.LootQualityMod);
 
                 // this part was not handled by mutation filter
-                if (wo.WieldRequirements == WieldRequirement.RawSkill)
+                if (!AssignAlternateWieldReq(wo, profile))
                 {
-                    if (wo.W_DamageType == DamageType.Nether)
-                        wo.WieldSkillType = (int)Skill.VoidMagic;
-                    else
-                        wo.WieldSkillType = (int)Skill.WarMagic;
+                    if (wo.WieldRequirements == WieldRequirement.RawSkill)
+                    {
+                        if (wo.W_DamageType == DamageType.Nether)
+                            wo.WieldSkillType = (int)Skill.VoidMagic;
+                        else
+                            wo.WieldSkillType = (int)Skill.WarMagic;
+                    }
                 }
 
                 // mutate WeaponDefense

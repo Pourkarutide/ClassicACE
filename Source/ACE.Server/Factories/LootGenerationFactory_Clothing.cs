@@ -136,6 +136,8 @@ namespace ACE.Server.Factories
             if (wo.HasMutateFilter(MutateFilter.ArmorModVsType))
                 MutateArmorModVsType(wo, profile);
 
+            AssignAlternateWieldReq(wo, profile);
+
             if (isMagical)
             {
                 AssignMagic(wo, profile, roll, true);
