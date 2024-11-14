@@ -78,6 +78,8 @@ namespace ACE.Server.Factories
 
             mutationFilter.TryMutate(wo, profile.Tier, profile.LootQualityMod);
 
+            AssignAlternateWieldReq(wo, profile);
+
             // weapon speed
             if (wo.WeaponTime != null)
             {
