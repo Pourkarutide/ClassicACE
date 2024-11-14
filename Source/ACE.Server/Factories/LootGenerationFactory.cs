@@ -62,29 +62,62 @@ namespace ACE.Server.Factories
             }
             else if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
             {
-                coinRanges = new List<(int, int)>()
+                if (PropertyManager.GetBool("dekarutide_season3_alternate_loot_valuations").Item)
                 {
-                    ( 300,  600), // T1
-                    ( 800, 2000), // T2
-                    (1000, 2200), // T3
-                    (1200, 2400), // T4
-                    (1400, 2600), // T5
-                    (1600, 2800), // T6
-                    (1800, 3000), // T7
-                    (2000, 3200), // T8
-                };
+                    // Author: FlaggAC
 
-                ItemValue_TierMod = new List<int>()
+                    coinRanges = new List<(int, int)>()
+                    {
+                        (100,    300), // T1
+                        (400,    800), // T2
+                        (800,   1600), // T3
+                        (1600,  3200), // T4
+                        (3200,  6400), // T5
+                        (6400, 19200), // T6 - If you made it this far, you earned this
+                        (19200,50000), // T7 - If you made it this far, you earned this
+                        (25600,50000), // T8
+                    };
+
+                    ItemValue_TierMod = new List<int>() // Note this is not a multiplier for the whole item value, only part of it
+                    {
+                        1,       // T1 - Consistently easy to cover with death items
+                        50,      // T2 - Slightly Cheaper to cover with death items
+                        350,     // T3 - Slightly more difficult to cover with death items, slightly more expensive at vendor
+                        500,     // T4 
+                        800,     // T5
+                        2500,    // T6 - Truly high value loot
+                        3500,   // T7
+                        6000,   // T8
+                    };
+                }
+                else
                 {
-                    25,    // T1
-                    50,    // T2
-                    65,    // T3
-                    80,    // T4
-                    95,    // T5
-                    110,   // T6
-                    125,   // T7
-                    140,   // T8
-                };
+                    // Author: Dekaru
+
+                    coinRanges = new List<(int, int)>()
+                    {
+                        ( 300,  600), // T1
+                        ( 800, 2000), // T2
+                        (1000, 2200), // T3
+                        (1200, 2400), // T4
+                        (1400, 2600), // T5
+                        (1600, 2800), // T6
+                        (1800, 3000), // T7
+                        (2000, 3200), // T8
+                    };
+
+                    ItemValue_TierMod = new List<int>()
+                    {
+                        25,    // T1
+                        50,    // T2
+                        65,    // T3
+                        80,    // T4
+                        95,    // T5
+                        110,   // T6
+                        125,   // T7
+                        140,   // T8
+                    };
+                }
             }
         }
 

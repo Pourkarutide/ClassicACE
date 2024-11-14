@@ -724,6 +724,7 @@ namespace ACE.Server.Managers
                     if (SEASON3_PATCH_2)
                     {
                         PropertyManager.ModifyBool("dekarutide_season3_alternate_weapon_wield_reqs", true);
+                        PropertyManager.ModifyBool("dekarutide_season3_alternate_loot_valuations", true);
                     }
                 }
             }
@@ -876,6 +877,7 @@ namespace ACE.Server.Managers
                 ("stackable_trophy_rewards_use_tar", new(false, "If enabled, stackable quest rewards from trophies will be modified by TAR, scaling from 120% to 20%")),
                 ("drop_all_coins_on_death", new(false, "If enabled, all coins will drop on death instead of half")),
                 ("dekarutide_season3_alternate_weapon_wield_reqs", new(false, "If enabled, use Dekarutide''s Alternate Weapon Wield Requirements formula for Season 3")),
+                ("dekarutide_season3_alternate_loot_valuations", new(false, "If enabled, use Dekarutide''s Alternate Loot Valuation formula for Season 3")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
