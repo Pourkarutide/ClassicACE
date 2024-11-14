@@ -16,7 +16,7 @@ VALUES (60008,   1,          8) /* ItemType - Jewelry */
      , (60008,  87,         20) /* MaxLevel */
      , (60008,  93,       1044) /* PhysicsState - Ethereal, IgnoreCollisions, Gravity */
      , (60008, 106,        350) /* ItemSpellcraft */
-     , (60008, 107,       3000) /* ItemCurMana */
+     , (60008, 107,         20) /* ItemCurMana */
      , (60008, 108,       3000) /* ItemMaxMana */
      , (60008, 109,          0) /* ItemDifficulty */
      , (60008, 114,          1) /* Attuned - Attuned */
