@@ -177,4 +177,5 @@ VALUES (60002, 2,   130,  0, 8, 0.33, False) /* Create Shirt (130) for Wield */
      , (60002, 4, 50077, -1, 0, 0, False) /* Create Magnifying Glass (50077) for Shop */
      , (60002, 4, 50119, -1, 0, 0, False) /* Create Salvage Barrel (50119) for Shop */
      , (60002, 4, 50179, -1, 0, 0, False) /* Create Blank Exploration Contract (50179) for Shop */
-     , (60002, 4, 60001, -1, 0, 0, False) /* Create Gem Pouch (60001) for Shop */;
+     , (60002, 4, 60001, -1, 0, 0, False) /* Create Gem Pouch (60001) for Shop */
+     , (60002, 4, 60008, -1, 0, 0, False) /* Create Ring of Pity (60008) for Shop */;

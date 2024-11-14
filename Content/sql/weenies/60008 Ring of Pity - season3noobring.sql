@@ -11,7 +11,7 @@ VALUES (60008,   1,          8) /* ItemType - Jewelry */
      , (60008,   9,     786432) /* ValidLocations - FingerWear */
      , (60008,  16,          1) /* ItemUseable - No */
      , (60008,  18,         32) /* UiEffects - Fire */
-     , (60008,  19,          0) /* Value */
+     , (60008,  19,        200) /* Value */
      , (60008,  33,          1) /* Bonded - Bonded */
      , (60008,  87,         20) /* MaxLevel */
      , (60008,  93,       1044) /* PhysicsState - Ethereal, IgnoreCollisions, Gravity */
@@ -23,7 +23,8 @@ VALUES (60008,   1,          8) /* ItemType - Jewelry */
      , (60008, 151,          2) /* HookType - Wall */;
 
 INSERT INTO `weenie_properties_bool` (`object_Id`, `type`, `value`)
-VALUES (60008,  22, True ) /* Inscribable */;
+VALUES (60008,  22, True ) /* Inscribable */
+     , (60008,  69, False) /* IsSellable */;
 
 INSERT INTO `weenie_properties_float` (`object_Id`, `type`, `value`)
 VALUES (60008,   5,  -0.033) /* ManaRate */
