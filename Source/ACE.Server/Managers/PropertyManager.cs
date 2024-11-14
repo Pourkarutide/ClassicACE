@@ -725,6 +725,8 @@ namespace ACE.Server.Managers
                     {
                         PropertyManager.ModifyBool("dekarutide_season3_alternate_weapon_wield_reqs", true);
                         PropertyManager.ModifyBool("dekarutide_season3_alternate_loot_valuations", true);
+                        PropertyManager.ModifyBool("ai_anti_perch", false);
+                        PropertyManager.ModifyBool("ai_custom_pathfind", false);
                     }
                 }
             }
@@ -878,6 +880,8 @@ namespace ACE.Server.Managers
                 ("drop_all_coins_on_death", new(false, "If enabled, all coins will drop on death instead of half")),
                 ("dekarutide_season3_alternate_weapon_wield_reqs", new(false, "If enabled, use Dekarutide''s Alternate Weapon Wield Requirements formula for Season 3")),
                 ("dekarutide_season3_alternate_loot_valuations", new(false, "If enabled, use Dekarutide''s Alternate Loot Valuation formula for Season 3")),
+                ("ai_anti_perch", new(true, "If enabled, use Dekaru''s anti-perch AI")),
+                ("ai_custom_pathfind", new(true, "If enabled, use custom pathfinding AI")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

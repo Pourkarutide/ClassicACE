@@ -1,5 +1,6 @@
 using ACE.Entity;
 using ACE.Entity.Enum;
+using ACE.Server.Managers;
 using System;
 
 namespace ACE.Server.WorldObjects
@@ -139,7 +140,7 @@ namespace ACE.Server.WorldObjects
             if (PathfindingPending)
                 return;
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && PropertyManager.GetBool("ai_anti_perch").Item)
             {
                 if (NextNoCounterResetTime <= currentUnixTime)
                 {
@@ -176,7 +177,7 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
-            if (CurrentAttack != CombatType.Missile || Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            if (CurrentAttack != CombatType.Missile || Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && PropertyManager.GetBool("ai_custom_pathfind").Item)
             {
                 if (targetDist > MaxRange || (!IsFacing(AttackTarget) && !IsSelfCast()))
                 {
