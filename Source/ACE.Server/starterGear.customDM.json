@@ -14,7 +14,19 @@
         },
         {
             "id": "15",
-            "name": "Magic Defense"
+            "name": "Magic Defense",
+            "gear": [
+                {
+                    "weenieId": "60008",
+                    "name": "Ring of Pity",
+                    "stacksize": "1"
+                },
+                {
+                    "weenieId": "60009",
+                    "name": "Generosity Stone",
+                    "stacksize": "1"
+                }
+            ]
         },
         {
             "id": "16",
