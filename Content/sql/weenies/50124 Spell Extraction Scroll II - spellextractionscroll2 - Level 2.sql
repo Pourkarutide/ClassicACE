@@ -12,9 +12,9 @@ VALUES (50124,   1,        128) /* ItemType - Misc */
      , (50124,  12,          1) /* StackSize */
      , (50124,  13,          1) /* StackUnitEncumbrance */
      , (50124,  14,          1) /* StackUnitMass */
-     , (50124,  15,       2000) /* StackUnitValue */
+     , (50124,  15,       1000) /* StackUnitValue */
      , (50124,  16,     524296) /* ItemUseable - SourceContainedTargetContained */
-     , (50124,  19,       2000) /* Value */
+     , (50124,  19,       1000) /* Value */
      , (50124,  25,          2) /* Level */
      , (50124,  33,          0) /* Bonded - Normal */
      , (50124,  93,       3092) /* PhysicsState - Ethereal, IgnoreCollisions, Gravity, LightingOn */
