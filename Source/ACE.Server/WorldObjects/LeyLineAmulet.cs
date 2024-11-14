@@ -267,7 +267,7 @@ namespace ACE.Server.WorldObjects
         }
 
         public double NextLeyLineTriggerTime = 0;
-        public static double LeyLineTriggerInterval = 10;
+        public static double LeyLineTriggerInterval = 7;
         public override int? ItemCurMana
         {
             get => GetProperty(PropertyInt.ItemCurMana);
