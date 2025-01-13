@@ -1057,7 +1057,8 @@ namespace ACE.Server.WorldObjects
 
             // take augments into consideration?
 
-            if (ConfigManager.Config.Server.WorldRuleset == Ruleset.CustomDM && !IsPKDeath(corpse.KillerId))
+            var maxItemsDroppedPerDeath = (int)PropertyManager.GetLong("max_items_dropped_per_death", -1).Item;
+            if (maxItemsDroppedPerDeath == 0)
                 return 0;
 
             var level = Level ?? 1;
@@ -1065,10 +1066,14 @@ namespace ACE.Server.WorldObjects
             if (level < PropertyManager.GetLong("min_level_eligible_to_drop_items_on_death", 10).Item && !IsHardcore)
                 return 0;
 
-            if (DefaultPropertyManager.SEASON3_DEFAULTS)
+
+            if (maxItemsDroppedPerDeath < 0)
+                maxItemsDroppedPerDeath = MaxItemsDropped;
+
+            if (PropertyManager.GetBool("use_fixed_death_item_formula", false).Item)
             {
                 if (isPvP || Level >= 20)
-                    return 25;
+                    return maxItemsDroppedPerDeath;
                 else
                     return 0;
             }
@@ -1084,7 +1089,17 @@ namespace ACE.Server.WorldObjects
             else
                 numItemsDropped = (level / 10) + ThreadSafeRandom.Next(0, 2);
 
-            numItemsDropped = Math.Min(numItemsDropped, MaxItemsDropped);   // is this really a max cap?
+
+            if (maxItemsDroppedPerDeath != MaxItemsDropped)
+            {
+                // Scale the configured max items dropped per death vs the default of 14. For example, if we configure 7 as max, approx 50% of items will drop 
+                var scalar = (float)maxItemsDroppedPerDeath / MaxItemsDropped;
+                numItemsDropped = (int)Math.Round(numItemsDropped * scalar);
+            }
+
+            numItemsDropped = Math.Min(numItemsDropped, maxItemsDroppedPerDeath);
+
+
 
             // The number of items you drop can be reduced with the Clutch of the Miser augmentation. If you get the
             // augmentation three times you will no longer drop any items (except half of your Pyreals and all Rares except if you're a PK).
