@@ -742,6 +742,7 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyDouble("vitae_penalty", 0.15);
                         PropertyManager.ModifyDouble("extra_vitae_penalty_pvp", 0.15);
                         PropertyManager.ModifyDouble("vitae_penalty_max", 0.30);
+                        PropertyManager.ModifyLong("pk_timer", 37);
                     }
                 }
             }
