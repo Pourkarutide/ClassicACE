@@ -513,6 +513,7 @@ namespace ACE.Server.Managers
         public const bool SEASON3_DEFAULTS = true;
         public const bool SEASON3_PATCH_1 = true;
         public const bool SEASON3_PATCH_2 = true;
+        public const bool SEASON3_PATCH_3 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -730,6 +731,11 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyDouble("spelltransfer_over_tier_success_chance", 0.5);
                         PropertyManager.ModifyBool("die_command_enabled", false);
                     }
+
+                    if (SEASON3_PATCH_3)
+                    {
+                        PropertyManager.ModifyBool("cmd_pop_last_24_hours", true);
+                    }
                 }
             }
         }
@@ -885,6 +891,8 @@ namespace ACE.Server.Managers
                 ("ai_anti_perch", new(true, "If enabled, use Dekaru''s anti-perch AI")),
                 ("ai_custom_pathfind", new(true, "If enabled, use custom pathfinding AI")),
                 ("die_command_enabled", new(true, "If disabled, prevents the use of /die")),
+                ("cmd_pop_enabled", new(true, "Enables the /pop command")),
+                ("cmd_pop_last_24_hours", new(false, "Uses the last 24 hours of unique ip connections to show population instead of the current online count")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

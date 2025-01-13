@@ -197,7 +197,7 @@ namespace ACE.Server.Network
                                 return Task.CompletedTask;
 
                             case "pop":
-                                SendMessage(message.Channel.Id, $"Current world population: {PlayerManager.GetOnlineCount():N0}");
+                                SendMessage(message.Channel.Id, PlayerCommands.GetPopString());
                                 return Task.CompletedTask;
                         }
                     }

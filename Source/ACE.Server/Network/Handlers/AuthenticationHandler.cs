@@ -333,6 +333,8 @@ namespace ACE.Server.Network.Handlers
             {
                 log.Error($"Exception in AuthenticationHandler.AccountSelectCallback logging account session start. Ex: {ex}");
             }
+
+            PlayerManager.RecordLoginStat(session.AccountId, session.EndPointC2S.Address.ToString());
         }
 
         public static void HandleConnectResponse(Session session)

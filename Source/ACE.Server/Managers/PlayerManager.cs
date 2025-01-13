@@ -23,6 +23,9 @@ using ACE.Server.WorldObjects;
 using Biota = ACE.Entity.Models.Biota;
 using ACE.Server.Network.Handlers;
 using ACE.Server.Entity.Actions;
+using System.Collections.Concurrent;
+using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 
 namespace ACE.Server.Managers
 {
@@ -46,6 +49,8 @@ namespace ACE.Server.Managers
         private static readonly TimeSpan databaseSaveInterval = TimeSpan.FromHours(1);
 
         private static DateTime lastDatabaseSave = DateTime.MinValue;
+
+        private static readonly ConcurrentDictionary<DateOnly, ConcurrentDictionary<string, DateTime>> uniqueIPsConnectedByDate = new();
 
         /// <summary>
         /// This will load all the players from the database into the OfflinePlayers dictionary. It should be called before WorldManager is initialized.
@@ -948,6 +953,33 @@ namespace ACE.Server.Managers
             }
 
             return (onlinePlayersTotal + offlinePlayersTotal) >= slotsAvailable;
+        }
+
+        internal static void RecordLoginStat(uint accountId, string IP)
+        {
+            DateTime now = DateTime.Now;
+            DateOnly today = new(now.Year, now.Month, now.Day);
+
+            if (!uniqueIPsConnectedByDate.ContainsKey(today))
+                uniqueIPsConnectedByDate.TryAdd(today, new ConcurrentDictionary<string, DateTime>());
+            uniqueIPsConnectedByDate[today].AddOrUpdate(IP, now, (_,_) => now);
+        }
+
+        public static int GetLast24HourUniqueLogins()
+        {
+            DateTime now = DateTime.Now;
+            DateTime oneDayAgo = now.AddDays(-1);
+            DateOnly today = new(now.Year, now.Month, now.Day);
+            DateOnly yesterday = today.AddDays(-1);
+
+            if (!uniqueIPsConnectedByDate.ContainsKey(today))
+                return 0;
+
+            int result = uniqueIPsConnectedByDate[today].Count;
+            if (uniqueIPsConnectedByDate.ContainsKey(yesterday))
+                result += uniqueIPsConnectedByDate[yesterday].Count(kvp => kvp.Value > oneDayAgo);
+
+            return result;
         }
     }
 }

@@ -34,7 +34,21 @@ namespace ACE.Server.Command.Handlers
             "")]
         public static void HandlePop(Session session, params string[] parameters)
         {
-            CommandHandlerHelper.WriteOutputInfo(session, $"Current world population: {PlayerManager.GetOnlineCount():N0}", ChatMessageType.Broadcast);
+            if (!PropertyManager.GetBool("cmd_pop_enabled").Item)
+                return;
+
+            CommandHandlerHelper.WriteOutputInfo(session, GetPopString(), ChatMessageType.Broadcast);
+        }
+
+        public static string GetPopString()
+        {
+            if (!PropertyManager.GetBool("cmd_pop_enabled").Item)
+                return "This command has been disabled.";
+
+            if (PropertyManager.GetBool("cmd_pop_last_24_hours").Item)
+                return $"Unique IPs connected in the last 24 hours: {PlayerManager.GetLast24HourUniqueLogins():N0}";
+            else
+                return $"Current world population: {PlayerManager.GetOnlineCount():N0}";
         }
 
         // quest info (uses GDLe formatting to match plugin expectations)
