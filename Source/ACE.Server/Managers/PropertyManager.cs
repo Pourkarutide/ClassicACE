@@ -606,7 +606,9 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyDouble("vitae_penalty_max", 0.60);
                     PropertyManager.ModifyLong("min_level_drop_wielded_on_death", 20);
                     PropertyManager.ModifyLong("min_level_eligible_to_drop_items_on_death", 1);
-
+                    PropertyManager.ModifyBool("use_fixed_death_item_formula", true);
+                    PropertyManager.ModifyLong("max_items_dropped_per_death", 25);
+                    
                     // Disabling Features
                     PropertyManager.ModifyDouble("elite_mob_spawn_rate", 0.0);
                     PropertyManager.ModifyBool("customdm_mutate_quest_items", false);
@@ -734,6 +736,7 @@ namespace ACE.Server.Managers
 
                     if (SEASON3_PATCH_3)
                     {
+                        PropertyManager.ModifyLong("max_items_dropped_per_death", 18);
                         PropertyManager.ModifyBool("cmd_pop_last_24_hours", true);
                     }
                 }
@@ -891,6 +894,7 @@ namespace ACE.Server.Managers
                 ("ai_anti_perch", new(true, "If enabled, use Dekaru''s anti-perch AI")),
                 ("ai_custom_pathfind", new(true, "If enabled, use custom pathfinding AI")),
                 ("die_command_enabled", new(true, "If disabled, prevents the use of /die")),
+                ("use_fixed_death_item_formula", new(false, "If enabled, a fixed number of items will be dropped on death instead of variable with level. The max_items_dropped_per_death property will be used for this.")),
                 ("cmd_pop_enabled", new(true, "Enables the /pop command")),
                 ("cmd_pop_last_24_hours", new(false, "Uses the last 24 hours of unique ip connections to show population instead of the current online count")),
 
@@ -927,6 +931,7 @@ namespace ACE.Server.Managers
                 ("min_level_eligible_to_drop_items_on_death", new(11, "Minimum character level before items may drop on player death.")),
                 ("pk_escape_max_level_difference", new(10, "The maximum level difference, in either direction, where a player may fast escape from another player in pvp. This includes logouts, portals, and recalls.")),
                 ("bz_snitch_level_difference", new(10, "The maximum level difference, in either direction, where a player may receive a bz snitch (location reveal). Doesn't affect hardcore mode.")),
+                ("max_items_dropped_per_death", new(Player.MaxItemsDropped, "The maximum number of items dropped on death. This is not a simple cap on death items. If changed from the default, the number of actual items dropped per death will be scaled lower or higher depending on the proportion of this versus the default.")),
 
                 // Do not edit below this line
                 ("null_long", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
