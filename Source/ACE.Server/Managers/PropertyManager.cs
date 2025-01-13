@@ -8,6 +8,7 @@ using System.Timers;
 using log4net;
 
 using ACE.Database;
+using ACE.Server.WorldObjects;
 
 namespace ACE.Server.Managers
 {
@@ -738,6 +739,9 @@ namespace ACE.Server.Managers
                     {
                         PropertyManager.ModifyLong("max_items_dropped_per_death", 18);
                         PropertyManager.ModifyBool("cmd_pop_last_24_hours", true);
+                        PropertyManager.ModifyDouble("vitae_penalty", 0.15);
+                        PropertyManager.ModifyDouble("extra_vitae_penalty_pvp", 0.15);
+                        PropertyManager.ModifyDouble("vitae_penalty_max", 0.30);
                     }
                 }
             }
@@ -1279,6 +1283,7 @@ namespace ACE.Server.Managers
                 ("coin_stack_multiplier", new(1.0, "Scales the amount of pyreals awarded from mob kills.")),
                 ("bz_snitch_chance", new(0.3, "The chance to proc a bz snitch per tick (PvP player location reveal).")),
                 ("spelltransfer_over_tier_success_chance", new(1.0, "The chance to successfully transfer a spell that is higher than the tier of the target item without destroying the target")),
+                ("extra_vitae_penalty_pvp", new(0.0, "The extra vitae penalty for a PvP death. A value of 0.05 means an extra 5% vitae on top of the usual 5%, for 10% total")),
 
                 // Do not edit below this line
                 ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

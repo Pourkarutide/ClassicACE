@@ -406,12 +406,24 @@ namespace ACE.Server.WorldObjects.Managers
         /// <summary>
         /// Called on player death
         /// </summary>
-        public virtual float UpdateVitae(int amount = 0)
+        public virtual float UpdateVitae(int amount = 0, bool isPkDeath = false)
         {
             if (Player == null) return 0;
             PropertiesEnchantmentRegistry vitae;
 
-            var floatAmount = amount > 0 ? Math.Clamp(amount / 100f, 0f, 1f) : (float)PropertyManager.GetDouble("vitae_penalty").Item;
+            float floatAmount;
+            if (amount > 0)
+                floatAmount = Math.Clamp(amount / 100f, 0f, 1f);
+            else
+            { 
+                floatAmount = (float)PropertyManager.GetDouble("vitae_penalty").Item;
+                if (isPkDeath)
+                {
+                    var extraPkVitae = (float)PropertyManager.GetDouble("extra_vitae_penalty_pvp").Item;
+                    if (extraPkVitae > 0)
+                        floatAmount += extraPkVitae;
+                }
+            }
 
             if (!HasVitae)
             {

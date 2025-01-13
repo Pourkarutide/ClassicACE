@@ -291,8 +291,11 @@ namespace ACE.Server.WorldObjects
                 if (!playerDamager.IsOnArenaLandblock && (victimLevel < playerDamagerLevel && victim.Level < 80 && levelDifference > PropertyManager.GetLong("pk_escape_max_level_difference", 20).Item))
                 {
                     var penalty = (int)Math.Ceiling((double)levelDifference * damagePercent);
-                    playerDamager.InflictVitaePenalty(penalty);
-                    playerDamager.Session.Network.EnqueueSend(new GameMessageSystemChat("Your cowardly actions weaken your vitae.", ChatMessageType.Broadcast));
+                    if (penalty > 0)
+                    {
+                        playerDamager.InflictVitaePenalty(penalty);
+                        playerDamager.Session.Network.EnqueueSend(new GameMessageSystemChat("Your cowardly actions weaken your vitae.", ChatMessageType.Broadcast));
+                    }
                 }
             }
         }
