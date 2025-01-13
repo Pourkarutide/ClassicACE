@@ -321,7 +321,12 @@ namespace ACE.Server.WorldObjects
 
         public void CheckExplorationLandblock()
         {
-            var currentLandblockId = CurrentLandblock.Id.Raw >> 16;
+            var currentLandblock = CurrentLandblock;
+            if (currentLandblock == null)
+                return; // TODO: Fix this - Players may not be getting credit for exploration
+
+            var currentLandblockId = currentLandblock.Id.Raw >> 16;
+
             if (!Exploration1LandblockReached && Exploration1LandblockId != 0 && Exploration1LandblockId == currentLandblockId)
             {
                 Exploration1LandblockReached = true;
