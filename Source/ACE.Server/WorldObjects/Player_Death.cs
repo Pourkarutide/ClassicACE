@@ -248,7 +248,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Inflicts vitae
         /// </summary>
-        public void InflictVitaePenalty(int amount = 0)
+        public void InflictVitaePenalty(int amount = 0, bool isPkDeath = false)
         {
             DeathLevel = Level; // for calculating vitae XP
             VitaeCpPool = 0;    // reset vitae XP earned
@@ -258,7 +258,7 @@ namespace ACE.Server.WorldObjects
 
             Session.Network.EnqueueSend(msgDeathLevel, msgVitaeCpPool);
 
-            var vitae = EnchantmentManager.UpdateVitae(amount);
+            var vitae = EnchantmentManager.UpdateVitae(amount, isPkDeath: isPkDeath);
 
             var spellID = (uint)SpellId.Vitae;
             var spell = new Spell(spellID);
@@ -344,14 +344,14 @@ namespace ACE.Server.WorldObjects
 
             var hadVitae = HasVitae;
 
-            var prevVitae = Vitae;
+            var isPkDeath = IsPKDeath(topDamager);
+
             // update vitae
             // players who died in a PKLite fight do not accrue vitae
             if (!IsPKLiteDeath(topDamager) && !IsHardcore && !IsOnArenaLandblock)
-                InflictVitaePenalty();
-            var vitaeDelta = Math.Abs((int)Math.Round(100 * (Vitae - prevVitae)));
+                InflictVitaePenalty(isPkDeath: isPkDeath);
 
-            if ((IsPKDeath(topDamager) || AugmentationSpellsRemainPastDeath == 0) && !IsOnArenaLandblock)
+            if ((isPkDeath || AugmentationSpellsRemainPastDeath == 0) && !IsOnArenaLandblock)
             {
                 var msgPurgeEnchantments = new GameEventMagicPurgeEnchantments(Session);
                 EnchantmentManager.RemoveAllEnchantments();
@@ -396,7 +396,7 @@ namespace ACE.Server.WorldObjects
                 ReportCollisions = previousReportCollisions;
                 IsFrozen = previousIsFrozen;
 
-                CreateCorpse(topDamager, hadVitae, vitaeDelta);
+                CreateCorpse(topDamager, hadVitae);
 
                 if(IsHardcore && !IsOnArenaLandblock)
                     Session.Network.EnqueueSend(new GameMessageSystemChat("Your corpse will release your soul in 30 seconds.", ChatMessageType.Broadcast));
