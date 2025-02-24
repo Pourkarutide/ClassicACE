@@ -345,9 +345,9 @@ namespace ACE.Server.WorldObjects
 
                     // TODO: replace with some kind of 'rootOwner unless equip' concept?
                     if (itemCaster != null && (equip || itemCaster is Gem || itemCaster is Food))
-                        CreateEnchantment(targetCreature ?? target, itemCaster, itemCaster, spell, equip, false, showMsg);
+                        CreateEnchantment(targetCreature ?? target, itemCaster, itemCaster, spell, equip, false, showMsg, isWeaponSpell);
                     else
-                        CreateEnchantment(targetCreature ?? target, this, this, spell, equip, false, showMsg);
+                        CreateEnchantment(targetCreature ?? target, this, this, spell, equip, false, showMsg, isWeaponSpell);
 
                     break;
 
@@ -437,7 +437,7 @@ namespace ACE.Server.WorldObjects
         /// Handles casting SpellType.Enchantment / FellowEnchantment spells
         /// this is also called if SpellType.EnchantmentProjectile successfully hits
         /// </summary>
-        public void CreateEnchantment(WorldObject target, WorldObject caster, WorldObject weapon, Spell spell, bool equip = false, bool fromProc = false, bool showMsg = true)
+        public void CreateEnchantment(WorldObject target, WorldObject caster, WorldObject weapon, Spell spell, bool equip = false, bool fromProc = false, bool showMsg = true, bool isWeaponSpell = false)
         {
             // weird itemCaster -> caster collapsing going on here -- fixme
 
@@ -470,7 +470,7 @@ namespace ACE.Server.WorldObjects
             }
 
             // create enchantment
-            var addResult = target.EnchantmentManager.Add(spell, caster, weapon, equip);
+            var addResult = target.EnchantmentManager.Add(spell, caster, weapon, equip, isWeaponSpell);
 
             // build message
             var suffix = "";
