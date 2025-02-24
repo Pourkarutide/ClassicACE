@@ -1,3 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Numerics;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+
+using Microsoft.EntityFrameworkCore;
+
 using ACE.Adapter.GDLE;
 using ACE.Adapter.Lifestoned;
 using ACE.Common.Extensions;
@@ -15,15 +26,15 @@ using ACE.Server.Network;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Physics.Extensions;
 using ACE.Server.WorldObjects;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Numerics;
-using System.Text.RegularExpressions;
+using WeenieClassName = ACE.Server.Factories.Enum.WeenieClassName;
+using System.Threading;
+using System.Diagnostics;
+using ACE.Entity.Models;
+using Weenie = ACE.Database.Models.World.Weenie;
+using ACE.Server.WorldObjects.Entity;
+using ACE.DatLoader.FileTypes;
+using ACE.DatLoader;
+using ACE.Server.Entity.Actions;
 
 namespace ACE.Server.Command.Handlers.Processors
 {
@@ -863,7 +874,7 @@ namespace ACE.Server.Command.Handlers.Processors
                 var metadata = new Adapter.GDLE.Models.Metadata(weenie);
                 if (metadata.HasInfo)
                 {
-                    var jsonEx = JsonConvert.SerializeObject(metadata, LifestonedConverter.SerializerSettings);
+                    var jsonEx = JsonSerializer.Serialize(metadata, LifestonedConverter.SerializerSettings);
                     sqlFile.WriteLine($"\n/* Lifestoned Changelog:\n{jsonEx}\n*/");
                 }
 
@@ -1275,7 +1286,7 @@ namespace ACE.Server.Command.Handlers.Processors
 
             if (File.Exists(json_folder + json_filename) && LifestonedLoader.AppendMetadata(json_folder + json_filename, json_weenie))
             {
-                json = JsonConvert.SerializeObject(json_weenie, LifestonedConverter.SerializerSettings);
+                json = JsonSerializer.Serialize(json_weenie, LifestonedConverter.SerializerSettings);
             }
 
             File.WriteAllText(json_folder + json_filename, json);
@@ -1309,7 +1320,7 @@ namespace ACE.Server.Command.Handlers.Processors
             if (!di.Exists)
                 di.Create();
 
-            var json = JsonConvert.SerializeObject(result, LifestonedConverter.SerializerSettings);
+            var json = JsonSerializer.Serialize(result, LifestonedConverter.SerializerSettings);
 
             File.WriteAllText(json_folder + json_filename, json);
 
@@ -1340,7 +1351,7 @@ namespace ACE.Server.Command.Handlers.Processors
             if (!di.Exists)
                 di.Create();
 
-            var json = JsonConvert.SerializeObject(result, LifestonedConverter.SerializerSettings);
+            var json = JsonSerializer.Serialize(result, LifestonedConverter.SerializerSettings);
 
             File.WriteAllText(json_folder + json_filename, json);
 
@@ -1365,7 +1376,7 @@ namespace ACE.Server.Command.Handlers.Processors
             if (!di.Exists)
                 di.Create();
 
-            var json = JsonConvert.SerializeObject(result, LifestonedConverter.SerializerSettings);
+            var json = JsonSerializer.Serialize(result, LifestonedConverter.SerializerSettings);
 
             File.WriteAllText(json_folder + json_filename, json);
 
@@ -2452,7 +2463,7 @@ namespace ACE.Server.Command.Handlers.Processors
 
             if (File.Exists(json_folder + json_filename) && LifestonedLoader.AppendMetadata(json_folder + json_filename, json_weenie))
             {
-                json = JsonConvert.SerializeObject(json_weenie, LifestonedConverter.SerializerSettings);
+                json = JsonSerializer.Serialize(json_weenie, LifestonedConverter.SerializerSettings);
             }
 
             File.WriteAllText(json_folder + json_filename, json);
@@ -2502,7 +2513,7 @@ namespace ACE.Server.Command.Handlers.Processors
 
             var json_filename = $"{recipeId.ToString("00000")} - {desc}.json";
 
-            var json = JsonConvert.SerializeObject(result, LifestonedConverter.SerializerSettings);
+            var json = JsonSerializer.Serialize(result, LifestonedConverter.SerializerSettings);
 
             File.WriteAllText(json_folder + json_filename, json);
 
@@ -2549,7 +2560,7 @@ namespace ACE.Server.Command.Handlers.Processors
 
             var json_filename = $"{landblockId:X4}.json";
 
-            var json = JsonConvert.SerializeObject(result, LifestonedConverter.SerializerSettings);
+            var json = JsonSerializer.Serialize(result, LifestonedConverter.SerializerSettings);
 
             File.WriteAllText(json_folder + json_filename, json);
 
@@ -2585,7 +2596,7 @@ namespace ACE.Server.Command.Handlers.Processors
 
             var json_filename = $"{questName}.json";
 
-            var json = JsonConvert.SerializeObject(result, LifestonedConverter.SerializerSettings);
+            var json = JsonSerializer.Serialize(result, LifestonedConverter.SerializerSettings);
 
             File.WriteAllText(json_folder + json_filename, json);
 
