@@ -18,7 +18,7 @@ namespace ACE.Server.Network.Structure
     /// </summary>
     public class AppraiseInfo
     {
-        private static readonly uint EnchantmentMask = 0x80000000;
+        private const uint EnchantmentMask = 0x80000000;
 
         public IdentifyResponseFlags Flags;
 
@@ -215,8 +215,11 @@ namespace ACE.Server.Network.Structure
                 }
                 else
                 {
-                    //longDesc = $"This house is {(slumLord.HouseStatus == HouseStatus.Disabled ? "not " : "")}available for purchase.\n"; // this was the retail msg.
-                    longDesc = $"This {(slumLord.House.HouseType == HouseType.Undef ? "house" : slumLord.House.HouseType.ToString().ToLower())} is {(slumLord.House.HouseStatus == HouseStatus.Disabled ? "not " : "")}available for purchase.\n";
+                    if (slumLord.House != null)
+                        //longDesc = $"This house is {(slumLord.HouseStatus == HouseStatus.Disabled ? "not " : "")}available for purchase.\n"; // this was the retail msg.
+                        longDesc = $"This {(slumLord.House.HouseType == HouseType.Undef ? "house" : slumLord.Name.ToString().ToLower())} is {(slumLord.House.HouseStatus == HouseStatus.Disabled ? "not " : "")}available for purchase.\n";
+                    else
+                        longDesc = "This house is not properly configured. Please report this issue.";
 
                     var discardInts = PropertiesInt.Where(x => x.Key != PropertyInt.HouseStatus && x.Key != PropertyInt.HouseType && x.Key != PropertyInt.MinLevel && x.Key != PropertyInt.MaxLevel && x.Key != PropertyInt.AllegianceMinLevel && x.Key != PropertyInt.AllegianceMaxLevel).Select(x => x.Key).ToList();
                     foreach (var key in discardInts)
@@ -264,7 +267,7 @@ namespace ACE.Server.Network.Structure
                 var hook = wo as Container;
 
                 string baseDescString = "";
-                if (wo.ParentLink.HouseOwner != null)
+                if (wo.ParentLink != null && wo.ParentLink.HouseOwner != null)
                 {
                     // This is for backwards compatibility. This value was not set/saved in earlier versions.
                     // It will get the player's name and save that to the HouseOwnerName property of the house. This is now done when a player purchases a house.
@@ -366,13 +369,13 @@ namespace ACE.Server.Network.Structure
 
         private void BuildProperties(WorldObject wo)
         {
-            PropertiesInt = wo.GetAllPropertyInt().Where(x => ClientProperties.PropertiesInt.Contains((ushort)x.Key)).ToDictionary(x => x.Key, x => x.Value);
-            PropertiesInt64 = wo.GetAllPropertyInt64().Where(x => ClientProperties.PropertiesInt64.Contains((ushort)x.Key)).ToDictionary(x => x.Key, x => x.Value);
-            PropertiesBool = wo.GetAllPropertyBools().Where(x => ClientProperties.PropertiesBool.Contains((ushort)x.Key)).ToDictionary(x => x.Key, x => x.Value);
-            PropertiesFloat = wo.GetAllPropertyFloat().Where(x => ClientProperties.PropertiesDouble.Contains((ushort)x.Key)).ToDictionary(x => x.Key, x => x.Value);
-            PropertiesString = wo.GetAllPropertyString().Where(x => ClientProperties.PropertiesString.Contains((ushort)x.Key)).ToDictionary(x => x.Key, x => x.Value);
-            PropertiesDID = wo.GetAllPropertyDataId().Where(x => ClientProperties.PropertiesDataId.Contains((ushort)x.Key)).ToDictionary(x => x.Key, x => x.Value);
-            PropertiesIID = wo.GetAllPropertyInstanceId().Where(x => ClientProperties.PropertiesInstanceId.Contains((ushort)x.Key)).ToDictionary(x => x.Key, x => x.Value);
+            PropertiesInt = wo.GetAllPropertyIntWhere(AssessmentProperties.PropertiesInt);
+            PropertiesInt64 = wo.GetAllPropertyInt64Where(AssessmentProperties.PropertiesInt64);
+            PropertiesBool = wo.GetAllPropertyBoolsWhere(AssessmentProperties.PropertiesBool);
+            PropertiesFloat = wo.GetAllPropertyFloatWhere(AssessmentProperties.PropertiesDouble);
+            PropertiesString = wo.GetAllPropertyStringWhere(AssessmentProperties.PropertiesString);
+            PropertiesDID = wo.GetAllPropertyDataIdWhere(AssessmentProperties.PropertiesDataId);
+            PropertiesIID = wo.GetAllPropertyInstanceIdWhere(AssessmentProperties.PropertiesInstanceId);
 
             if (wo is Player player)
             {
@@ -427,26 +430,29 @@ namespace ACE.Server.Network.Structure
 
                 if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
                 {
-                    var baseArmor = PropertiesInt[PropertyInt.ArmorLevel];
-
-                    var wielder = wo.Wielder as Player;
-                    if (wielder != null && ((wo.ClothingPriority ?? 0) & (CoverageMask)CoverageMaskHelper.Underwear) == 0)
+                    if (!wo.IsClothArmor)
                     {
-                        int armor;
-                        if (wo.IsShield)
-                            armor = (int)wielder.GetSkillModifiedShieldLevel(baseArmor);
-                        else
-                            armor = (int)wielder.GetSkillModifiedArmorLevel(baseArmor);
+                        var baseArmor = PropertiesInt[PropertyInt.ArmorLevel];
 
-                        if (armor < baseArmor)
+                        var wielder = wo.Wielder as Player;
+                        if (wielder != null && ((wo.ClothingPriority ?? 0) & (CoverageMask)CoverageMaskHelper.Underwear) == 0)
                         {
-                            PropertiesInt[PropertyInt.ArmorLevel] = armor;
-                            IsArmorCapped = true;
-                        }
-                        else if (armor > baseArmor)
-                        {
-                            PropertiesInt[PropertyInt.ArmorLevel] = armor;
-                            IsArmorBuffed = true;
+                            int armor;
+                            if (wo.IsShield)
+                                armor = (int)wielder.GetSkillModifiedShieldLevel(baseArmor);
+                            else
+                                armor = (int)wielder.GetSkillModifiedArmorLevel(baseArmor);
+
+                            if (armor < baseArmor)
+                            {
+                                PropertiesInt[PropertyInt.ArmorLevel] = armor;
+                                IsArmorCapped = true;
+                            }
+                            else if (armor > baseArmor)
+                            {
+                                PropertiesInt[PropertyInt.ArmorLevel] = armor;
+                                IsArmorBuffed = true;
+                            }
                         }
                     }
                 }
@@ -627,40 +633,53 @@ namespace ACE.Server.Network.Structure
                     hasExtraPropertiesText = true;
                 }
 
-                if (wo.ArmorLevel != null && wo.ArmorLevel != 0 && wo.CurrentWieldedLocation != null)
+                if (wo.ArmorLevel != null && wo.ArmorLevel != 0)
                 {
-                    if (hasExtraPropertiesText)
-                        extraPropertiesText += "\n";
-                    extraPropertiesText += $"Base Armor Level: {wo.ArmorLevel}.";
-                    hasExtraPropertiesText = true;
+                    if (wo.IsClothArmor)
+                    {
+                        if (hasExtraPropertiesText)
+                            extraPropertiesText += "\n";
+                        extraPropertiesText += $"Cloth Armor is not affected by the Armor Skill.\n";
+                        hasExtraPropertiesText = true;
+                    }
+
+                    if (wo.CurrentWieldedLocation != null)
+                    {
+                        if (hasExtraPropertiesText)
+                            extraPropertiesText += "\n";
+                        extraPropertiesText += $"Base Armor Level: {wo.ArmorLevel}.";
+                        hasExtraPropertiesText = true;
+                    }
                 }
 
                 if (wo.IsShield)
                 {
-                    var shieldDefenseMod = ((wo.ShieldDefense ?? 1) - 1) * 100;
-                    if (shieldDefenseMod != 0)
-                    {
-                        if (hasExtraPropertiesText)
-                            extraPropertiesText += "\n";
-                        extraPropertiesText += $"Bonus to Shield Skill: {(shieldDefenseMod > 0 ? "+" : "")}{shieldDefenseMod.ToString("0.0")}%.";
-                        hasExtraPropertiesText = true;
-                    }
+                    var BlockModBase = (float)(wo.BlockMod ?? 1);
+                    var BlockModEnchanted = BlockModBase + wo.EnchantmentManager.GetBlockMod();
+                    var BlockModPercent = BlockModEnchanted * 100;
+                    var buffOrDebuff = 0;
+                    if (BlockModEnchanted > BlockModBase)
+                        buffOrDebuff = 1;
+                    else if (BlockModEnchanted < BlockModBase)
+                        buffOrDebuff = -1;
 
-                    var blockBonus = wo.GetShieldMissileBlockBonus() * 100;
-                    if (blockBonus != 0)
+                    if (BlockModPercent != 0)
                     {
                         if (hasExtraPropertiesText)
                             extraPropertiesText += "\n";
-                        extraPropertiesText += $"Missile Attack Bonus Block Chance: {(blockBonus > 0 ? "+" : "")}{blockBonus:N0}%.";
+                        extraPropertiesText += $"Bonus to Block Chance: {(BlockModPercent > 0 ? "+" : "")}{BlockModPercent.ToString("0.0")}%. {(buffOrDebuff > 0 ? "(Buffed)" : "")}{(buffOrDebuff < 0 ? "(Debuffed)" : "")}";
                         hasExtraPropertiesText = true;
                     }
                 }
 
+                bool hasMissileDefenseCap = PropertiesFloat.TryGetValue(PropertyFloat.MissileDefenseCap, out var missileDefenseCap);
+                bool combinedMeleeMissileCap = false;
                 if (PropertiesFloat.TryGetValue(PropertyFloat.MeleeDefenseCap, out var meleeDefenseCap) && meleeDefenseCap != 0)
                 {
-                    if (PropertiesFloat.TryGetValue(PropertyFloat.MissileDefenseCap, out var missileDefenseCap) && missileDefenseCap == meleeDefenseCap)
+                    if (hasMissileDefenseCap && missileDefenseCap == meleeDefenseCap)
                     {
                         // We have both melee and missile entries and they are the same value, group them up into "Evasion"
+                        combinedMeleeMissileCap = true;
                         if (hasExtraPropertiesText)
                             extraPropertiesText += "\n";
                         extraPropertiesText += $"Max Evasion Chance: {(meleeDefenseCap > 0 ? "+" : "")}{meleeDefenseCap.ToString("0.0")}%.";
@@ -674,7 +693,8 @@ namespace ACE.Server.Network.Structure
                         hasExtraPropertiesText = true;
                     }
                 }
-                else if (PropertiesFloat.TryGetValue(PropertyFloat.MissileDefenseCap, out var missileDefenseCap) && missileDefenseCap != 0)
+
+                if (!combinedMeleeMissileCap && hasMissileDefenseCap && missileDefenseCap != 0)
                 {
                     if (hasExtraPropertiesText)
                         extraPropertiesText += "\n";
@@ -789,6 +809,12 @@ namespace ACE.Server.Network.Structure
                     extraPropertiesText += $"{verb} {wo.ExtraManaRegenPool:N0} {complement} your Extra Mana Regeneration pool when consumed.";
                     hasExtraPropertiesText = true;
                 }
+
+                if (wo is Corpse corpse && !corpse.IsMonster)
+                    PropertiesString[PropertyString.LongDesc] += $"\n\nContains {corpse.VitaeCpPool} Vitae.\n";
+
+                if (wo.ImbuedEffect == ImbuedEffectType.ElementalRending)
+                    PropertiesInt[PropertyInt.ImbuedEffect] = (int)ImbuedEffectType.NetherRending; // The client has been modified to read "Elem. Rending" instead.
 
                 if (hasExtraPropertiesText)
                     PropertiesString[PropertyString.Use] = extraPropertiesText.TrimEnd('\n');

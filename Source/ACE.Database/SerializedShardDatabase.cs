@@ -126,11 +126,11 @@ namespace ACE.Database
         }
 
 
-        public void SaveBiotasInParallel(IEnumerable<(ACE.Entity.Models.Biota biota, ReaderWriterLockSlim rwLock)> biotas, Action<bool> callback)
+        public void SaveBiotasInParallel(IEnumerable<(ACE.Entity.Models.Biota biota, ReaderWriterLockSlim rwLock)> biotas, Action<bool> callback, bool doNotAddToCache = false)
         {
             _queue.Add(new Task(() =>
             {
-                var result = BaseDatabase.SaveBiotasInParallel(biotas);
+                var result = BaseDatabase.SaveBiotasInParallel(biotas, doNotAddToCache);
                 callback?.Invoke(result);
             }));
         }
@@ -275,6 +275,15 @@ namespace ACE.Database
             _queue.Add(new Task(() =>
             {
                 BaseDatabase.CreatePKKill(victimId, killerId, victimMonarchId, killerMonarchId);
+            }));
+        }
+
+        public void GetUniqueIPsInTheLast(TimeSpan timeSpan, Action<int> callback)
+        {
+            _queue.Add(new Task(() =>
+            {
+                var result = BaseDatabase.GetUniqueIPsInTheLast(timeSpan);
+                callback?.Invoke(result);
             }));
         }
     }

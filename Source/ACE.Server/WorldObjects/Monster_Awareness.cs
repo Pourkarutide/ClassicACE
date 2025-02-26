@@ -38,6 +38,12 @@ namespace ACE.Server.WorldObjects
 
             if (alertNearby)
                 AlertFriendly();
+
+            if (PathfindingEnabled && Location.Indoors && AttackTarget != null)
+            {
+                if ((!IsRanged && !IsMeleeVisible(AttackTarget, true)) || (IsRanged && (!IsDirectVisible(AttackTarget, true) || GetDistanceToTarget() > GetMaxMissileRange())))
+                    TryRoute();
+            }
         }
 
         /// <summary>
@@ -50,16 +56,33 @@ namespace ACE.Server.WorldObjects
 
             SetCombatMode(CombatMode.NonCombat);
 
-            CurrentAttack = null;
+            CurrentAttackType = null;
             firstUpdate = true;
             AttackTarget = null;
             IsAwake = false;
-            IsMoving = false;
             MonsterState = State.Idle;
+            AwakeJustToGrantPassage = false;
 
-            PhysicsObj.CachedVelocity = Vector3.Zero;
+            if (IsEmoting)
+                EndEmoting();
+            if (IsWandering)
+                EndWandering();
+            if (IsRouting)
+                EndRoute();
+            if (IsMovingToHome)
+                EndMoveToHome();
+
+            if (HasPendingMovement)
+                CancelMoveTo(WeenieError.ObjectGone);
+            OnMovementStopped();
 
             ClearRetaliateTargets();
+
+            var home = GetPosition(PositionType.Home);
+            if (Location.DistanceTo(home) > 2.0f)
+                ForceHome();
+            else
+                TurnTo(home);
         }
 
         public Tolerance Tolerance
@@ -143,7 +166,7 @@ namespace ACE.Server.WorldObjects
             var manaCost = 2; // Taunting uses mana!
 
             Player target = AttackTarget as Player;
-            if (target != null && target.IsAttemptingToTaunt && IsDirectVisible(target))
+            if (target != null && target.IsAttemptingToTaunt && IsDirectVisible(target, true))
             {
                 // Current target is already trying to taunt and is visible, so he has priority over everyone else and we also skip the activation chance step.
 
@@ -197,7 +220,7 @@ namespace ACE.Server.WorldObjects
                 {
                     if (target.Mana.Current < manaCost)
                         continue;
-                    if (!IsDirectVisible(target))
+                    if (!IsDirectVisible(target, true))
                         continue;
 
                     //Balance change: Effective Taunt skill gets +10% bonus
@@ -243,7 +266,7 @@ namespace ACE.Server.WorldObjects
 
         public virtual bool FindNextTarget()
         {
-            stopwatch.Restart();
+            //stopwatch.Restart();
 
             try
             {
@@ -253,9 +276,7 @@ namespace ACE.Server.WorldObjects
                 var visibleTargets = GetAttackTargets();
                 if (visibleTargets.Count == 0)
                 {
-                    if (MonsterState != State.Return)
-                        MoveToHome();
-
+                    TryMoveToHome();
                     return false;
                 }
 
@@ -346,14 +367,24 @@ namespace ACE.Server.WorldObjects
                 if (player != null && !Visibility && player.AddTrackedObject(this))
                     log.Error($"Fixed invisible attacker on player {player.Name}. (Landblock:{CurrentLandblock.Id} - {Name} ({Guid})");
 
-                if (AttackTarget != null && AttackTarget != prevAttackTarget)
+                if (AttackTarget == null)
+                    TryMoveToHome();
+                else if (AttackTarget != null && AttackTarget != prevAttackTarget)
+                {
                     EmoteManager.OnNewEnemy(AttackTarget);
+
+                    if (PathfindingEnabled && Location.Indoors)
+                    {
+                        if ((!IsRanged && !IsMeleeVisible(AttackTarget, true)) || (IsRanged && (!IsDirectVisible(AttackTarget, true) || GetDistanceToTarget() > GetMaxMissileRange())))
+                            TryRoute();
+                    }
+                }
 
                 return AttackTarget != null;
             }
             finally
             {
-                ServerPerformanceMonitor.AddToCumulativeEvent(ServerPerformanceMonitor.CumulativeEventHistoryType.Monster_Awareness_FindNextTarget, stopwatch.Elapsed.TotalSeconds);
+                //ServerPerformanceMonitor.AddToCumulativeEvent(ServerPerformanceMonitor.CumulativeEventHistoryType.Monster_Awareness_FindNextTarget, stopwatch.Elapsed.TotalSeconds);
             }
         }
 
@@ -508,12 +539,12 @@ namespace ACE.Server.WorldObjects
         /// The most common value from retail
         /// Some other common values are in the range of 12-25
         /// </summary>
-        public static readonly float VisualAwarenessRange_Default = 18.0f;
+        public const float VisualAwarenessRange_Default = 18.0f;
 
         /// <summary>
         /// The highest value found in the current database
         /// </summary>
-        public static readonly float VisualAwarenessRange_Highest = 75.0f;
+        public const float VisualAwarenessRange_Highest = 75.0f;
 
         public double? VisualAwarenessRange
         {

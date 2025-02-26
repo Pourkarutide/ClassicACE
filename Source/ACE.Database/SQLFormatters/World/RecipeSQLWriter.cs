@@ -222,7 +222,11 @@ namespace ACE.Database.SQLFormatters.World
                 writer.WriteLine();
                 writer.WriteLine("INSERT INTO `recipe_mod` (`recipe_Id`, `executes_On_Success`, `health`, `stamina`, `mana`, `unknown_7`, `data_Id`, `unknown_9`, `instance_Id`, `weenie_Class_Id`)");
 
-                var output = $"VALUES ({recipeId}, {value.ExecutesOnSuccess}, {value.Health}, {value.Stamina}, {value.Mana}, {value.Unknown7}, {(value.DataId > 0 ? $"0x{value.DataId:X8}" : $"{value.DataId}")}, {value.Unknown9}, {value.InstanceId}, {value.WeenieClassId});";
+                string label = null;
+                if (WeenieNames != null)
+                    WeenieNames.TryGetValue((uint)value.WeenieClassId, out label);
+
+                var output = $"VALUES ({recipeId}, {value.ExecutesOnSuccess}, {value.Health}, {value.Stamina}, {value.Mana}, {value.Unknown7}, {(value.DataId > 0 ? $"0x{value.DataId:X8}" : $"{value.DataId}")}, {value.Unknown9}, {value.InstanceId}, {value.WeenieClassId} /* {label} */);";
 
                 output = FixNullFields(output);
 
@@ -294,7 +298,7 @@ namespace ACE.Database.SQLFormatters.World
         {
             writer.WriteLine("INSERT INTO `recipe_mods_d_i_d` (`recipe_Mod_Id`, `index`, `stat`, `value`, `enum`, `source`)");
 
-            var lineGenerator = new Func<int, string>(i => $"@parent_id, {input[i].Index}, {input[i].Stat.ToString().PadLeft(3)}, {input[i].Value}, {input[i].Enum}, {input[i].Source}) /* On {((RecipeSourceType)input[i].Source).ToString()}.{((ModificationType)input[i].Index).ToString()} {((ModificationOperation)input[i].Enum).ToString()} {Enum.GetName(typeof(PropertyDataId), input[i].Stat)} to {((ModificationType)input[i].Index).ToString().Substring(7)} */");
+            var lineGenerator = new Func<int, string>(i => $"@parent_id, {input[i].Index}, {input[i].Stat.ToString().PadLeft(3)}, 0x{input[i].Value:X8}, {input[i].Enum}, {input[i].Source}) /* On {((RecipeSourceType)input[i].Source).ToString()}.{((ModificationType)input[i].Index).ToString()} {((ModificationOperation)input[i].Enum).ToString()} {Enum.GetName(typeof(PropertyDataId), input[i].Stat)} to {((ModificationType)input[i].Index).ToString().Substring(7)} */");
 
             ValuesWriter(input.Count, lineGenerator, writer);
         }
@@ -303,7 +307,7 @@ namespace ACE.Database.SQLFormatters.World
         {
             writer.WriteLine("INSERT INTO `recipe_mods_i_i_d` (`recipe_Mod_Id`, `index`, `stat`, `value`, `enum`, `source`)");
 
-            var lineGenerator = new Func<int, string>(i => $"@parent_id, {input[i].Index}, {input[i].Stat.ToString().PadLeft(3)}, {input[i].Value}, {input[i].Enum}, {input[i].Source}) /* On {((RecipeSourceType)input[i].Source).ToString()}.{((ModificationType)input[i].Index).ToString()} {((ModificationOperation)input[i].Enum).ToString()} {Enum.GetName(typeof(PropertyInstanceId), input[i].Stat)} to {((ModificationType)input[i].Index).ToString().Substring(7)} */");
+            var lineGenerator = new Func<int, string>(i => $"@parent_id, {input[i].Index}, {input[i].Stat.ToString().PadLeft(3)}, 0x{input[i].Value:X8}, {input[i].Enum}, {input[i].Source}) /* On {((RecipeSourceType)input[i].Source).ToString()}.{((ModificationType)input[i].Index).ToString()} {((ModificationOperation)input[i].Enum).ToString()} {Enum.GetName(typeof(PropertyInstanceId), input[i].Stat)} to {((ModificationType)input[i].Index).ToString().Substring(7)} */");
 
             ValuesWriter(input.Count, lineGenerator, writer);
         }

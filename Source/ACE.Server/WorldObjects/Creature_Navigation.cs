@@ -8,6 +8,7 @@ using ACE.Server.Entity.Actions;
 using ACE.Server.Physics.Animation;
 using ACE.Server.Physics.Extensions;
 using ACE.Server.Network.GameMessages.Messages;
+using System.Threading;
 
 namespace ACE.Server.WorldObjects
 {
@@ -208,13 +209,13 @@ namespace ACE.Server.WorldObjects
         /// Used by the emote system, which has the target rotation stored in positions
         /// </summary>
         /// <returns>The amount of time in seconds for the rotation to complete</returns>
-        public float TurnTo(Position position)
+        public float TurnTo(Position position, float speed = 1.0f, bool clientOnly = false)
         {
-            var frame = new AFrame(position.Pos, position.Rotation);
-            var heading = frame.get_heading();
+            if (DebugMove)
+                Console.WriteLine($"{Name} ({Guid}).TurnTo({position.ToLOCString()}, {speed}, {clientOnly})");
 
             // send network message to start turning creature
-            var turnToMotion = new Motion(this, position, heading);
+            var turnToMotion = GetTurnToMotion(position, speed);
             EnqueueBroadcastMotion(turnToMotion);
 
             var angle = GetAngle(position);
@@ -224,17 +225,25 @@ namespace ACE.Server.WorldObjects
             var rotateDelay = GetRotateDelay(angle);
             //Console.WriteLine("RotateTime: " + rotateTime);
 
-            // update server object rotation on completion
-            // TODO: proper incremental rotation
-            var actionChain = new ActionChain();
-            actionChain.AddDelaySeconds(rotateDelay);
-            actionChain.AddAction(this, () =>
+            if (!clientOnly)
             {
-                var targetDir = position.GetCurrentDir();
-                Location.Rotate(targetDir);
-                PhysicsObj.Position.Frame.Orientation = Location.Rotation;
-            });
-            actionChain.EnqueueChain();
+                OnMovementStarted(true);
+                // update server object rotation on completion
+                // TODO: proper incremental rotation
+                var actionChain = new ActionChain();
+                actionChain.AddDelaySeconds(rotateDelay);
+                actionChain.AddAction(this, () =>
+                {
+                    var targetDir = position.GetCurrentDir();
+                    Location.Rotate(targetDir);
+                    PhysicsObj.Position.Frame.Orientation = Location.Rotation;
+
+                    OnMovementStopped();
+                    if (!IsAwake)
+                        UpdatePosition();
+                });
+                actionChain.EnqueueChain();
+            }
 
             return rotateDelay;
         }
@@ -253,173 +262,228 @@ namespace ACE.Server.WorldObjects
 
         /// <summary>
         /// This is called by the monster AI system for ranged attacks
-        /// It is mostly a duplicate of Rotate(), and should be refactored eventually...
-        /// It sets CurrentMotionState and AttackTarget here
+        /// It sets CurrentMotionState here
         /// </summary>
-        public float TurnTo(WorldObject target, bool debug = false)
+        public void TurnTo(WorldObject target, float speed = 1.0f, bool clientOnly = false)
         {
             if (DebugMove)
-                Console.WriteLine($"{Name}.TurnTo({target.Name})");
+                Console.WriteLine($"{Name} ({Guid}).TurnTo({target.Name}, {speed}, {clientOnly})");
 
-            if (this is Player) return 0.0f;
+            if (this is Player)
+                return;
 
-            var turnToMotion = new Motion(this, target, MovementType.TurnToObject);
-            EnqueueBroadcastMotion(turnToMotion);
+            var motion = GetTurnToMotion(target, speed);
 
-            CurrentMotionState = turnToMotion;
+            EnqueueBroadcastMotion(motion);
 
-            AttackTarget = target;
-            var rotateDelay = EstimateTurnTo();
-            if (debug)
-                Console.WriteLine("TurnTime = " + rotateDelay);
-            var actionChain = new ActionChain();
-            actionChain.AddDelaySeconds(rotateDelay);
-            actionChain.AddAction(this, () =>
-            {
-                // fix me: in progress turn
-                //var targetDir = GetDirection(Location.ToGlobal(), target.Location.ToGlobal());
-                //Location.Rotate(targetDir);
-                if (debug)
-                    Console.WriteLine("Finished turning - " + rotateDelay + "s");
-            });
-            actionChain.EnqueueChain();
-            return rotateDelay;
+            if (clientOnly)
+                return;
+
+            CurrentMotionState = motion;
+
+            OnMovementStarted(true);
+
+            // prevent initial snap forward
+            if (!PhysicsObj.IsMovingOrAnimating)
+                PhysicsObj.UpdateTime = Physics.Common.PhysicsTimer.CurrentTime;
+
+            var mvp = new MovementParameters(motion);
+            PhysicsObj.TurnToObject(target.PhysicsObj, mvp);
         }
 
         /// <summary>
         /// Used by the monster AI system to start turning / running towards a target
         /// </summary>
-        public virtual void MoveTo(WorldObject target, float runRate = 1.0f)
+        public virtual void MoveTo(WorldObject target, float distanceToObject = 2.0f, float speed = 1.0f, bool clientOnly = false)
         {
             if (DebugMove)
-                Console.WriteLine($"{Name}.MoveTo({target.Name}, {runRate}) - CurPos: {Location.ToLOCString()} - DestPos: {AttackTarget.Location.ToLOCString()} - TargetDist: {Vector3.Distance(Location.ToGlobal(), AttackTarget.Location.ToGlobal())}");
+                Console.WriteLine($"{Name} ({Guid}).MoveTo({target.Name}, {distanceToObject}, {speed}, {clientOnly})");
 
-            var motion = GetMoveToMotion(target, runRate);
-
-            CurrentMotionState = motion;
+            var motion = GetMoveToMotion(target, distanceToObject);
 
             EnqueueBroadcastMotion(motion);
-        }
 
-        public Motion GetMoveToMotion(WorldObject target, float runRate)
-        {
-            var motion = new Motion(this, target, MovementType.MoveToObject);
-            motion.MoveToParameters.MovementParameters |= MovementParams.CanCharge | MovementParams.FailWalk | MovementParams.UseFinalHeading | MovementParams.Sticky | MovementParams.MoveAway;
-            motion.MoveToParameters.WalkRunThreshold = 1.0f;
+            if (clientOnly)
+                return;
 
-            if (runRate > 0)
-                motion.RunRate = runRate;
-            else
-                motion.MoveToParameters.MovementParameters &= ~MovementParams.CanRun;
-
-            return motion;
-        }
-
-        public virtual void BroadcastMoveTo(Player player)
-        {
-            Motion motion = null;
-
-            if (AttackTarget != null)
+            MonsterMovementLock.EnterWriteLock();
+            try
             {
-                // move to object
-                motion = GetMoveToMotion(AttackTarget, RunRate);
+                LastMoveTo = motion;
             }
-            else
+            finally
             {
-                // move to position
-                var home = GetPosition(PositionType.Home);
-
-                motion = GetMoveToPosition(home, RunRate, 1.0f);
+                MonsterMovementLock.ExitWriteLock();
             }
+            CurrentMotionState = motion;
 
-            player.Session.Network.EnqueueSend(new GameMessageUpdateMotion(this, motion));
+            OnMovementStarted();
+
+            // prevent initial snap forward
+            if (!PhysicsObj.IsMovingOrAnimating)
+                PhysicsObj.UpdateTime = Physics.Common.PhysicsTimer.CurrentTime;
+
+            var mvp = new MovementParameters(motion);
+            PhysicsObj.MoveToObject(target.PhysicsObj, mvp);
         }
 
         /// <summary>
-        /// Sends a network message for moving a creature to a new position
+        /// Used by the monster AI system to start turning / running towards a position
         /// </summary>
-        public void MoveTo(Position position, float runRate = 1.0f, bool setLoc = true, float? walkRunThreshold = null, float? speed = null)
+        public void MoveTo(Position position, float distanceToObject = 2.0f, float speed = 1.0f, bool useFinalHeading = true, bool clientOnly = false)
         {
-            // build and send MoveToPosition message to client
-            var motion = GetMoveToPosition(position, runRate, walkRunThreshold, speed);
+            if (DebugMove)
+                Console.WriteLine($"{Name} ({Guid}).MoveTo({position.ToLOCString()}, {distanceToObject}, {speed}, {clientOnly})");
+
+            if (!position.Indoors)
+                position.AdjustMapCoords();
+
+            var motion = GetMoveToMotion(position, distanceToObject, speed,  useFinalHeading);
+
             EnqueueBroadcastMotion(motion);
 
-            if (!setLoc) return;
+            if (clientOnly)
+                return;
+
+            MonsterMovementLock.EnterWriteLock();
+            try
+            {
+                LastMoveTo = motion;
+            }
+            finally
+            {
+                MonsterMovementLock.ExitWriteLock();
+            }
+            CurrentMotionState = motion;
 
             // start executing MoveTo iterator on server
             if (!PhysicsObj.IsMovingOrAnimating)
                 PhysicsObj.UpdateTime = Physics.Common.PhysicsTimer.CurrentTime;
 
-            var mvp = new MovementParameters(motion.MoveToParameters);
+            var mvp = new MovementParameters(motion);
             PhysicsObj.MoveToPosition(new Physics.Common.Position(position), mvp);
 
-            AddMoveToTick();
+            OnMovementStarted();
         }
 
-        private void AddMoveToTick()
+        private Motion GetMoveToMotion(WorldObject target, float distanceToObject = 0.6f, float speed = 1.0f)
         {
-            var actionChain = new ActionChain();
-            actionChain.AddDelaySeconds(monsterTickInterval);
-            actionChain.AddAction(this, () =>
-            {
-                if (!IsDead && PhysicsObj?.MovementManager?.MoveToManager != null && PhysicsObj.IsMovingTo())
-                {
-                    PhysicsObj.update_object();
-                    UpdatePosition_SyncLocation();
-                    SendUpdatePosition();
+            var motion = new Motion(this, target, MovementType.MoveToObject);
 
-                    if (PhysicsObj?.MovementManager?.MoveToManager?.FailProgressCount < 5)
-                    {
-                        AddMoveToTick();
-                    }
-                    else
-                    {
-                        if (PhysicsObj?.MovementManager?.MoveToManager != null)
-                        {
-                            PhysicsObj.MovementManager.MoveToManager.CancelMoveTo(WeenieError.ActionCancelled);
-                            PhysicsObj.MovementManager.MoveToManager.FailProgressCount = 0;
-                        }
-                        EnqueueBroadcastMotion(new Motion(CurrentMotionState.Stance, MotionCommand.Ready));
-                    }
+            motion.MoveToParameters.MovementParameters =
+                //MovementParams.CanWalk |
+                MovementParams.CanRun |
+                //MovementParams.CanCharge |
+                //MovementParams.CanSideStep |
+                MovementParams.CanWalkBackwards |
+                MovementParams.FailWalk |
+                MovementParams.MoveAway |
+                MovementParams.MoveTowards |
+                MovementParams.UseSpheres |
+                MovementParams.SetHoldKey |
+                MovementParams.ModifyRawState |
+                MovementParams.ModifyInterpretedState |
+                MovementParams.CancelMoveTo |
+                MovementParams.StopCompletely |
+                MovementParams.Sticky |
+                MovementParams.UseFinalHeading;
 
-                    //Console.WriteLine($"{Name}.Position: {Location}");
-                }
-            });
-            actionChain.EnqueueChain();
-        }
+            motion.MoveToParameters.DistanceToObject = distanceToObject;
+            motion.MoveToParameters.Speed = speed;
 
-        public Motion GetMoveToPosition(Position position, float runRate = 1.0f, float? walkRunThreshold = null, float? speed = null)
-        {
-            // TODO: change parameters to accept an optional MoveToParameters
-
-            var motion = new Motion(this, position);
-            motion.MovementType = MovementType.MoveToPosition;
-            //motion.Flag |= MovementParams.CanCharge | MovementParams.FailWalk | MovementParams.UseFinalHeading | MovementParams.MoveAway;
-            if (walkRunThreshold != null)
-                motion.MoveToParameters.WalkRunThreshold = walkRunThreshold.Value;
-            if (speed != null)
-                motion.MoveToParameters.Speed = speed.Value;
-
-            // always use final heading?
-            var frame = new AFrame(position.Pos, position.Rotation);
-            motion.MoveToParameters.DesiredHeading = frame.get_heading();
-            motion.MoveToParameters.MovementParameters |= MovementParams.UseFinalHeading;
-            motion.MoveToParameters.DistanceToObject = 0.6f;
-
-            if (runRate > 0)
-                motion.RunRate = runRate;
-            else
-                motion.MoveToParameters.MovementParameters &= ~MovementParams.CanRun;
+            motion.RunRate = RunRate;
 
             return motion;
+        }
+
+        private Motion GetMoveToMotion(Position position, float distanceToObject = 0.6f, float speed = 1.0f, bool useFinalHeading = true)
+        {
+            var motion = new Motion(this, position);
+
+            motion.MoveToParameters.MovementParameters =
+                MovementParams.CanWalk |
+                MovementParams.CanRun |
+                //MovementParams.CanSideStep |
+                //MovementParams.CanWalkBackwards |
+                MovementParams.FailWalk |
+                //MovementParams.MoveAway |
+                MovementParams.MoveTowards |
+                MovementParams.UseSpheres |
+                MovementParams.SetHoldKey |
+                MovementParams.ModifyRawState |
+                MovementParams.ModifyInterpretedState |
+                MovementParams.CancelMoveTo |
+                MovementParams.StopCompletely;
+
+            motion.MoveToParameters.DistanceToObject = distanceToObject;
+            motion.MoveToParameters.Speed = speed;
+            motion.RunRate = RunRate;
+
+            if (useFinalHeading)
+                motion.MoveToParameters.MovementParameters |= MovementParams.UseFinalHeading;
+
+            return motion;
+        }
+
+        private Motion GetTurnToMotion(WorldObject target, float speed = 1.0f)
+        {
+            var motion = new Motion(this, target, MovementType.TurnToObject);
+
+            motion.MoveToParameters.MovementParameters =
+                MovementParams.UseSpheres |
+                MovementParams.SetHoldKey |
+                MovementParams.ModifyRawState |
+                MovementParams.ModifyInterpretedState |
+                MovementParams.CancelMoveTo |
+                MovementParams.StopCompletely;
+
+            motion.MoveToParameters.Speed = speed;
+
+            return motion;
+        }
+
+        private Motion GetTurnToMotion(Position position, float speed = 1.0f)
+        {
+            var frame = new AFrame(position.Pos, position.Rotation);
+            var heading = frame.get_heading();
+
+            var motion = new Motion(this, position, heading);
+
+            motion.MoveToParameters.MovementParameters =
+                MovementParams.UseSpheres |
+                MovementParams.SetHoldKey |
+                MovementParams.ModifyRawState |
+                MovementParams.ModifyInterpretedState |
+                MovementParams.CancelMoveTo |
+                MovementParams.StopCompletely;
+
+            motion.MoveToParameters.Speed = speed;
+
+            return motion;
+        }
+
+        public readonly ReaderWriterLockSlim MonsterMovementLock = new ReaderWriterLockSlim();
+        public Motion LastMoveTo;
+        public virtual void BroadcastMoveTo(Player player)
+        {
+            MonsterMovementLock.EnterReadLock();
+            try
+            {
+                if (LastMoveTo != null)
+                    player.Session.Network.EnqueueSend(new GameMessageUpdateMotion(this, LastMoveTo));
+            }
+            finally
+            {
+                MonsterMovementLock.ExitReadLock();
+            }
         }
 
         /// <summary>
         /// For monsters only -- blips to a new position within the same landblock
         /// </summary>
-        public void FakeTeleport(Position _newPosition)
+        public void FakeTeleport(Position toPosition)
         {
-            var newPosition = new Position(_newPosition);
+            var newPosition = new Position(toPosition);
 
             newPosition.PositionZ += 0.005f * (ObjScale ?? 1.0f);
 
@@ -446,6 +510,30 @@ namespace ACE.Server.WorldObjects
 
             // broadcast blip to new position
             SendUpdatePosition(true);
+        }
+
+        public bool IsBlockedByDoor(WorldObject target)
+        {
+            System.Collections.Generic.List<Physics.PhysicsObj> knownDoors;
+            if (this is Player)
+                knownDoors = PhysicsObj.ObjMaint.GetVisibleObjectsValuesWhere(o => o.WeenieObj.WorldObject != null && (o.WeenieObj.WorldObject.WeenieType == WeenieType.Door || o.WeenieObj.WorldObject.CreatureType == ACE.Entity.Enum.CreatureType.Wall));
+            else
+                knownDoors = target.PhysicsObj.ObjMaint.GetVisibleObjectsValuesWhere(o => o.WeenieObj.WorldObject != null && (o.WeenieObj.WorldObject.WeenieType == WeenieType.Door || o.WeenieObj.WorldObject.CreatureType == ACE.Entity.Enum.CreatureType.Wall));
+
+            bool nearDoor = false;
+            foreach (var entry in knownDoors)
+            {
+                var door = entry.WeenieObj.WorldObject;
+                if (!door.IsOpen && (Location.DistanceTo(door.Location) < 2f || target.Location.DistanceTo(door.Location) < 2f))
+                {
+                    nearDoor = true;
+                    break;
+                }
+            }
+
+            if (nearDoor && !IsDirectVisible(target, 1))
+                return true;
+            return false;
         }
     }
 }

@@ -403,5 +403,6 @@ namespace ACE.Server.Entity
         {
             return !MutationToolBlackList.Contains(wcid);
         }
-    }    
+    }
 }
+

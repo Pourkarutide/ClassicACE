@@ -29,30 +29,20 @@ namespace ACE.Server.WorldObjects
             set { if (!value.HasValue) RemoveProperty(PropertyFloat.PowerupTime); else SetProperty(PropertyFloat.PowerupTime, value.Value); }
         }
 
-
-        /// <summary>
-        /// Returns TRUE if creature can perform a melee attack
-        /// </summary>
-        public bool MeleeReady()
-        {
-            return IsMeleeRange() && Timers.RunningTime >= NextAttackTime;
-        }
-
         /// <summary>
         /// Performs a melee attack for the monster
         /// </summary>
-        /// <returns>The length in seconds for the attack animation</returns>
-        public float MeleeAttack()
+        public void MeleeAttack()
         {
-            var target = AttackTarget as Creature;
+            var targetCreature = AttackTarget as Creature;
             var targetPlayer = AttackTarget as Player;
             var targetPet = AttackTarget as CombatPet;
             var combatPet = this as CombatPet;
 
-            if (target == null || !target.IsAlive)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && IsBlockedByDoor(targetCreature))
             {
-                FindNextTarget();
-                return 0.0f;
+                EndAttack();
+                return;
             }
 
             if (CurrentMotionState.Stance == MotionStance.NonCombat)
@@ -63,12 +53,14 @@ namespace ACE.Server.WorldObjects
             // select combat maneuver
             var motionCommand = GetCombatManeuver();
             if (motionCommand == null)
-                return 0.0f;
-
-            DoSwingMotion(AttackTarget, motionCommand.Value, out float animLength, out var attackFrames);
+            {
+                EndAttack();
+                return;
+            }
 
             if (!AiImmobile)
                 PhysicsObj.stick_to_object(AttackTarget.PhysicsObj.ID);
+            DoSwingMotion(AttackTarget, motionCommand.Value, out float animLength, out var attackFrames);
 
             var extraStaminaUsage = 0;
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && weapon == null)
@@ -94,21 +86,23 @@ namespace ACE.Server.WorldObjects
 
                 actionChain.AddAction(this, () =>
                 {
-                    if (AttackTarget == null || IsDead || target.IsDead) return;
-
-                    //if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && !IsDirectVisible(target))
-                    //    return;
-
-                    if (WeenieType == WeenieType.GamePiece)
+                    if (AttackTarget == null || IsDead || targetCreature.IsDead)
                     {
-                        target.TakeDamage(this, DamageType.Slash, target.Health.Current);
-                        (this as GamePiece).OnDealtDamage();
+                        EndAttack();
                         return;
                     }
 
-                    var damageEvent = DamageEvent.CalculateDamage(this, target, weapon, motionCommand, attackFrames[0].attackHook);
+                    if (WeenieType == WeenieType.GamePiece)
+                    {
+                        targetCreature.TakeDamage(this, DamageType.Slash, targetCreature.Health.Current);
+                        (this as GamePiece).OnDealtDamage();
+                        EndAttack();
+                        return;
+                    }
 
-                    target.OnAttackReceived(this, CombatType.Melee, damageEvent.IsCritical, damageEvent.Evaded);
+                    var damageEvent = DamageEvent.CalculateDamage(this, targetCreature, weapon, motionCommand, attackFrames[0].attackHook);
+
+                    targetCreature.OnAttackReceived(this, CombatType.Melee, damageEvent.IsCritical, damageEvent.Evaded);
 
                     //var damage = CalculateDamage(ref damageType, maneuver, bodyPart, ref critical, ref shieldMod);
 
@@ -138,33 +132,33 @@ namespace ACE.Server.WorldObjects
                             if (GetCreatureSkill(Skill.DirtyFighting).AdvancementClass >= SkillAdvancementClass.Trained)
                                 FightDirty(targetPlayer, damageEvent.Weapon);
                         }
-                        else if (combatPet != null || targetPet != null || Faction1Bits != null || target.Faction1Bits != null || PotentialFoe(target))
+                        else if (combatPet != null || targetPet != null || Faction1Bits != null || targetCreature.Faction1Bits != null || PotentialFoe(targetCreature))
                         {
                             // combat pet inflicting or receiving damage
                             //Console.WriteLine($"{target.Name} taking {Math.Round(damage)} {damageType} damage from {Name}");
-                            target.TakeDamage(this, damageEvent.DamageType, damageEvent.Damage);
+                            targetCreature.TakeDamage(this, damageEvent.DamageType, damageEvent.Damage);
 
-                            EmitSplatter(target, damageEvent.Damage);
+                            EmitSplatter(targetCreature, damageEvent.Damage);
 
                             // handle Dirty Fighting
                             if (GetCreatureSkill(Skill.DirtyFighting).AdvancementClass >= SkillAdvancementClass.Trained)
-                                FightDirty(target, damageEvent.Weapon);
+                                FightDirty(targetCreature, damageEvent.Weapon);
                         }
 
                         // handle target procs
                         if (!targetProc)
                         {
-                            TryProcEquippedItems(this, target, false, weapon, damageEvent);
+                            TryProcEquippedItems(this, targetCreature, false, weapon, damageEvent);
                             targetProc = true;
                         }
                     }
                     else
-                        target.OnEvade(this, CombatType.Melee);
+                        targetCreature.OnEvade(this, CombatType.Melee);
 
                     if (combatPet != null)
-                        combatPet.PetOnAttackMonster(target);
+                        combatPet.PetOnAttackMonster(targetCreature);
                     else if (targetPlayer == null)
-                        MonsterOnAttackMonster(target);
+                        MonsterOnAttackMonster(targetCreature);
                 });
             }
             actionChain.EnqueueChain();
@@ -176,7 +170,7 @@ namespace ACE.Server.WorldObjects
 
             NextAttackTime = PrevAttackTime + animLength + meleeDelay;
 
-            return animLength;
+            return;
         }
 
         /// <summary>
@@ -353,23 +347,40 @@ namespace ACE.Server.WorldObjects
 
         private static readonly ConcurrentDictionary<AttackFrameParams, bool> missingAttackFrames = new ConcurrentDictionary<AttackFrameParams, bool>();
 
-        private bool moveBit;
+        //private bool moveBit;
 
+
+        MotionCommand CurrentAttackMotionCommand;
         /// <summary>
         /// Perform the melee attack swing animation
         /// </summary>
         public void DoSwingMotion(WorldObject target, MotionCommand motionCommand, out float animLength, out List<(float time, AttackHook attackHook)> attackFrames)
         {
-            if (!moveBit)
-            {
-                SendUpdatePosition(true);
-                moveBit = true;
-            }
+            //if (!moveBit)
+            //{
+            //    SendUpdatePosition(true);
+            //    moveBit = true;
+            //}
 
             //Console.WriteLine($"{maneuver.Style} - {maneuver.Motion} - {maneuver.AttackHeight}");
 
             var baseSpeed = GetAnimSpeed();
-            var animSpeedMod = IsDualWieldAttack ? 1.2f : 1.0f;     // dual wield swing animation 20% faster
+
+            float animSpeedMod;
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                animSpeedMod = IsDualWieldAttack ? 1.2f : 1.0f;     // dual wield swing animation 20% faster
+            else
+            {
+                if (GetEquippedOffHand() == null && !TwoHandedCombat)
+                    animSpeedMod = 1.2f;
+                else
+                    animSpeedMod = 1.0f;
+
+                var weapon = GetEquippedMeleeWeapon();
+                if (weapon != null && weapon.WeaponSkill == Skill.Dagger && weapon.W_AttackType.IsMultiStrike())
+                    animSpeedMod += 0.8f;
+            }
+
             var animSpeed = baseSpeed * animSpeedMod;
 
             animLength = MotionTable.GetAnimationLength(MotionTableId, CurrentMotionState.Stance, motionCommand, animSpeed);
@@ -388,16 +399,21 @@ namespace ACE.Server.WorldObjects
                 attackFrames = defaultAttackFrames;
             }
 
+            CurrentAttackMotionCommand = motionCommand;
+
             var motion = new Motion(this, motionCommand, animSpeed);
             motion.MotionState.TurnSpeed = 2.25f;
 
             if (!AiImmobile)
+            {
                 motion.MotionFlags |= MotionFlags.StickToObject;
+                motion.MoveToParameters.MovementParameters |= MovementParams.Sticky;
+            }
 
             motion.TargetGuid = target.Guid;
             CurrentMotionState = motion;
 
-            EnqueueBroadcastMotion(motion);
+            EnqueueBroadcastMotion(motion, null, true);
         }
 
         /// <summary>
@@ -405,7 +421,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public BaseDamageMod GetBaseDamage(PropertiesBodyPart attackPart)
         {
-            if (CurrentAttack == CombatType.Missile && GetMissileAmmo() != null)
+            if (CurrentAttackType == CombatType.Missile && GetMissileAmmo() != null)
                 return GetMissileDamage();
 
             // use weapon damage for every attack?
@@ -443,27 +459,21 @@ namespace ACE.Server.WorldObjects
         /// Returns the percent of damage absorbed by layered armor + clothing
         /// </summary>
         /// <param name="armors">The list of armor/clothing covering the targeted body part</param>
-        public float GetArmorMod(Creature defender, DamageType damageType, List<WorldObject> armors, WorldObject weapon, float armorRendingMod = 1.0f, bool isPvP = false)
+        public float GetArmorMod(Creature attacker, DamageType damageType, List<WorldObject> armors, WorldObject weapon, float armorRendingMod = 1.0f, bool isPvP = false)
         {
-            var ignoreMagicArmor =  (weapon?.IgnoreMagicArmor ?? false)  || IgnoreMagicArmor;
-            var ignoreMagicResist = (weapon?.IgnoreMagicResist ?? false) || IgnoreMagicResist;
+            var ignoreMagicArmor =  (weapon?.IgnoreMagicArmor ?? false)  || attacker.IgnoreMagicArmor;
+            var ignoreMagicResist = (weapon?.IgnoreMagicResist ?? false) || attacker.IgnoreMagicResist;
 
             var effectiveAL = 0.0f;
 
             foreach (var armor in armors)
-                effectiveAL += defender.GetArmorMod(armor, damageType, ignoreMagicArmor);
+                effectiveAL += GetArmorMod(attacker, armor, damageType, ignoreMagicArmor);
 
             // life spells
             // additive: armor/imperil
-            int bodyArmorMod;
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
-                bodyArmorMod = defender.EnchantmentManager.GetBodyArmorMod(true); // Do not take into account armor debuffs yet.
-            else
-            {
-                bodyArmorMod = defender.EnchantmentManager.GetBodyArmorMod();
-                if (ignoreMagicResist)
-                    bodyArmorMod = IgnoreMagicResistScaled(bodyArmorMod);
-            }
+            var bodyArmorMod = EnchantmentManager.GetBodyArmorMod();
+            if (ignoreMagicResist)
+                bodyArmorMod = attacker is Player ? IgnoreMagicResistScaled(bodyArmorMod) : 0;
 
             // handle armor rending mod here?
             //if (bodyArmorMod > 0)
@@ -480,7 +490,7 @@ namespace ACE.Server.WorldObjects
                     effectiveAL = bodyArmorMod; // Body armor doesn't stack with equipment armor, use whichever is highest.
 
                 if (!isPvP && !ignoreMagicResist)
-                    effectiveAL += defender.EnchantmentManager.GetBodyArmorMod(false); // Take into account armor debuffs now, but only if weapon isn't hollow and this is not PvP (Imperil disabled in PvP for now).
+                    effectiveAL += attacker.EnchantmentManager.GetBodyArmorMod(false); // Take into account armor debuffs now, but only if weapon isn't hollow and this is not PvP (Imperil disabled in PvP for now).
             }
 
             // Armor Rending reduces physical armor too?
@@ -565,7 +575,7 @@ namespace ACE.Server.WorldObjects
 
         public float GetSkillModifiedArmorLevel(float armorLevel)
         {
-            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM || IsClothArmor)
                 return armorLevel;
 
             if (armorLevel == 0)
@@ -594,7 +604,7 @@ namespace ACE.Server.WorldObjects
         /// Returns the effective AL for 1 piece of armor/clothing
         /// </summary>
         /// <param name="armor">A piece of armor or clothing</param>
-        public float GetArmorMod(WorldObject armor, DamageType damageType, bool ignoreMagicArmor)
+        public float GetArmorMod(Creature attacker, WorldObject armor, DamageType damageType, bool ignoreMagicArmor)
         {
             // get base armor/resistance level
             var baseArmor = armor.GetProperty(PropertyInt.ArmorLevel) ?? 0;
@@ -610,7 +620,7 @@ namespace ACE.Server.WorldObjects
             var armorMod = armor.EnchantmentManager.GetArmorMod();
 
             if (ignoreMagicArmor)
-                armorMod = (int)Math.Round(IgnoreMagicArmorScaled(armorMod));
+                armorMod = attacker is Player ? (int)Math.Round(IgnoreMagicArmorScaled(armorMod)) : 0;
 
             // Console.WriteLine("Impen: " + armorMod);
             var effectiveAL = baseArmor + armorMod;
@@ -619,7 +629,7 @@ namespace ACE.Server.WorldObjects
             var armorBane = armor.EnchantmentManager.GetArmorModVsType(damageType);
 
             if (ignoreMagicArmor)
-                armorBane = IgnoreMagicArmorScaled(armorBane);
+                armorBane = attacker is Player ? IgnoreMagicArmorScaled(armorBane) : 0.0f;
 
             // Console.WriteLine("Bane: " + armorBane);
             var effectiveRL = (float)(resistance + armorBane);

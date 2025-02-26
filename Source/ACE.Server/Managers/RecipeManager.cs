@@ -21,6 +21,7 @@ using ACE.Server.Factories;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Weenie = ACE.Entity.Models.Weenie;
 
 namespace ACE.Server.Managers
@@ -87,7 +88,7 @@ namespace ACE.Server.Managers
             }
 
             if (recipe.IsTinkering())
-                log.Debug($"[TINKERING] {player.Name}.UseObjectOnTarget({source.NameWithMaterial}, {target.NameWithMaterial}) | Status: {(confirmed ? "" : "un")}confirmed");
+                log.DebugFormat("[TINKERING] {0}.UseObjectOnTarget({1}, {2}) | Status: {3}confirmed", player.Name, source.NameWithMaterial, target.NameWithMaterial, (confirmed ? "" : "un"));
 
             var percentSuccess = GetRecipeChance(player, source, target, recipe);
 
@@ -1195,11 +1196,29 @@ namespace ACE.Server.Managers
                     // Transfer spells to the new item.
                     var spells = target.ExtraSpellsList.Split(",");
 
+                    var baseResultItemDifficulty = Math.Max(result.BaseItemDifficultyOverride ?? 0, result.ItemDifficulty ?? 0);
+                    var baseResultItemSpellcraft = Math.Max(result.BaseSpellcraftOverride ?? 0, result.ItemSpellcraft ?? 0);
+                    var failedSomeTransfers = false;
                     foreach (string spellString in spells)
                     {
                         if (uint.TryParse(spellString, out var spellId))
-                            SpellTransferScroll.InjectSpell(spellId, result);
+                        {
+                            var data = SpellTransferScroll.InjectSpell(result, (SpellId)spellId);
+
+                            if (data.Result != SpellTransferScroll.InjectSpellResult.Success)
+                                failedSomeTransfers = true;
+                        }
                     }
+
+                    if (!failedSomeTransfers) // Transfer our exact rolls to the new item. If we fail any of the transfers for some reason(like the new item already having a stronger spell of the same type) we skip this so the item difficulty can reflect the change.
+                    {
+                        result.ItemDifficulty = Math.Max(baseResultItemDifficulty, target.ItemDifficulty ?? 0);
+                        result.ItemSpellcraft = Math.Max(baseResultItemSpellcraft, target.ItemSpellcraft ?? 0);
+                    }
+
+                    // We keep even the spells that failed in the list as the next time the item is changed it has another chance to apply(items like Atlan weapons can be continuously changed and this way the spell survives temporary inactivity)
+                    result.ExtraSpellsCount = target.ExtraSpellsCount;
+                    result.ExtraSpellsList = target.ExtraSpellsList;
 
                     player.EnqueueBroadcast(new GameMessageUpdateObject(result));
                 }
@@ -1225,7 +1244,8 @@ namespace ACE.Server.Managers
 
                 player.Session.Network.EnqueueSend(new GameMessageSystemChat(message, ChatMessageType.Craft));
 
-                log.Debug($"[CRAFTING] {player.Name} used {source.NameWithMaterial} on {target.NameWithMaterial} {(success ? "" : "un")}successfully. {(destroySource ? $"| {source.NameWithMaterial} was destroyed " : "")}{(destroyTarget ? $"| {target.NameWithMaterial} was destroyed " : "")}| {message}");
+                if (log.IsDebugEnabled)
+                    log.Debug($"[CRAFTING] {player.Name} used {source.NameWithMaterial} on {target.NameWithMaterial} {(success ? "" : "un")}successfully. {(destroySource ? $"| {source.NameWithMaterial} was destroyed " : "")}{(destroyTarget ? $"| {target.NameWithMaterial} was destroyed " : "")}| {message}");
             }
             else
                 BroadcastTinkering(player, source, target, successChance, success);
@@ -1235,15 +1255,27 @@ namespace ACE.Server.Managers
 
         public static void BroadcastTinkering(Player player, WorldObject tool, WorldObject target, double chance, bool success)
         {
+            // retail AC had some inconsistency with respect to the messages broadcast by tinkering.
+            //
+            // Largely this revolved around the name of the weenies that represented each of the salvage bags.
+            // First, there were name changes that were a result of the client side pre-pending of material type which resulted in bags being named "Salvage", "Salvaged"
+            // Second, these bags that were generated from loot by players always ended with the number of materials in the bag, such as (100), (88), (1)
+            // while non-lootgen bags did not include the number, so the name of the bag when displayed or broadcast varied like "Steel Salvage (100)", "Steel Salvaged (100)", "Steel Salvage"
+            // Third, Foolproof bags, again depending on weenie names, also had their own variations which resulted in display names like "Foolproof Black Garnet Gem", "Zircon Foolproof Zircon", "Imperial Topaz Foolproof Imperial Topaz"
+            // in many cases, there are multiple weenies of a particular salvage type, used by various systems, which resulted in each tinker operation having varied output even when doing essentially the same thing
+            // Finally, items that were inscribed were surprisingly identified in the broadcast like "Reed Shark Hide Studded Leather Sleeves inscribed by Callaway", "Copper Frost Bow inscribed by Mini Bonsai"
+            //
+            // ACE output, as seen below, has for the most part standardized the message due to weenie name changes, salvage coding and recipe handling differences
+            // 
             var sourceName = Regex.Replace(tool.NameWithMaterial, @" \(\d+\)$", "");
 
-            // send local broadcast
-            if (success)
-                player.EnqueueBroadcast(new GameMessageSystemChat($"{player.Name} successfully applies the {sourceName} (workmanship {(tool.Workmanship ?? 0):#.00}) to the {target.NameWithMaterial}.", ChatMessageType.Craft), WorldObject.LocalBroadcastRange, ChatMessageType.Craft);
-            else
-                player.EnqueueBroadcast(new GameMessageSystemChat($"{player.Name} fails to apply the {sourceName} (workmanship {(tool.Workmanship ?? 0):#.00}) to the {target.NameWithMaterial}. The target is destroyed.", ChatMessageType.Craft), WorldObject.LocalBroadcastRange, ChatMessageType.Craft);
+            var msg = $"{player.Name} {(success ? "successfully applies" : "fails to apply")} the {sourceName} (workmanship {(tool.Workmanship ?? 0):#.00}) to the {target.NameWithMaterial}{((target.Inscription != null && target.ScribeName != null) ? $" inscribed by {target.ScribeName}" : "")}.{(!success ? " The target is destroyed." : "")}";
 
-            log.Debug($"[TINKERING] {player.Name} {(success ? "successfully applies" : "fails to apply")} the {sourceName} (workmanship {(tool.Workmanship ?? 0):#.00}) to the {target.NameWithMaterial}.{(!success ? " The target is destroyed." : "")} | Chance: {chance}");
+            // send local broadcast
+            player.EnqueueBroadcast(new GameMessageSystemChat(msg, ChatMessageType.Craft), WorldObject.LocalBroadcastRange, ChatMessageType.Craft);
+
+            if (log.IsDebugEnabled)
+                log.Debug($"[TINKERING] {msg} | Chance: {chance}");
         }
 
         public static WorldObject CreateItem(Player player, uint wcid, uint amount)
@@ -1676,37 +1708,102 @@ namespace ACE.Server.Managers
             var newSetup = newWeenie.GetProperty(PropertyDataId.Setup);
 
             if (newDamageType != null)
-                target.SetProperty(PropertyInt.DamageType, (int) newDamageType);
+                target.SetProperty(PropertyInt.DamageType, (int)newDamageType);
             else
                 target.RemoveProperty(PropertyInt.DamageType);
 
             if (newUiEffects != null)
-                target.SetProperty(PropertyInt.UiEffects, (int) newUiEffects);
+                target.SetProperty(PropertyInt.UiEffects, (int)newUiEffects);
             else if (target.ProcSpell != null || target.Biota.HasKnownSpell(target.BiotaDatabaseLock))
-                target.SetProperty(PropertyInt.UiEffects, (int) UiEffects.Magical);
+                target.SetProperty(PropertyInt.UiEffects, (int)UiEffects.Magical);
             else
                 target.RemoveProperty(PropertyInt.UiEffects);
 
             if (newSetup != null)
-                target.SetProperty(PropertyDataId.Setup, (uint) newSetup);
+                target.SetProperty(PropertyDataId.Setup, (uint)newSetup);
             else
                 target.RemoveProperty(PropertyDataId.Setup);
         }
-
         /// <summary>
         /// flag to use c# logic instead of mutate script logic
         /// </summary>
-        private static readonly bool useMutateNative = false;
+        //private static readonly bool useMutateNative = false;
 
         public static bool TryMutate(Player player, WorldObject source, WorldObject target, Recipe recipe, uint dataId, HashSet<uint> modified)
         {
-            if (useMutateNative)
-                return TryMutateNative(player, source, target, recipe, dataId);
+            //if (useMutateNative)
+            //    return TryMutateNative(player, source, target, recipe, dataId);
 
+            var numTimesTinkered = target.NumTimesTinkered;
+            var skipMutateScript = false;
+            var result = false;
             switch (dataId)
             {
-                case 0x38000042:
-                    // Can this be done with mutation script?
+                case 0x38000011: // Steel
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        skipMutateScript = true;
+
+                        var currentAL = target.ArmorLevel ?? 0;
+                        var newAL = (int)Math.Floor(currentAL * 1.25f);
+                        if (newAL - currentAL < 20)
+                            newAL = currentAL + 20;
+
+                        target.ArmorLevel = newAL;
+                        target.NumTimesTinkered++;
+                        result = true;
+                    }
+                    break;
+                case 0x3800001A: // Iron
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        skipMutateScript = true;
+
+                        var currentDmgPerSwing = target.Damage ?? 0;
+
+                        var numStrikes = target.GetWeaponMaxStrikes();
+
+                        if (numStrikes == 1)
+                            target.Damage += 4;
+                        else
+                            target.Damage += 2;
+
+                        target.NumTimesTinkered++;
+                        result = true;
+                    }
+                    break;
+                case 0x3800001F: // Gold
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        skipMutateScript = true;
+
+                        var currentValue = target.Value ?? 0;
+                        var newValue = currentValue * 2;
+                        if (newValue - currentValue < 5000)
+                            newValue = currentValue + 5000;
+
+                        target.Value = newValue;
+                        target.OriginalValue += newValue - currentValue;
+                        target.NumTimesTinkered++;
+                        result = true;
+                    }
+                    break;
+                case 0x3800002F: // Moonstone
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        skipMutateScript = true;
+
+                        var currentMana = target.ItemMaxMana ?? 0;
+                        var newMana = currentMana * 2;
+                        if (newMana - currentMana < 500)
+                            newMana = currentMana + 500;
+
+                        target.ItemMaxMana = newMana;
+                        target.NumTimesTinkered++;
+                        result = true;
+                    }
+                    break;
+                case 0x38000042: // Teak, Porcelain, Ebony
                     switch (target.ItemHeritageGroupRestriction)
                     {
                         case "Aluvian":
@@ -1726,30 +1823,112 @@ namespace ACE.Server.Managers
                             break;
                     }
                     break;
-                case 0x38000051:
-                case 0x38000052:
-                case 0x38000053:
-                case 0x38000054:
-                case 0x38000055:
-                case 0x38000056:
-                case 0x38000057:
-                    // If weapon is restance cleaving update cleaving element to match new weapon element.
-                    if (target.ResistanceModifierType.HasValue && target.ResistanceModifierType != DamageType.Undef)
-                        target.ResistanceModifierType = target.W_DamageType;
+                case 0x3800003A: // Emerald
+                case 0x3800003B: // White Sapphire
+                case 0x3800003C: // Aquamarine
+                case 0x3800003D: // Jet
+                case 0x3800003E: // Red Garnet
+                case 0x3800003F: // Black Garnet
+                case 0x38000040: // Imperial Topaz
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        // If weapon is resistance cleaving update cleaving element to match new weapon element.
+                        if (target.ResistanceModifierType.HasValue && target.ResistanceModifierType != DamageType.Undef)
+                            target.ResistanceModifierType = target.W_DamageType;
+                    }
                     break;
-            }            
+                case 0x38000101: // Satin
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        skipMutateScript = true;
 
-            var numTimesTinkered = target.NumTimesTinkered;
+                        target.MeleeDefenseCap *= 0.5f;
+                        target.MissileDefenseCap *= 0.5f;
 
-            var mutationScript = MutationCache.GetMutation(dataId);
+                        target.NumTimesTinkered++;
+                        result = true;
+                    }
+                    break;
+                case 0x3800004B: // Green Garnet
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        if (!target.ElementalDamageMod.HasValue || target.ElementalDamageMod == 0)
+                        {
+                            target.W_DamageType = DamageType.Elemental;
+                            target.ElementalDamageMod = 1.0;
+                        }
+                    }
+                    break;
 
-            if (mutationScript == null)
-            {
-                log.Error($"RecipeManager.TryApplyMutation({dataId:X8}, {target.Name}) - couldn't find mutation script");
-                return false;
+                case 0x38000034:    // Silver
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        skipMutateScript = true;
+
+                        if (target.ItemDifficulty.HasValue)
+                            target.ItemDifficulty = Math.Max(target.ItemDifficulty.Value - 10, 0);
+                        target.ManaRate *= 2.0f;
+
+                        target.NumTimesTinkered++;
+                        result = true;
+                    }
+                    break;
+
+                case 0x38000035:    // Copper
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        skipMutateScript = true;
+
+                        if(target.ItemDifficulty.HasValue)
+                            target.ItemDifficulty = Math.Max(target.ItemDifficulty.Value - 5, 0);
+
+                        target.NumTimesTinkered++;
+                        result = true;
+                    }
+                    break;
+
+                case 0x38000103:    // Pyreal
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        skipMutateScript = true;
+
+                        target.ManaRate *= 0.5f;
+
+                        target.NumTimesTinkered++;
+                        result = true;
+                    }
+                    break;
+
+                case 0x38000104:    // Amber
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        skipMutateScript = true;
+
+                        var slotCount = target.GetMaxExtraSpellsCount();
+
+                        if (!target.IsClothArmor)
+                            target.ExtraSpellsMaxOverride = slotCount + 1;
+                        else
+                            target.ExtraSpellsMaxOverride = slotCount + 2;
+
+                        target.NumTimesTinkered++;
+                        result = true;
+                    }
+                    break;
             }
 
-            var result = mutationScript.TryMutate(target);
+            if (!skipMutateScript)
+            {
+                var mutationScript = MutationCache.GetMutation(dataId);
+
+                if (mutationScript == null)
+                {
+                    log.Error($"RecipeManager.TryApplyMutation({dataId:X8}, {target.Name}) - couldn't find mutation script");
+                    return false;
+                }
+
+                result = mutationScript.TryMutate(target);
+            }
 
             if (numTimesTinkered != target.NumTimesTinkered)
                 HandleTinkerLog(source, target);

@@ -4,6 +4,7 @@ using System.Linq;
 
 using log4net;
 
+using ACE.Common.Extensions;
 using ACE.Database;
 using ACE.Entity;
 using ACE.Entity.Enum;
@@ -143,6 +144,8 @@ namespace ACE.Server.Factories
                     return new SpellConduit(weenie, guid);
                 case WeenieType.SpellTransferScroll:
                     return new SpellTransferScroll(weenie, guid);
+                case WeenieType.TreasureMap:
+                    return new TreasureMap(weenie, guid);
                 default:
                     return new GenericObject(weenie, guid);
             }
@@ -264,6 +267,8 @@ namespace ACE.Server.Factories
                     return new SpellConduit(biota);
                 case WeenieType.SpellTransferScroll:
                     return new SpellTransferScroll(biota);
+                case WeenieType.TreasureMap:
+                    return new TreasureMap(biota);
                 default:
                     return new GenericObject(biota);
             }
@@ -381,7 +386,7 @@ namespace ACE.Server.Factories
 
                     if (worldObject.Location == null)
                     {
-                        log.Warn($"CreateNewWorldObjects: {worldObject.Name} (0x{worldObject.Guid}) Location was null. CreationTimestamp = {worldObject.CreationTimestamp} ({Common.Time.GetDateTimeFromTimestamp(worldObject.CreationTimestamp ?? 0).ToLocalTime()}) | Location restored from world db instance.");
+                        log.Warn($"CreateNewWorldObjects: {worldObject.Name} (0x{worldObject.Guid}) Location was null. CreationTimestamp = {worldObject.CreationTimestamp} ({Common.Time.GetDateTimeFromTimestamp(worldObject.CreationTimestamp ?? 0).ToLocalTime().ToCommonString()}) | Location restored from world db instance.");
                         worldObject.Location = new Position(instance.ObjCellId, instance.OriginX, instance.OriginY, instance.OriginZ, instance.AnglesX, instance.AnglesY, instance.AnglesZ, instance.AnglesW);
                     }
                 }

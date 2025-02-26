@@ -358,7 +358,11 @@ namespace ACE.Server.WorldObjects
                 Session.Network.EnqueueSend(msgPurgeEnchantments);
             }
             else
-                Session.Network.EnqueueSend(new GameMessageSystemChat("Your augmentation prevents the tides of death from ripping away your current enchantments!", ChatMessageType.Broadcast));
+            {
+                var msgPurgeBadEnchantments = new GameEventMagicPurgeBadEnchantments(Session);
+                EnchantmentManager.RemoveAllBadEnchantments();
+                Session.Network.EnqueueSend(msgPurgeBadEnchantments, new GameMessageSystemChat("Your augmentation prevents the tides of death from ripping away your current enchantments!", ChatMessageType.Broadcast));
+            }
 
             // wait for the death animation to finish
             var dieChain = new ActionChain();
@@ -501,7 +505,7 @@ namespace ACE.Server.WorldObjects
                     // Stand back up
                     SetCombatMode(CombatMode.NonCombat);
 
-                    RevertToBrandNewCharacter(false, true, true, true, true, true, (long)xpToRetain);
+                    RevertToBrandNewCharacter(false, PropertyManager.GetBool("hardcore_death_keep_allegiance").Item, PropertyManager.GetBool("hardcore_death_keep_housing").Item, PropertyManager.GetBool("hardcore_death_keep_bonded").Item, PropertyManager.GetBool("hardcore_death_keep_spells").Item, true, (long)xpToRetain);
 
                     var teleportChain = new ActionChain();
                     if (!IsLoggingOut) // If we're in the process of logging out, we skip the delay

@@ -109,7 +109,7 @@ namespace ACE.Server.WorldObjects
             var rng = ThreadSafeRandom.Next(0.0f, 1.0f);
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
-                chance = Math.Min(chance, 0.95f + (magicDefenseCapBonus * 0.01f));
+                chance = Math.Min(chance, 0.90f + (magicDefenseCapBonus * 0.01f));
 
             resistChance = (float)chance;
             return chance > rng;
@@ -347,7 +347,7 @@ namespace ACE.Server.WorldObjects
                     if (itemCaster != null && (equip || itemCaster is Gem || itemCaster is Food))
                         CreateEnchantment(targetCreature ?? target, itemCaster, itemCaster, spell, equip, false, showMsg);
                     else
-                        CreateEnchantment(targetCreature ?? target, this, this, spell, equip, false, showMsg);
+                        CreateEnchantment(targetCreature ?? target, this, weapon, spell, equip, false, showMsg, isWeaponSpell: isWeaponSpell);
 
                     break;
 
@@ -437,7 +437,7 @@ namespace ACE.Server.WorldObjects
         /// Handles casting SpellType.Enchantment / FellowEnchantment spells
         /// this is also called if SpellType.EnchantmentProjectile successfully hits
         /// </summary>
-        public void CreateEnchantment(WorldObject target, WorldObject caster, WorldObject weapon, Spell spell, bool equip = false, bool fromProc = false, bool showMsg = true)
+        public void CreateEnchantment(WorldObject target, WorldObject caster, WorldObject weapon, Spell spell, bool equip = false, bool fromProc = false, bool showMsg = true, bool isWeaponSpell = false)
         {
             // weird itemCaster -> caster collapsing going on here -- fixme
 
@@ -470,7 +470,7 @@ namespace ACE.Server.WorldObjects
             }
 
             // create enchantment
-            var addResult = target.EnchantmentManager.Add(spell, caster, weapon, equip);
+            var addResult = target.EnchantmentManager.Add(spell, caster, weapon, equip, isWeaponSpell);
 
             // build message
             var suffix = "";
@@ -502,13 +502,13 @@ namespace ACE.Server.WorldObjects
 
                 if (casterCheck || target == this || caster != target)
                 {
-                    var casterName = casterCheck ? "You" : caster.Name;
-                    var targetName = target.Name;
+                    var casterName = casterCheck ? "You" : caster.NameWithMaterial;
+                    var targetName = target.NameWithMaterial;
                     if (target == this)
                         targetName = casterCheck ? "yourself" : "you";
 
                     if(showMsg)
-                        player.SendChatMessage(player, $"{casterName} cast {spell.Name} on {targetName}{suffix}", ChatMessageType.Magic);
+                        player.SendChatMessage(player, $"{casterName} casts {spell.Name} on {targetName}{suffix}.", ChatMessageType.Magic);
                 }
             }
 
@@ -645,10 +645,10 @@ namespace ACE.Server.WorldObjects
                 string targetMessage;
 
                 if (spell.IsBeneficial)
-                    targetMessage = $"{Name} casts {spell.Name} and restores {boost} points of your {srcVital}.";
+                    targetMessage = $"{NameWithMaterial} casts {spell.Name} and restores {boost} points of your {srcVital}.";
                 else
                 {
-                    targetMessage = $"{Name} casts {spell.Name} and drains {Math.Abs(boost)} points of your {srcVital}.";
+                    targetMessage = $"{NameWithMaterial} casts {spell.Name} and drains {Math.Abs(boost)} points of your {srcVital}.";
 
                     if (creature != null)
                         targetPlayer.SetCurrentAttacker(creature);
@@ -762,11 +762,20 @@ namespace ACE.Server.WorldObjects
             {
                 string targetMessage;
 
-                targetMessage = $"{Name} casts {spell.Name} and resurrects you.";
+                targetMessage = $"{NameWithMaterial} casts {spell.Name} and resurrects you.";
 
                 if (showMsg)
                     targetPlayer.SendChatMessage(this, targetMessage, ChatMessageType.Magic);
             }
+
+            var vitaeToRestore = targetCorpse.VitaeCpPool ?? 0;
+            if (vitaeToRestore > 0)
+                targetPlayer.ReduceVitae(vitaeToRestore);
+
+            if (targetCorpse.VitaeCpPool != 0)
+                targetCorpse.VitaeCpPool = 0;
+
+            targetPlayer.NextRessOfferTime = 0;
         }
 
         /// <summary>
@@ -1079,19 +1088,19 @@ namespace ACE.Server.WorldObjects
 
             if (spell.School == MagicSchool.LifeMagic)
             {
-                if (spell.Name.Contains("Blight"))
+                if (spell.DamageType.HasFlag(DamageType.Mana))
                 {
                     var tryDamage = (int)Math.Round(caster.GetCreatureVital(PropertyAttribute2nd.Mana).Current * spell.DrainPercentage);
                     damage = (uint)-caster.UpdateVitalDelta(caster.Mana, -tryDamage);
                     damageType = DamageType.Mana;
                 }
-                else if (spell.Name.Contains("Tenacity"))
+                else if (spell.DamageType.HasFlag(DamageType.Stamina))
                 {
                     var tryDamage = (int)Math.Round(caster.GetCreatureVital(PropertyAttribute2nd.Stamina).Current * spell.DrainPercentage);
                     damage = (uint)-caster.UpdateVitalDelta(caster.Stamina, -tryDamage);
                     damageType = DamageType.Stamina;
                 }
-                else
+                else if (spell.DamageType.HasFlag(DamageType.Health))
                 {
                     var tryDamage = (int)Math.Round(caster.GetCreatureVital(PropertyAttribute2nd.Health).Current * spell.DrainPercentage);
                     damage = (uint)-caster.UpdateVitalDelta(caster.Health, -tryDamage);
@@ -1099,7 +1108,17 @@ namespace ACE.Server.WorldObjects
                     damageType = DamageType.Health;
 
                     //if (player != null && player.Fellowship != null)
-                        //player.Fellowship.OnVitalUpdate(player);
+                    //player.Fellowship.OnVitalUpdate(player);
+                }
+                else if(spell.DamageType != DamageType.Undef)
+                {
+                    // Handle rare case where some of these "Life Magic" spells do physical damage e.g. Hunter's Lash 2970 and Thorn Valley 6159
+                    damageType = spell.DamageType;
+                }
+                else
+                {
+                    log.Warn($"Unknown DamageType ({spell.DamageType}) for LifeProjectile {spell.Name} - {spell.Id}");
+                    return;
                 }
             }
 
@@ -1202,7 +1221,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Returns a Portal object for a WCID
         /// </summary>
-        private static Portal GetPortal(uint wcid)
+        public static Portal GetPortal(uint wcid)
         {
             var weenie = DatabaseManager.World.GetCachedWeenie(wcid);
 
@@ -1624,7 +1643,7 @@ namespace ACE.Server.WorldObjects
 
             if (target is Player targetPlayer && targetPlayer != player)
             {
-                var targetMsg = $"{Name} casts {spell.Name} on you{suffix.Replace("and dispel", "and dispels")}";
+                var targetMsg = $"{NameWithMaterial} casts {spell.Name} on you{suffix.Replace("and dispel", "and dispels")}";
 
                 if (showMsg)
                     targetPlayer.SendChatMessage(this, targetMsg, ChatMessageType.Magic);
@@ -1733,7 +1752,7 @@ namespace ACE.Server.WorldObjects
             }
         }
 
-        public static readonly float ProjHeight = 2.0f / 3.0f;
+        public const float ProjHeight = 2.0f / 3.0f;
 
         public Vector3 CalculatePreOffset(Spell spell, ProjectileSpellType spellType, WorldObject target)
         {
@@ -1897,7 +1916,7 @@ namespace ACE.Server.WorldObjects
 
         public static readonly Quaternion OneEighty = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)Math.PI);
 
-        public static readonly float ProjHeightArc = 5.0f / 6.0f;
+        public const float ProjHeightArc = 5.0f / 6.0f;
 
         /// <summary>
         /// Calculates the spell projectile velocity in global space
@@ -2091,7 +2110,20 @@ namespace ACE.Server.WorldObjects
             if (!weenie.PropertiesFloat.TryGetValue(PropertyFloat.DefaultScale, out var scale))
                 scale = 1.0f;
 
-            var result = (float)(setup.Spheres[0].Radius * scale);
+            //var result = (float)(setup.Spheres[0].Radius * scale);
+
+            var setupRadius = setup.Radius;
+
+            // Fix projectiles spawning behind the caster.
+            if (weenie.PropertiesDID.TryGetValue(PropertyDataId.PhysicsEffectTable, out var physicsEffectTable))
+            {
+                if (physicsEffectTable == 0x34000005)
+                    setupRadius += 1.5f;
+                else if (physicsEffectTable == 0x34000007)
+                    setupRadius += 0.5f;
+            }
+
+            var result = (float)(setupRadius * scale);
 
             ProjectileRadiusCache.TryAdd(projectileWcid, result);
 
@@ -2151,12 +2183,12 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Returns the epic cantrips from this item's spellbook
         /// </summary>
-        public Dictionary<int, float /* probability */> EpicCantrips => Biota.GetMatchingSpells(LootTables.EpicCantrips, BiotaDatabaseLock);
+        public Dictionary<int, float /* probability */> EpicCantrips => Biota.GetMatchingSpells(LootGenerationFactory.EpicCantrips, BiotaDatabaseLock);
 
         /// <summary>
         /// Returns the legendary cantrips from this item's spellbook
         /// </summary>
-        public Dictionary<int, float /* probability */> LegendaryCantrips => Biota.GetMatchingSpells(LootTables.LegendaryCantrips, BiotaDatabaseLock);
+        public Dictionary<int, float /* probability */> LegendaryCantrips => Biota.GetMatchingSpells(LootGenerationFactory.LegendaryCantrips, BiotaDatabaseLock);
 
         private int? _maxSpellLevel;
 
@@ -2419,7 +2451,7 @@ namespace ACE.Server.WorldObjects
             IsAffecting = false;
         }
 
-        private static readonly double defaultIgnoreSomeMagicProjectileDamage = 0.25;
+        private const double defaultIgnoreSomeMagicProjectileDamage = 0.25;
 
         public double? GetAbsorbMagicDamage()
         {

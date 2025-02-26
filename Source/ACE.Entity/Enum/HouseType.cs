@@ -7,6 +7,10 @@ namespace ACE.Entity.Enum
         Cottage,
         Villa,
         Mansion,
-        Apartment
+        Apartment,
+        CustomApartment,
+        CustomCottage,
+        CustomVilla,
+        CustomMansion
     }
 }

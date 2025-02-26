@@ -5,6 +5,7 @@ using System.Numerics;
 using log4net;
 
 using ACE.Common;
+using ACE.Common.Extensions;
 using ACE.Database;
 using ACE.Database.Models.Auth;
 using ACE.DatLoader;
@@ -29,6 +30,7 @@ using ACE.Server.WorldObjects.Managers;
 using Character = ACE.Database.Models.Shard.Character;
 using MotionTable = ACE.DatLoader.FileTypes.MotionTable;
 using System.Linq;
+using ACE.Server.Command.Handlers;
 
 namespace ACE.Server.WorldObjects
 {
@@ -111,8 +113,8 @@ namespace ACE.Server.WorldObjects
 
         public SquelchManager SquelchManager;
 
-        public static readonly float MaxRadarRange_Indoors = 25.0f;
-        public static readonly float MaxRadarRange_Outdoors = 75.0f;
+        public const float MaxRadarRange_Indoors = 25.0f;
+        public const float MaxRadarRange_Outdoors = 75.0f;
 
         public DateTime PrevObjSend;
         public DateTime PrevWho;
@@ -216,6 +218,8 @@ namespace ACE.Server.WorldObjects
 
             IsOlthoiPlayer = HeritageGroup == HeritageGroup.Olthoi || HeritageGroup == HeritageGroup.OlthoiAcid;
 
+            IsGearKnightPlayer = PropertyManager.GetBool("gearknight_core_plating").Item && HeritageGroup == HeritageGroup.Gearknight;
+
             ContainerCapacity = (byte)(7 + AugmentationExtraPackSlot);
 
             if (Session != null && AdvocateQuest && IsAdvocate) // Advocate permissions are per character regardless of override
@@ -314,7 +318,7 @@ namespace ACE.Server.WorldObjects
 
             if (wo == null)
             {
-                //log.Debug($"{Name}.HandleActionIdentifyObject({objectGuid:X8}): couldn't find object");
+                //log.DebugFormat("{0}.HandleActionIdentifyObject({1:X8}): couldn't find object", Name, objectGuid);
                 Session.Network.EnqueueSend(new GameEventIdentifyObjectResponse(Session, objectGuid));
                 return;
             }
@@ -501,11 +505,21 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            // the object could be in the world or on the player, first check player
-            var item = GetInventoryItem(itemGuid) ?? GetEquippedItem(itemGuid);
+            if (ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                var item = FindObject(itemGuid, SearchLocations.MyInventory | SearchLocations.MyEquippedItems | SearchLocations.Landblock, out _, out _, out _);
 
-            if (item != null)
-                item.QueryItemMana(Session);
+                if (item != null)
+                    item.QueryItemMana(Session);
+            }
+            else
+            {
+                // the object could be in the world or on the player, first check player
+                var item = GetInventoryItem(itemGuid) ?? GetEquippedItem(itemGuid);
+
+                if (item != null)
+                    item.QueryItemMana(Session);
+            }
 
             ManaQueryTarget = itemGuid;
         }
@@ -605,12 +619,24 @@ namespace ACE.Server.WorldObjects
             }
         }
 
+       
         /// <summary>
         /// Do the player log out work.<para />
         /// If you want to force a player to logout, use Session.LogOffPlayer().
         /// </summary>
         public bool LogOut(bool clientSessionTerminatedAbruptly = false, bool forceImmediate = false)
         {
+            if (OfflineInstances != null)
+            {
+                // Discard and rollback any unsaved changes in this player's offline instances.
+                var landblockId = new LandblockId((uint)(OfflineInstancesLandblockId << 16 | 0xFFFF));
+                if (LandblockManager.IsLoaded(landblockId))
+                    DeveloperCommands.ReloadLandblock(LandblockManager.GetLandblock(landblockId, false));
+
+                OfflineInstancesLandblockId = 0;
+                OfflineInstances = null;
+            }
+
             if (!PKRecallAllowed && !forceImmediate)
             {
                 var timer = PropertyManager.GetLong("pk_timer").Item;
@@ -656,6 +682,8 @@ namespace ACE.Server.WorldObjects
             IsLoggingOut = true;
 
             EndSneaking();
+
+            PlayerManager.AddPlayerToFinalLogoffQueue(this);
 
             if (Fellowship != null)
                 FellowshipQuit(false);
@@ -757,6 +785,8 @@ namespace ACE.Server.WorldObjects
             }
         }
 
+        public double LogOffFinalizedTime;
+
         public bool ForcedLogOffRequested;
 
         /// <summary>
@@ -767,6 +797,8 @@ namespace ACE.Server.WorldObjects
         {
             if (!ForcedLogOffRequested) return;
 
+            log.WarnFormat("[LOGOUT] Executing ForcedLogoff for Account {0} with character {1} (0x{2}) at {3}.", Account.AccountName, Name, Guid, DateTime.Now.ToCommonString());
+
             FinalizeLogout();
 
             ForcedLogOffRequested = false;
@@ -774,12 +806,13 @@ namespace ACE.Server.WorldObjects
 
         private void FinalizeLogout()
         {
+            PlayerManager.RemovePlayerFromFinalLogoffQueue(this);
             CurrentLandblock?.RemoveWorldObject(Guid, false);
             SetPropertiesAtLogOut();
             SavePlayerToDatabase();
             PlayerManager.SwitchPlayerFromOnlineToOffline(this);
 
-            log.Debug($"[LOGOUT] Account {Account.AccountName} exited the world with character {Name} (0x{Guid}) at {DateTime.Now}.");
+            log.DebugFormat("[LOGOUT] Account {0} exited the world with character {1} (0x{2}) at {3}.", Account.AccountName, Name, Guid, DateTime.Now.ToCommonString());
         }
 
         public void HandleMRT()
@@ -809,71 +842,7 @@ namespace ACE.Server.WorldObjects
 
 
 
-        public void HandleActionFinishBarber(ClientMessage message)
-        {
-            // Read the payload sent from the client...
-            PaletteBaseId = message.Payload.ReadUInt32();
-            HeadObjectDID = message.Payload.ReadUInt32();
-            Character.HairTexture = message.Payload.ReadUInt32();
-            Character.DefaultHairTexture = message.Payload.ReadUInt32();
-            CharacterChangesDetected = true;
-            EyesTextureDID = message.Payload.ReadUInt32();
-            DefaultEyesTextureDID = message.Payload.ReadUInt32();
-            NoseTextureDID = message.Payload.ReadUInt32();
-            DefaultNoseTextureDID = message.Payload.ReadUInt32();
-            MouthTextureDID = message.Payload.ReadUInt32();
-            DefaultMouthTextureDID = message.Payload.ReadUInt32();
-            SkinPaletteDID = message.Payload.ReadUInt32();
-            HairPaletteDID = message.Payload.ReadUInt32();
-            EyesPaletteDID = message.Payload.ReadUInt32();
-            SetupTableId = message.Payload.ReadUInt32();
-
-            uint option_bound = message.Payload.ReadUInt32(); // Supress Levitation - Empyrean Only
-            uint option_unk = message.Payload.ReadUInt32(); // Unknown - Possibly set aside for future use?
-
-            // Check if Character is Empyrean, and if we need to set/change/send new motion table
-            if (Heritage == 9)
-            {
-                // These are the motion tables for Empyrean float and not-float (one for each gender). They are hard-coded into the client.
-                const uint EmpyreanMaleFloatMotionDID = 0x0900020Bu;
-                const uint EmpyreanFemaleFloatMotionDID = 0x0900020Au;
-                const uint EmpyreanMaleMotionDID = 0x0900020Eu;
-                const uint EmpyreanFemaleMotionDID = 0x0900020Du;
-
-                // Check for the Levitation option for Empyrean. Shadow crown and Undead flames are handled by client.
-                if (Gender == 1) // Male
-                {
-                    if (option_bound == 1 && MotionTableId != EmpyreanMaleMotionDID)
-                    {
-                        MotionTableId = EmpyreanMaleMotionDID;
-                        Session.Network.EnqueueSend(new GameMessagePrivateUpdateDataID(this, PropertyDataId.MotionTable, (uint)MotionTableId));
-                    }
-                    else if (option_bound == 0 && MotionTableId != EmpyreanMaleFloatMotionDID)
-                    {
-                        MotionTableId = EmpyreanMaleFloatMotionDID;
-                        Session.Network.EnqueueSend(new GameMessagePrivateUpdateDataID(this, PropertyDataId.MotionTable, (uint)MotionTableId));
-                    }
-                }
-                else // Female
-                {
-                    if (option_bound == 1 && MotionTableId != EmpyreanFemaleMotionDID)
-                    {
-                        MotionTableId = EmpyreanFemaleMotionDID;
-                        Session.Network.EnqueueSend(new GameMessagePrivateUpdateDataID(this, PropertyDataId.MotionTable, (uint)MotionTableId));
-                    }
-                    else if (option_bound == 0 && MotionTableId != EmpyreanFemaleFloatMotionDID)
-                    {
-                        MotionTableId = EmpyreanFemaleFloatMotionDID;
-                        Session.Network.EnqueueSend(new GameMessagePrivateUpdateDataID(this, PropertyDataId.MotionTable, (uint)MotionTableId));
-                    }
-                }
-            }
-
-
-            // Broadcast updated character appearance
-            EnqueueBroadcast(new GameMessageObjDescEvent(this));
-            BarberActive = false;
-        }
+        
 
         /// <summary>
         ///  Sends object description if the client requests it
@@ -883,7 +852,7 @@ namespace ACE.Server.WorldObjects
             var wo = FindObject(itemGuid, SearchLocations.Everywhere);
             if (wo == null)
             {
-                //log.Debug($"HandleActionForceObjDescSend() - couldn't find object {itemGuid:X8}");
+                //log.DebugFormat("HandleActionForceObjDescSend() - couldn't find object {0:X8}", itemGuid);
                 return;
             }
             Session.Network.EnqueueSend(new GameMessageObjDescEvent(wo));
@@ -1357,5 +1326,10 @@ namespace ACE.Server.WorldObjects
             });
             actionChain.EnqueueChain();
         }
+
+        // Content developer helper variables
+        public ACE.Entity.Position CopiedPos = null;
+        public List<ACE.Database.Models.World.LandblockInstance> OfflineInstances = null;
+        public ushort OfflineInstancesLandblockId = 0;
     }
 }

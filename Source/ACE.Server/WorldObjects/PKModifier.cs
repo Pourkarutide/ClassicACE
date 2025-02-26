@@ -47,7 +47,7 @@ namespace ACE.Server.WorldObjects
                 ObjectDescriptionFlags |= ObjectDescriptionFlag.PkSwitch;
         }
 
-        public override ActivationResult CheckUseRequirements(WorldObject activator)
+        public override ActivationResult CheckUseRequirements(WorldObject activator, bool silent = false)
         {
             if (!(activator is Player player))
                 return new ActivationResult(false);
@@ -99,17 +99,17 @@ namespace ACE.Server.WorldObjects
 
             if (player.IsAdvocate || player.AdvocateQuest || player.AdvocateState)
             {
-                return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.AdvocatesCannotChangePKStatus));
+                return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.AdvocatesCannotChangePKStatus));
             }
 
             if (player.MinimumTimeSincePk != null)
             {
-                return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.CannotChangePKStatusWhileRecovering));
+                return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.CannotChangePKStatusWhileRecovering));
             }
 
             if (IsBusy)
             {
-                return new ActivationResult(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.The_IsCurrentlyInUse, Name));
+                return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.The_IsCurrentlyInUse, Name));
             }
 
             return new ActivationResult(true);
@@ -117,6 +117,12 @@ namespace ACE.Server.WorldObjects
 
         public void ConvertToGameplayMode(Player player, bool setStarterLocation)
         {
+            if (!PropertyManager.GetBool("allow_custom_gameplay_modes").Item && (PkLevelModifier == 10 || PkLevelModifier == 11 || PkLevelModifier == 12))
+            {
+                player.Session.Network.EnqueueSend(new GameMessageSystemChat("This gameplay mode is currently disabled for new characters!", ChatMessageType.Broadcast));
+                return;
+            }
+
             switch (PkLevelModifier)
             {
                 case 10: // Hardcore NPK
@@ -141,7 +147,8 @@ namespace ACE.Server.WorldObjects
                     player.EnqueueBroadcast(new GameMessagePublicUpdatePropertyInt(player, PropertyInt.PlayerKillerStatus, (int)player.PlayerKillerStatus));
                     player.EnqueueBroadcast(new GameMessagePublicUpdatePropertyInt(player, PropertyInt.PkLevelModifier, player.PkLevelModifier));
 
-                    player.GiveFromEmote(this, (int)Factories.Enum.WeenieClassName.ringHardcore);
+                    if(PropertyManager.GetBool("hardcore_pk_grant_ring_of_impermanency").Item)
+                        player.GiveFromEmote(this, (int)Factories.Enum.WeenieClassName.ringHardcore);
                     break;
                 case 12: // Solo Self Found
                     player.RevertToBrandNewCharacterEquipment(true, true);

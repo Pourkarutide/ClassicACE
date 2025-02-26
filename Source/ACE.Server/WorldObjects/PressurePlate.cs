@@ -11,7 +11,6 @@ using ACE.Server.Entity.Actions;
 using ACE.Server.Factories;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
-using System;
 using System.Numerics;
 using Time = ACE.Common.Time;
 
@@ -137,7 +136,7 @@ namespace ACE.Server.WorldObjects
         {
             Tier = GetHighestTierAroundObject(50);
 
-            if (!Tier.HasValue)
+            if (!Tier.HasValue || Tier == 0)
                 Tier = 3;
 
             ResistLockpick = (int)(Tier * 65);

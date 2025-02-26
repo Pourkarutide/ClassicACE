@@ -65,11 +65,7 @@ namespace ACE.Server.Entity
         public uint EffectiveDefenseSkill;
         public float AccuracyMod;
 
-        public float BlockChance;
-        public uint EffectiveBlockSkill;
-
         public bool Evaded;
-        public bool Blocked;
 
         public BaseDamageMod BaseDamageMod;
         public float BaseDamage { get; set; }
@@ -105,8 +101,17 @@ namespace ACE.Server.Entity
         public float DamageResistanceRatingMod;
         public float PkDamageResistanceMod;
 
+        public float BlockChance;
+        public float PerfectBlockChance;
+        public uint EffectiveBlockSkill;
+
+        public bool Blocked;
         public float DamageMitigated;
         public float DamageBlocked;
+
+        public bool IsPerfectBlock;
+        public bool AttackerStunned;
+        public bool DefenderStunned;
 
         public bool IsAttackFromSneaking;
 
@@ -402,13 +407,19 @@ namespace ACE.Server.Entity
             }
 
             // armor rending and cleaving
-            var armorRendingMod = 1.0f;
+            var ignoreArmorMod = attacker.GetArmorCleavingMod(attacker, Weapon, attackSkill, pkBattle);
+
             if (Weapon != null && Weapon.HasImbuedEffect(ImbuedEffectType.ArmorRending))
-                armorRendingMod = WorldObject.GetArmorRendingMod(attacker, attackSkill, pkBattle);
+            {
+                var armorRendingMod = WorldObject.GetArmorRendingMod(attacker, attackSkill, pkBattle);
 
-            var armorCleavingMod = attacker.GetArmorCleavingMod(attacker, Weapon, attackSkill, pkBattle);
-
-            var ignoreArmorMod = Math.Min(armorRendingMod, armorCleavingMod);
+                if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                    ignoreArmorMod = Math.Min(ignoreArmorMod, armorRendingMod);
+                else if (ignoreArmorMod < 1.0f)
+                    ignoreArmorMod = 0.375f; // Equivalent to -125 at 200 AL armor.
+                else
+                    ignoreArmorMod = Math.Min(ignoreArmorMod, armorRendingMod);
+            }
 
             // get body part / armor pieces / armor modifier
             if (playerDefender != null)
@@ -424,10 +435,10 @@ namespace ACE.Server.Entity
                 }
 
                 // get player armor pieces
-                Armor = attacker.GetArmorLayers(playerDefender, BodyPart);
+                Armor = playerDefender.GetArmorLayers(playerDefender, BodyPart);
 
                 // get armor modifiers
-                ArmorMod = attacker.GetArmorMod(playerDefender, DamageType, Armor, Weapon, ignoreArmorMod, pkBattle);
+                ArmorMod = playerDefender.GetArmorMod(attacker, DamageType, Armor, Weapon, ignoreArmorMod, pkBattle);
             }
             else
             {
@@ -503,13 +514,26 @@ namespace ACE.Server.Entity
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
             {
                 var shield = defender.GetEquippedShield();
-                if (shield != null)
+                if (shield != null && attacker != defender)
                 {
-                    BlockChance = GetBlockChance(attacker, defender, shield, attackSkill);
-                    if (attacker != defender && BlockChance > ThreadSafeRandom.Next(0.0f, 1.0f))
+                    EffectiveBlockSkill = defender.GetEffectiveShieldSkill(CombatType);
+                    BlockChance = Creature.GetBlockChance(shield, defender, EffectiveAttackSkill, EffectiveBlockSkill, pkBattle);
+                    if (BlockChance > ThreadSafeRandom.Next(0.0f, 1.0f))
                     {
                         Blocked = true;
-                        ShieldMod = defender.GetShieldMod(attacker, DamageType, Weapon, pkBattle);
+
+                        var shieldSkill = defender.GetShieldSkill();
+                        PerfectBlockChance = WorldObject.GetWeaponCriticalChance(shield, defender, shieldSkill, attacker, pkBattle);
+                        if (PerfectBlockChance > ThreadSafeRandom.Next(0.0f, 1.0f))
+                        {
+                            IsPerfectBlock = true;
+                            ShieldMod = 0.0f;
+
+                            if (playerAttacker == null && playerDefender != null && CombatType == CombatType.Melee)
+                                AttackerStunned = true;
+                        }
+                        else
+                            ShieldMod = defender.GetShieldMod(attacker, DamageType, Weapon, pkBattle);
                     }
                     else
                     {
@@ -741,7 +765,7 @@ namespace ACE.Server.Entity
 
             //var attackType = attacker.GetCombatType();
 
-            EffectiveDefenseSkill = defender.GetEffectiveDefenseSkill(CombatType, isPvP);
+            EffectiveDefenseSkill = defender.GetEffectiveDefenseSkill(CombatType);
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
             {
@@ -760,8 +784,14 @@ namespace ACE.Server.Entity
                     if (defenderTechnique != null && defenderTechnique.TacticAndTechniqueId == (int)TacticAndTechniqueType.Reckless)
                         return 0.0f; // No evasion while using Reckless technique.
 
+                    var evadeMod = 1.0f;
                     if (playerDefender != null && playerDefender.AttackHeight == AttackHeight.Low) // While using low height attacks players get an extra defence skill bonus.
-                        EffectiveDefenseSkill = (uint)Math.Round(EffectiveDefenseSkill * 1.10f);
+                        evadeMod += 0.1f;
+
+                    if (playerDefender.GetEquippedOffHand() == null) // Having a free off-hand will grant players an extra defence skill bonus.
+                        evadeMod += 0.1f;
+
+                    EffectiveDefenseSkill = (uint)Math.Round(EffectiveDefenseSkill * evadeMod);
                 }
 
                 // Evasion penalty for receiving too many attacks per second.
@@ -772,58 +802,9 @@ namespace ACE.Server.Entity
             var evadeChance = 1.0f - SkillCheck.GetSkillChance(EffectiveAttackSkill, EffectiveDefenseSkill);
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && playerDefender != null)
-                evadeChance = Math.Min(evadeChance, 0.95f + ((CombatType == CombatType.Missile ? playerDefender.CachedMissileDefenseCapBonus : playerDefender.CachedMeleeDefenseCapBonus)) * 0.01);
+                evadeChance = Math.Min(evadeChance, 0.90f + ((CombatType == CombatType.Missile ? playerDefender.CachedMissileDefenseCapBonus : playerDefender.CachedMeleeDefenseCapBonus) * 0.01));
 
             return (float)evadeChance;
-        }
-
-        public float GetBlockChance(Creature attacker, Creature defender, WorldObject shield, CreatureSkill attackSkill)
-        {
-            if (defender == null || defender.IsExhausted)
-                return 0.0f;
-
-            var playerAttacker = attacker as Player;
-            var playerDefender = defender as Player;
-            var isPvP = playerAttacker != null && playerDefender != null;
-            if (playerDefender == null)
-                return 1.0f; // Creatures with shields always block.
-            else
-            {
-                var shieldSkill = defender.GetCreatureSkill(Skill.Shield);
-                if (shieldSkill.AdvancementClass > SkillAdvancementClass.Untrained)
-                {
-                    var shieldDefenseMod = (float)(shield.ShieldDefense ?? 1) + shield.EnchantmentManager.GetShieldDefenseMod();
-
-                    if (shield.IsEnchantable)
-                        shieldDefenseMod += defender.EnchantmentManager.GetAttackMod();
-
-                    var maceBonus = 1.0f;
-                    if (defender.GetEquippedMeleeWeapon(true)?.WeaponSkill == Skill.Mace)
-                        maceBonus = 1.1f;
-
-                    EffectiveBlockSkill = (uint)Math.Round(shieldSkill.Current * shieldDefenseMod * maceBonus);
-                }
-                else
-                    EffectiveBlockSkill = 0;
-
-                var combatTypeMod = CombatType == CombatType.Missile ? 1.0f : 1.333f;
-                EffectiveBlockSkill = (uint)(EffectiveBlockSkill * combatTypeMod);
-
-                var blockChance = 1.0f - SkillCheck.GetSkillChance(attackSkill.Current, EffectiveBlockSkill);
-
-                if (CombatType == CombatType.Missile)
-                    blockChance += blockChance * shield.GetShieldMissileBlockBonus();
-
-                if (isPvP)
-                {
-                    blockChance *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_shield_block_chance", "pvp_dmg_mod_high_shield_block_chance", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
-                    blockChance = Math.Max(blockChance, 0.2f);
-                }
-                else
-                    blockChance += 0.2f;
-
-                return (float)blockChance;
-            }
         }
 
         /// <summary>
@@ -900,15 +881,14 @@ namespace ACE.Server.Entity
         /// </summary>
         public void GetBodyPart(Creature defender, Quadrant quadrant)
         {
-            // get cached body parts table
-            var bodyParts = !defender.IsModified ? Creature.GetBodyParts(defender.WeenieClassId) : Creature.GetBodyParts(defender); // If we're modified(our level has been altered) get our custom body parts instead of the generic one.
+            var bodyParts = defender.GetBodyParts();
 
             // rng roll for body part
             var bodyPart = bodyParts.RollBodyPart(quadrant);
 
             if (bodyPart == CombatBodyPart.Undefined)
             {
-                log.Debug($"DamageEvent.GetBodyPart({defender?.Name} ({defender?.Guid}) ) - couldn't find body part for wcid {defender.WeenieClassId}, Quadrant {quadrant}");
+                log.DebugFormat("DamageEvent.GetBodyPart({0} ({1}) ) - couldn't find body part for wcid {2}, Quadrant {3}", defender?.Name, defender?.Guid, defender.WeenieClassId, quadrant);
                 Evaded = true;
                 return;
             }
@@ -1091,9 +1071,15 @@ namespace ACE.Server.Entity
             info += $"DamageMitigated: {DamageMitigated}\n";
             info += $"Damage: {Damage}\n";
 
-            info += $"Block Chance: {BlockChance}\n";
+            info += $"BlockChance: {BlockChance}\n";
             info += $"Blocked: {Blocked}\n";
-            info += $"Damage Blocked: {DamageBlocked}\n";
+            info += $"PerfectBlockChance: {PerfectBlockChance}\n";
+            info += $"PerfectBlock: {IsPerfectBlock}\n";
+            info += $"DamageBlocked: {DamageBlocked}\n";
+            info += $"AttackerStunned: {AttackerStunned}\n";
+            info += $"DefenderStunned: {DefenderStunned}\n";
+
+            info += $"IsAttackFromSneaking: {IsAttackFromSneaking}\n";
 
             info += $"IsAttackFromSneaking: {IsAttackFromSneaking}\n";
 

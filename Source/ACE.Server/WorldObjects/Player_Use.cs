@@ -166,7 +166,7 @@ namespace ACE.Server.WorldObjects
                         sourceItem.HandleActionUseOnTarget(this, target);
                     else
                         SendUseDoneEvent();
-                });
+                }, target.ItemType == ItemType.Portal ? 1.5f : null);
             }
             else
                 sourceItem.HandleActionUseOnTarget(this, target);
@@ -190,6 +190,46 @@ namespace ACE.Server.WorldObjects
 
             if (item != null)
             {
+                if (item.TargetType.HasValue && item.TargetType.Value != ItemType.None)
+                {
+                    // We have a target requirement, so redirect this to the appropriate function.
+                    var queryTarget = GetQueryTarget(item.Guid.Full);
+
+                    if (item.WeenieType == WeenieType.Healer)
+                    {
+                        var healTarget = this;
+
+                        if (queryTarget is Player playerTarget)
+                        {
+                            if (!IsPKType || !playerTarget.IsPKType || (Fellowship != null && Fellowship == playerTarget.Fellowship))
+                                healTarget = playerTarget;
+                        }
+
+                        HandleActionUseWithTarget(item.Guid.Full, healTarget.Guid.Full);
+                        return;
+                    }
+                    else
+                    {
+                        if (queryTarget != null)
+                        {
+                            if ((item.TargetType.Value & queryTarget.ItemType) == ItemType.None)
+                            {
+                                SendTransientError($"Cannot use the {item.Name} with the {queryTarget.Name}");
+                                SendUseDoneEvent();
+                            }
+                            else
+                                HandleActionUseWithTarget(item.Guid.Full, queryTarget.Guid.Full);
+                            return;
+                        }
+                        else
+                        {
+                            SendTransientError($"Cannot use the {item.Name} without a target");
+                            SendUseDoneEvent();
+                            return;
+                        }
+                    }
+                }
+
                 if ((item.TacticAndTechniqueId ?? 0) != (int)TacticAndTechniqueType.Sneak && (item.TacticAndTechniqueId ?? 0) != (int)TacticAndTechniqueType.Misdirect && item.WeenieType != WeenieType.Corpse && item.WeenieType != WeenieType.Door)
                     EndSneaking();
 
@@ -215,7 +255,7 @@ namespace ACE.Server.WorldObjects
             }
             else
             {
-                log.Debug($"{Name}.HandleActionUseItem({itemGuid:X8}): couldn't find object");
+                log.DebugFormat("{0}.HandleActionUseItem({1:X8}): couldn't find object", Name, itemGuid);
                 SendUseDoneEvent();
             }
         }
@@ -259,7 +299,6 @@ namespace ACE.Server.WorldObjects
             Session.Network.EnqueueSend(new GameEventUseDone(Session, errorType));
         }
 
-
         /// <summary>
         /// This method processes the Game Action (F7B1) No Longer Viewing Contents (0x0195)
         /// This is raised when we:
@@ -274,12 +313,6 @@ namespace ACE.Server.WorldObjects
         }
 
         public Pet CurrentActivePet { get; set; }
-
-        public void StartBarber()
-        {
-            BarberActive = true;
-            Session.Network.EnqueueSend(new GameEventStartBarber(Session));
-        }
 
         public void ApplyConsumable(MotionCommand useMotion, Action action, float animMod = 1.0f)
         {

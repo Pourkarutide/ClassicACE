@@ -16,6 +16,12 @@ using ACE.Server.Entity.Actions;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Managers;
+using ACE.Server.Network.Sequence;
+using ACE.Server.Pathfinding;
+using ACE.Server.Physics.Common;
+
+using Position = ACE.Entity.Position;
+using Landblock = ACE.Server.Entity.Landblock;
 
 namespace ACE.Server.WorldObjects
 {
@@ -79,6 +85,12 @@ namespace ACE.Server.WorldObjects
             if (TooBusyToRecall)
             {
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
+                return;
+            }
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
             }
 
@@ -162,6 +174,12 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
+                return;
+            }
+
             // FIXME(ddevec): I should probably make a better interface for this
             UpdateVital(Mana, Mana.Current / 2);
 
@@ -232,6 +250,12 @@ namespace ACE.Server.WorldObjects
             if (TooBusyToRecall)
             {
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
+                return;
+            }
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
             }
 
@@ -307,6 +331,12 @@ namespace ACE.Server.WorldObjects
             if (TooBusyToRecall)
             {
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
+                return;
+            }
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
             }
 
@@ -406,6 +436,12 @@ namespace ACE.Server.WorldObjects
             if (TooBusyToRecall)
             {
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
+                return;
+            }
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
             }
 
@@ -536,6 +572,12 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
+                return;
+            }
+
             if (CombatMode != CombatMode.NonCombat)
             {
                 // this should be handled by a different thing, probably a function that forces player into peacemode
@@ -623,6 +665,12 @@ namespace ACE.Server.WorldObjects
             if (TooBusyToRecall)
             {
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
+                return;
+            }
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
             }
 
@@ -716,7 +764,7 @@ namespace ACE.Server.WorldObjects
                 var delayTelport = new ActionChain();
                 delayTelport.AddAction(this, () => ClearFogColor());
                 delayTelport.AddDelaySeconds(1);
-                delayTelport.AddAction(this, () => WorldManager.ThreadSafeTeleport(this, _newPosition));
+                delayTelport.AddAction(this, () => WorldManager.ThreadSafeTeleport(this, _newPosition, null, fromPortal));
 
                 delayTelport.EnqueueChain();
 
@@ -849,6 +897,123 @@ namespace ACE.Server.WorldObjects
             //    Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.ITeleported));
         }
 
+        /// <summary>
+        /// This is not thread-safe. Consider using WorldManager.ThreadSafeBlink() instead if you're calling this from a multi-threaded subsection.
+        /// </summary>
+        public void Blink(Position destination, bool fromPortal)
+        {
+            if (destination == null || Teleporting)
+                return;
+
+            destination = new Position(destination);
+
+            if (destination.PositionX == 0 && destination.PositionY == 0 && destination.Cell == 0) // Trying to catch invalid position.
+                destination = new Position(Sanctuary) ?? new Position(Instantiation) ?? new Position(0xA9B00015, 60.108139f, 103.333549f, 64.402885f, 0.000000f, 0.000000f, -0.381155f, -0.924511f);
+
+            // Check currentFogColor set for player. If LandblockManager.GlobalFogColor is set, don't bother checking, dungeons didn't clear like this on retail worlds.
+            // if not clear, reset to clear before portaling in case portaling to dungeon (no current way to fast check unloaded landblock for IsDungeon or current FogColor)
+            // client doesn't respond to any change inside dungeons, and only queues for change if in dungeon, executing change upon next teleport
+            // so if we delay teleport long enough to ensure clear arrives before teleport, we don't get fog carrying over into dungeon.
+
+            if (currentFogColor.HasValue && currentFogColor != EnvironChangeType.Clear && !LandblockManager.GlobalFogColor.HasValue)
+            {
+                var delayBlink = new ActionChain();
+                delayBlink.AddAction(this, () => ClearFogColor());
+                delayBlink.AddDelaySeconds(1);
+                delayBlink.AddAction(this, () => WorldManager.ThreadSafeBlink(this, destination, null, fromPortal));
+
+                delayBlink.EnqueueChain();
+
+                return;
+            }
+
+            destination.PositionZ += 0.005f * (ObjScale ?? 1.0f);
+
+            var distance = Location.DistanceTo(destination);
+
+            if(!CurrentLandblock.IsDungeon)
+                destination.UpdateCell();
+
+            if (!destination.Indoors && !Underground)
+            {
+                if(!Indoors)
+                    destination.AdjustMapCoords();
+                else
+                {
+                    var sortCell = LScape.get_landcell(destination.Cell) as SortCell;
+                    if (sortCell != null && sortCell.has_building())
+                    {
+                        var building = sortCell.Building;
+
+                        var minZ = building.GetMinZ();
+
+                        if (minZ > destination.PositionZ && minZ < float.MaxValue)
+                            destination.PositionZ += minZ;
+
+                        destination.LandblockId = new LandblockId(destination.GetCell());
+                    }
+                }
+            }
+            else
+            {
+                AdjustDungeon(destination);
+
+                var height = PhysicsObj.GetHeight();
+                if (!destination.IsValidIndoorCell(height))
+                {
+                    if (Pathfinder.PathfindingEnabled)
+                    {
+                        destination = Pathfinder.GetClosestPointOnMesh(destination, AgentWidth.Narrow);
+
+                        if (destination == null || !destination.IsValidIndoorCell(height))
+                            return;
+                    }
+                    else
+                        return;
+                }
+            }
+
+            Teleporting = true;
+            LastTeleportTime = DateTime.UtcNow;
+            LastTeleportStartTimestamp = Time.GetUnixTime();
+
+            EndSneaking();
+
+            if (fromPortal)
+                LastPortalTeleportTimestamp = LastTeleportStartTimestamp;
+
+            var setPos = new Physics.Common.SetPosition(destination.PhysPosition(), Physics.Common.SetPositionFlags.Teleport | Physics.Common.SetPositionFlags.Slide);
+            var result = PhysicsObj.SetPosition(setPos);
+
+            if (result == Physics.Common.SetPositionError.OK)
+            {
+                Location = PhysicsObj.Position.ACEPosition(); // Update our location to wherever the physics says we ended up. This takes care of slightly invalid destination locations that both the server and client physics will autocorrect.
+                SnapPos = Location;
+                PrevMovementUpdateMaxSpeed = 0.0f;
+                LastPlayerMovementCheckTime = Time.GetUnixTime();
+                HasPerformedActionsSinceLastMovementUpdate = false;
+
+                // force out of hotspots
+                PhysicsObj.report_collision_end(true);
+
+                if (UnderLifestoneProtection)
+                    LifestoneProtectionDispel();
+
+                CheckMonsters();
+                CheckHouse();
+
+                Sequences.GetNextSequence(SequenceType.ObjectForcePosition);
+                SendUpdatePosition();
+
+                if (!InUpdate)
+                    LandblockManager.RelocateObjectForPhysics(this, distance <= 192 && !InDungeon);
+            }
+            else
+                Session.Network.EnqueueSend(new GameMessageSystemChat("Blink failed!", ChatMessageType.Broadcast));
+
+            Teleporting = false;
+        }
+
         public void NotifyLandblocks()
         {
             // the original implementations of this were done on landblock heartbeat,
@@ -861,8 +1026,16 @@ namespace ACE.Server.WorldObjects
             if (CurrentLandblock != null)
                 CurrentLandblock?.SetActive();
         }
+        public override void OnEnterLandblock(Landblock landblock)
+        {
+            CheckExplorationLandblock(landblock);
+        }
 
-        public static readonly float RunFactor = 1.5f;
+        public override void OnLeaveLandblock(Landblock landblock)
+        {
+        }
+
+        public const float RunFactor = 1.5f;
 
         /// <summary>
         /// Returns the amount of time for player to rotate by the # of degrees

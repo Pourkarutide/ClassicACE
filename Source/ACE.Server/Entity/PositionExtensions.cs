@@ -73,55 +73,78 @@ namespace ACE.Server.Entity
             return position;
         }
 
+        public static bool UpdateCell(this Position p)
+        {
+            var previousCell = p.LandblockId.Raw;
+            p.SetLandblock(true);
+            p.SetLandCell(true);
+            p.LandblockId = new LandblockId(p.GetCell());
+
+            if (previousCell != p.LandblockId.Raw)
+                return true;
+            return false;
+        }
+
         /// <summary>
         /// Gets the cell ID for a position within a landblock
         /// </summary>
         public static uint GetCell(this Position p)
         {
-            var landblock = LScape.get_landblock(p.LandblockId.Raw);
-
-            // dungeons
-            // TODO: investigate dungeons that are below actual traversable overworld terrain
-            // ex., 010AFFFF
-            //if (landblock.IsDungeon)
-            if (p.Indoors)
-                return GetIndoorCell(p);
-
-            // outside - could be on landscape, in building, or underground cave
-            var cellID = GetOutdoorCell(p);
-            var landcell = LScape.get_landcell(cellID) as LandCell;
-
-            if (landcell == null)
-                return cellID;
-
-            if (landcell.has_building())
+            try
             {
-                var envCells = landcell.Building.get_building_cells();
-                foreach (var envCell in envCells)
-                    if (envCell.point_in_cell(p.Pos))
-                        return envCell.ID;
-            }
+                //var landblock = LScape.get_landblock(p.LandblockId.Raw);
 
-            // handle underground areas ie. caves
-            // get the terrain Z-height for this X/Y
-            Physics.Polygon walkable = null;
-            var terrainPoly = landcell.find_terrain_poly(p.Pos, ref walkable);
-            if (walkable != null)
-            {
-                Vector3 terrainPos = p.Pos;
-                walkable.Plane.set_height(ref terrainPos);
+                // dungeons
+                // TODO: investigate dungeons that are below actual traversable overworld terrain
+                // ex., 010AFFFF
+                //if (landblock.IsDungeon)
+                if (p.Indoors)
+                    return GetIndoorCell(p);
 
-                // are we below ground? if so, search all of the indoor cells for this landblock
-                if (terrainPos.Z > p.Pos.Z)
+                // outside - could be on landscape, in building, or underground cave
+                var cellID = GetOutdoorCell(p);
+                var landcell = LScape.get_landcell(cellID) as LandCell;
+
+                if (landcell == null)
+                    return cellID;
+
+                if (landcell.has_building())
                 {
-                    var envCells = landblock.get_envcells();
+                    var envCells = landcell.Building.get_building_cells();
                     foreach (var envCell in envCells)
                         if (envCell.point_in_cell(p.Pos))
                             return envCell.ID;
                 }
-            }
 
-            return cellID;
+                // handle underground areas ie. caves
+                // get the terrain Z-height for this X/Y
+                Physics.Polygon walkable = null;
+                var terrainPoly = landcell.find_terrain_poly(p.Pos, ref walkable);
+                if (walkable != null)
+                {
+                    Vector3 terrainPos = p.Pos;
+                    walkable.Plane.set_height(ref terrainPos);
+
+                    // are we below ground? if so, search all of the indoor cells for this landblock
+                    if (terrainPos.Z > p.Pos.Z)
+                    {
+                        var landblock = LScape.get_landblock(p.LandblockId.Raw);
+                        var envCells = landblock.get_envcells();
+                        foreach (var envCell in envCells)
+                            if (envCell.point_in_cell(p.Pos))
+                                return envCell.ID;
+                    }
+                }
+
+                return cellID;
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("GetCell() threw an exception: {0}\nposition as LOC => {1}", e.ToString(), p.ToLOCString());
+                log.Error(e);
+
+                return 0;
+            }
         }
 
         /// <summary>
@@ -149,6 +172,27 @@ namespace ACE.Server.Entity
                 return envCell.Value;
             else
                 return p.Cell;
+        }
+
+        public static bool IsValidIndoorCell(this Position p)
+        {
+            var adjustCell = AdjustCell.Get(p.Landblock);
+            var envCell = adjustCell.GetCell(p.Pos);
+            return envCell != null;
+        }
+
+        public static bool IsValidIndoorCell(this Position p, float objHeight)
+        {
+            var adjustCell = AdjustCell.Get(p.Landblock);
+            var envCell = adjustCell.GetCell(p.Pos);
+
+            var heightPos = new Position(p);
+            heightPos.PositionZ += objHeight;
+
+            var adjustCell2 = AdjustCell.Get(heightPos.Landblock);
+            var envCell2 = adjustCell.GetCell(heightPos.Pos);
+
+            return envCell != null && envCell2 != null;
         }
 
         /// <summary>
@@ -246,7 +290,7 @@ namespace ACE.Server.Entity
             }
         }
 
-        public static void Translate(this Position pos, uint blockCell)
+        public static void TranslateLandblockId(this Position pos, uint blockCell)
         {
             var newBlockX = blockCell >> 24;
             var newBlockY = (blockCell >> 16) & 0xFF;
@@ -274,7 +318,7 @@ namespace ACE.Server.Entity
             var landblock = LScape.get_landblock(p.LandblockId.Raw);
 
             var cellID = GetOutdoorCell(p);
-            var landcell = (LandCell)LScape.get_landcell(cellID);
+            var landcell = LScape.get_landcell(cellID) as LandCell;
 
             if (landcell == null)
                 return p.Pos.Z;
@@ -313,6 +357,10 @@ namespace ACE.Server.Entity
             var cell = landblock.IsDungeon ? p.Cell : p.GetOutdoorCell();
 
             return HouseCell.HouseCells.ContainsKey(cell);
+        }
+        public static bool IsUnderground(this Position p)
+        {
+            return p.PositionZ < p.GetTerrainZ();
         }
 
         public static Position ACEPosition(this Physics.Common.Position pos)
@@ -362,6 +410,220 @@ namespace ACE.Server.Entity
             log.Warn($" after fix: {pos.ToLOCString()}");
 
             return success;
+        }
+
+        public static float GetLargestOffset(this Position pos, Position p)
+        {
+            var offset = pos.GetOffset(p);
+            var absOffset = new Vector3(Math.Abs(offset.X), Math.Abs(offset.Y), Math.Abs(offset.Z));
+
+            if (absOffset.X > absOffset.Y)
+            {
+                if (absOffset.X > absOffset.Z)
+                    return offset.X;
+            }
+            else
+            {
+                if (absOffset.Y > absOffset.Z)
+                    return offset.Y;
+            }
+            return offset.Z;
+        }
+
+        public static string GetCardinalDirectionsTo(this Position pos, Position p)
+        {
+            var offset = pos.GetOffset(p);
+
+            var minDist = 2;
+            var aCoupleStepsDistance = 5;
+            var aCoupleStepsThresholdDistance = 10;
+            var aFewStepsDistance = 20;
+            var aFewStepsThresholdDistance = 40;
+            var aBitDistance = 200;
+            var aBitThresholdDistance = 400;
+            var farDistance = 900;
+            var veryFarDistance = 1800;
+
+            var isNorthSouth = false;
+            var isEastWest = false;
+
+            var directionEastWestString = "";
+            if (offset.X > minDist)
+            {
+                isEastWest = true;
+                directionEastWestString += "east";
+            }
+            else if (offset.X < -minDist)
+            {
+                isEastWest = true;
+                directionEastWestString += "west";
+            }
+
+            var directionNorthSouthString = "";
+            if (offset.Y > minDist)
+            {
+                isNorthSouth = true;
+                directionNorthSouthString += "north";
+            }
+            else if (offset.Y < -minDist)
+            {
+                isNorthSouth = true;
+                directionNorthSouthString += "south";
+            }
+
+            if (directionEastWestString.Length == 0 && directionNorthSouthString.Length == 0)
+                return "";
+            else
+            {
+                var eastWestDist = Math.Abs(offset.X);
+                var northSouthDist = Math.Abs(offset.Y);
+
+                if (northSouthDist > aCoupleStepsThresholdDistance && eastWestDist < aCoupleStepsDistance)
+                    isEastWest = false;
+                else if (eastWestDist > aCoupleStepsThresholdDistance && northSouthDist < aCoupleStepsDistance)
+                    isNorthSouth = false;
+                else if (northSouthDist > aFewStepsThresholdDistance && eastWestDist < aFewStepsDistance)
+                    isEastWest = false;
+                else if (eastWestDist > aFewStepsThresholdDistance && northSouthDist < aFewStepsDistance)
+                    isNorthSouth = false;
+                else if (northSouthDist > aBitThresholdDistance && eastWestDist < aBitDistance)
+                    isEastWest = false;
+                else if (eastWestDist > aBitThresholdDistance && northSouthDist < aBitDistance)
+                    isNorthSouth = false;
+
+                string eastWestDistanceString = "";
+                if (isEastWest)
+                {
+                    if (eastWestDist < aCoupleStepsDistance)
+                        eastWestDistanceString = "a couple steps to the ";
+                    else if (eastWestDist < aFewStepsDistance)
+                        eastWestDistanceString = "a few steps to the ";
+                    else if (eastWestDist < aBitDistance)
+                        eastWestDistanceString = "a bit to the ";
+                    else if (eastWestDist < farDistance)
+                        eastWestDistanceString = "";
+                    else if (eastWestDist < veryFarDistance)
+                        eastWestDistanceString = "far to the ";
+                    else
+                        eastWestDistanceString = "very far to the ";
+                }
+
+                string northSouthDistanceString = "";
+                if (isNorthSouth)
+                {
+                    if (northSouthDist < aCoupleStepsDistance)
+                        northSouthDistanceString = "a couple steps to the ";
+                    else if (northSouthDist < aFewStepsDistance)
+                        northSouthDistanceString = "a few steps to the ";
+                    else if (northSouthDist < aBitDistance)
+                        northSouthDistanceString = "a bit to the ";
+                    else if (northSouthDist < farDistance)
+                        northSouthDistanceString = "";
+                    else if (northSouthDist < veryFarDistance)
+                        northSouthDistanceString = "far to the ";
+                    else
+                        northSouthDistanceString = "very far to the ";
+                }
+
+                string direction;
+                if (isEastWest && isNorthSouth)
+                {
+                    if (eastWestDistanceString == northSouthDistanceString)
+                        direction = $"{northSouthDistanceString}{directionNorthSouthString}{directionEastWestString}";
+                    else if (northSouthDist > eastWestDist)
+                        direction = $"{northSouthDistanceString}{directionNorthSouthString} and {eastWestDistanceString}{directionEastWestString}";
+                    else
+                        direction = $"{eastWestDistanceString}{directionEastWestString} and {northSouthDistanceString}{directionNorthSouthString}";
+                }
+                else if (isEastWest && !isNorthSouth)
+                    direction = $"{eastWestDistanceString}{directionEastWestString}";
+                else if (isNorthSouth && !isEastWest)
+                    direction = $"{northSouthDistanceString}{directionNorthSouthString}";
+                else
+                    direction = "";
+
+                return direction;
+            }
+        }
+
+        public static void RotateAroundPivot(this Position pos, Position pivot, float degrees)
+        {
+            var radians = degrees.ToRadians();
+
+            var cosTheta = Math.Cos(radians);
+            var sinTheta = Math.Sin(radians);
+
+            var x = cosTheta * (pos.PositionX - pivot.PositionX) - sinTheta * (pos.PositionY - pivot.PositionY) + pivot.PositionX;
+            var y = sinTheta * (pos.PositionX - pivot.PositionX) + cosTheta * (pos.PositionY - pivot.PositionY) + pivot.PositionY;
+
+            pos.PositionX = (float)x;
+            pos.PositionY = (float)y;
+
+            pos.Rotate(degrees);
+        }
+
+        public static Vector3 GetYawPitchRoll(this Position pos)
+        {
+            var q = pos.Rotation;
+
+            double Ysqr = q.Y * q.Y;
+            double t0 = -2.0 * (Ysqr + q.Z * q.Z) + 1.0;
+            double t1 = +2.0 * (q.X * q.Y + q.W * q.Z);
+            double t2 = -2.0 * (q.X * q.Z - q.W * q.Y);
+            double t3 = +2.0 * (q.Y * q.Z + q.W * q.X);
+            double t4 = -2.0 * (q.X * q.X + Ysqr) + 1.0;
+
+            t2 = t2 > 1.0 ? 1.0 : t2;
+            t2 = t2 < -1.0 ? -1.0 : t2;
+
+            var yaw = (float)Math.Atan2(t1, t0).ToDegrees() % 360f;
+            var pitch = (float)Math.Atan2(t3, t4).ToDegrees() % 360f;
+            var roll = (float)Math.Asin(t2).ToDegrees() % 360f;
+
+            if (yaw < 0)
+                yaw += 360f;
+            if (pitch < 0)
+                pitch += 360f;
+            if (roll < 0)
+                roll += 360f;
+
+            return new Vector3(yaw, pitch, roll);
+        }
+
+        public static float GetYaw(this Position pos)
+        {
+            var q = pos.Rotation;
+
+            var yaw = (float)Math.Atan2(2.0 * (q.Z * q.W + q.X * q.Y), -1.0 + 2.0 * (q.W * q.W + q.X * q.X)).ToDegrees() % 360f;
+
+            if (yaw < 0)
+                yaw += 360f;
+
+            return yaw;
+        }
+
+        public static float GetPitch(this Position pos)
+        {
+            var q = pos.Rotation;
+
+            var pitch = (float)Math.Atan2(2.0 * (q.Z * q.Y + q.W * q.X), 1.0 - 2.0 * (q.X * q.X + q.Y * q.Y)).ToDegrees() % 360f;
+
+            if (pitch < 0)
+                pitch += 360f;
+
+            return pitch;
+        }
+
+        public static float GetRoll(this Position pos)
+        {
+            var q = pos.Rotation;
+
+            var roll = (float)Math.Asin(2.0 * (q.Y * q.W - q.Z * q.X)).ToDegrees() % 360f;
+
+            if (roll < 0)
+                roll += 360f;
+
+            return roll;
         }
     }
 }

@@ -117,9 +117,9 @@ namespace ACE.Server.WorldObjects
         /// If a player tries to use 2 portals in under this amount of time,
         /// they receive an error message
         /// </summary>
-        private static readonly float minTimeSinceLastPortal = 3.5f;
+        private const float minTimeSinceLastPortal = 3.5f;
 
-        public override ActivationResult CheckUseRequirements(WorldObject activator)
+        public override ActivationResult CheckUseRequirements(WorldObject activator, bool silent = false)
         {
             if (!(activator is Player player))
                 return new ActivationResult(false);
@@ -152,13 +152,13 @@ namespace ACE.Server.WorldObjects
 
                     player.LastPortalTeleportTimestampError = currentTime;
 
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouHaveBeenTeleportedTooRecently));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouHaveBeenTeleportedTooRecently));
                 }
             }
 
             if (player.PKTimerActive && !PortalIgnoresPkAttackTimer)
             {
-                return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
+                return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouHaveBeenInPKBattleTooRecently));
             }
 
             if (!player.PKRecallAllowed && !PortalIgnoresPkAttackTimer)
@@ -172,19 +172,19 @@ namespace ACE.Server.WorldObjects
                 if (!player.VerifyGameplayMode(this))
                 {
                     player.Session.Network.EnqueueSend(new GameEventCommunicationTransientString(player.Session, $"This item cannot be used, invalid gameplay mode!"));
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouFailToTeleport));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouFailToTeleport));
                 }
 
                 if (player.Level < MinLevel)
                 {
                     // You are not powerful enough to interact with that portal!
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouAreNotPowerfulEnoughToUsePortal));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouAreNotPowerfulEnoughToUsePortal));
                 }
 
-                if (player.Level > MaxLevel && MaxLevel != 0)
+                if (player.Level > MaxLevel && MaxLevel != 0 && PropertyManager.GetBool("use_portal_max_level_requirement").Item)
                 {
                     // You are too powerful to interact with that portal!
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouAreTooPowerfulToUsePortal));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouAreTooPowerfulToUsePortal));
                 }
 
                 //var playerPkLevel = player.PkLevel;
@@ -197,61 +197,61 @@ namespace ACE.Server.WorldObjects
                 if (PortalRestrictions == PortalBitmask.Undef)
                 {
                     // Players may not interact with that portal.
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.PlayersMayNotUsePortal));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.PlayersMayNotUsePortal));
                 }
 
                 if (PortalRestrictions.HasFlag(PortalBitmask.NoPk) && player.PlayerKillerStatus == PlayerKillerStatus.PK)
                 {
                     // Player killers may not interact with that portal!
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.PKsMayNotUsePortal));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.PKsMayNotUsePortal));
                 }
 
                 if (PortalRestrictions.HasFlag(PortalBitmask.NoPKLite) && player.PlayerKillerStatus == PlayerKillerStatus.PKLite)
                 {
                     // Lite Player Killers may not interact with that portal!
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.PKLiteMayNotUsePortal));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.PKLiteMayNotUsePortal));
                 }
 
                 if (PortalRestrictions.HasFlag(PortalBitmask.NoNPK) && player.PlayerKillerStatus == PlayerKillerStatus.NPK)
                 {
                     // Non-player killers may not interact with that portal!
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.NonPKsMayNotUsePortal));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.NonPKsMayNotUsePortal));
                 }
 
                 if (PortalRestrictions.HasFlag(PortalBitmask.OnlyOlthoiPCs) && !player.IsOlthoiPlayer)
                 {
                     // Only Olthoi may pass through this portal!
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.OnlyOlthoiMayUsePortal));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.OnlyOlthoiMayUsePortal));
                 }
 
                 if ((PortalRestrictions.HasFlag(PortalBitmask.NoOlthoiPCs) || IsGateway) && player.IsOlthoiPlayer)
                 {
                     // Olthoi may not pass through this portal!
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.OlthoiMayNotUsePortal));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.OlthoiMayNotUsePortal));
                 }
 
                 if (PortalRestrictions.HasFlag(PortalBitmask.NoVitae) && player.HasVitae)
                 {
                     // You may not pass through this portal while Vitae weakens you!
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouMayNotUsePortalWithVitae));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouMayNotUsePortalWithVitae));
                 }
 
                 if (PortalRestrictions.HasFlag(PortalBitmask.NoNewAccounts) && !player.Account15Days)
                 {
                     // This character must be two weeks old or have been created on an account at least two weeks old to use this portal!
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouMustBeTwoWeeksOldToUsePortal));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouMustBeTwoWeeksOldToUsePortal));
                 }
 
                 if (player.AccountRequirements < AccountRequirements)
                 {
                     // You must purchase Asheron's Call -- Throne of Destiny to use this portal.
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.MustPurchaseThroneOfDestinyToUsePortal));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.MustPurchaseThroneOfDestinyToUsePortal));
                 }
 
                 if ((AdvocateQuest ?? false) && !player.IsAdvocate)
                 {
                     // You must be an Advocate to interact with that portal.
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouMustBeAnAdvocateToUsePortal));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouMustBeAnAdvocateToUsePortal));
                 }
             }
 

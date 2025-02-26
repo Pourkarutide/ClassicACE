@@ -7,7 +7,6 @@ using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
 using ACE.Entity.Models;
 using log4net;
-using Newtonsoft.Json.Linq;
 
 namespace ACE.Database.SQLFormatters.World
 {
@@ -58,7 +57,7 @@ namespace ACE.Database.SQLFormatters.World
                 var weenie = DatabaseManager.World.GetCachedWeenie(input[i].WeenieClassId);
                 if (weenie == null)
                 {
-                    log.Warn($"[ENCOUNTERSSQLWRITER] Landblock {input[i].Landblock:X4}: Encounter has entry to unknown weeniedClassId: {input[i].WeenieClassId}");
+                    log.Warn($"[ENCOUNTERSSQLWRITER] Landblock {input[i].Landblock:X4}: Encounter has entry to unknown weenieClassId: {input[i].WeenieClassId}");
                 }
                 else if (TreasureDeath != null)
                 {

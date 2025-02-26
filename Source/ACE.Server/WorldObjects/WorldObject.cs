@@ -69,7 +69,33 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Should only be adjusted by Landblock -- default is null
         /// </summary>
-        public Landblock CurrentLandblock { get; internal set; }
+        public Landblock CurrentLandblock
+        {
+            get => currentLandblock;
+
+            internal set
+            {
+                var previousLandblock = currentLandblock;
+                currentLandblock = value;
+
+                if (previousLandblock != currentLandblock)
+                {
+                    if (previousLandblock != null)
+                        OnLeaveLandblock(previousLandblock);
+
+                    if (currentLandblock != null)
+                        OnEnterLandblock(currentLandblock);
+                }
+            }
+        }
+
+        public virtual void OnEnterLandblock(Landblock landblock)
+        {
+        }
+
+        public virtual void OnLeaveLandblock(Landblock Landblock)
+        {
+        }
 
         public bool IsBusy { get; set; }
         public bool IsShield { get => CombatUse != null && CombatUse == ACE.Entity.Enum.CombatUse.Shield; }
@@ -82,6 +108,7 @@ namespace ACE.Server.WorldObjects
         public bool IsThrownWeapon { get => DefaultCombatStyle != null && DefaultCombatStyle == CombatStyle.ThrownWeapon; }
         public bool IsRanged { get => IsAmmoLauncher || IsThrownWeapon; }
         public bool IsCaster { get => DefaultCombatStyle != null && (DefaultCombatStyle == CombatStyle.Magic); }
+        public bool IsClothArmor { get => ItemType == ItemType.Clothing && ClothingPriority.HasValue && ClothingPriority.Value.HasFlag(CoverageMask.OuterwearChest); } // Robes and Dresses
 
         public bool IsCreature
         {
@@ -325,7 +352,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Returns TRUE if this object has direct line-of-sight visibility to input object
         /// </summary>
-        public bool IsDirectVisible(WorldObject wo)
+        public bool IsDirectVisible(WorldObject wo, bool ethereal = false)
         {
             if (PhysicsObj == null || wo.PhysicsObj == null)
                 return false;
@@ -351,6 +378,9 @@ namespace ACE.Server.WorldObjects
             SightObj.CurCell = PhysicsObj.CurCell;
             SightObj.ProjectileTarget = wo.PhysicsObj;
 
+            if (ethereal)
+                SightObj.set_ethereal(true, false);
+
             // perform line of sight test
             var transition = SightObj.transition(startPos, targetPos, false);
 
@@ -363,7 +393,7 @@ namespace ACE.Server.WorldObjects
             return isVisible;
         }
 
-        public bool IsDirectVisible(Position pos)
+        public bool IsDirectVisible(Position pos, bool ethereal = false)
         {
             if (PhysicsObj == null)
                 return false;
@@ -389,6 +419,9 @@ namespace ACE.Server.WorldObjects
             SightObj.CurCell = PhysicsObj.CurCell;
             SightObj.ProjectileTarget = PhysicsObj;
 
+            if (ethereal)
+                SightObj.set_ethereal(true, false);
+
             // perform line of sight test
             var transition = SightObj.transition(targetPos, startPos, false);
 
@@ -401,7 +434,66 @@ namespace ACE.Server.WorldObjects
             return isVisible;
         }
 
-        public bool IsMeleeVisible(WorldObject wo)
+        public bool IsDirectVisible(WorldObject wo, float width, bool ethereal = false)
+        {
+            if (PhysicsObj == null || wo.PhysicsObj == null)
+                return false;
+
+            var offset = width / 2;
+
+            if (!IsDirectVisibleWidthInternal(wo, offset, ethereal))
+                return false;
+            if (!IsDirectVisibleWidthInternal(wo, -offset, ethereal))
+                return false;
+
+            return true;
+        }
+
+        private bool IsDirectVisibleWidthInternal(WorldObject wo, float offset, bool ethereal = false)
+        {
+            if (PhysicsObj == null || wo.PhysicsObj == null)
+                return false;
+
+            var SightObj = PhysicsObj.makeObject(0x02000124, 0, false, true);
+
+            SightObj.State |= PhysicsState.Missile;
+
+            var startPos = new Physics.Common.Position(PhysicsObj.Position);
+            var targetPos = new Physics.Common.Position(wo.PhysicsObj.Position);
+
+            startPos.add_offset(new Vector3(0, offset, 0));
+            targetPos.add_offset(new Vector3(0, offset, 0));
+
+            if (PhysicsObj.GetBlockDist(startPos, targetPos) > 1)
+                return false;
+
+            // set to eye level
+            startPos.Frame.Origin.Z += PhysicsObj.GetHeight() - SightObj.GetHeight();
+            targetPos.Frame.Origin.Z += wo.PhysicsObj.GetHeight() - SightObj.GetHeight();
+
+            var dir = Vector3.Normalize(targetPos.Frame.Origin - startPos.Frame.Origin);
+            var radsum = PhysicsObj.GetPhysicsRadius() + SightObj.GetPhysicsRadius();
+            startPos.Frame.Origin += dir * radsum;
+
+            SightObj.CurCell = PhysicsObj.CurCell;
+            SightObj.ProjectileTarget = wo.PhysicsObj;
+
+            if (ethereal)
+                SightObj.set_ethereal(true, false);
+
+            // perform line of sight test
+            var transition = SightObj.transition(startPos, targetPos, false);
+
+            SightObj.DestroyObject();
+
+            if (transition == null) return false;
+
+            // check if target object was reached
+            var isVisible = transition.CollisionInfo.CollideObject.FirstOrDefault(c => c.ID == wo.PhysicsObj.ID) != null;
+            return isVisible;
+        }
+
+        public bool IsMeleeVisible(WorldObject wo, bool ethereal = false)
         {
             if (PhysicsObj == null || wo.PhysicsObj == null)
                 return false;
@@ -411,8 +503,62 @@ namespace ACE.Server.WorldObjects
 
             PhysicsObj.ProjectileTarget = wo.PhysicsObj;
 
+            bool isEthereal = PhysicsObj.State.HasFlag(PhysicsState.Ethereal);
+            if (ethereal && !isEthereal)
+                PhysicsObj.set_ethereal(true, false);
+
             // perform line of sight test
             var transition = PhysicsObj.transition(startPos, targetPos, false);
+
+            if (ethereal && !isEthereal)
+                PhysicsObj.set_ethereal(false, false);
+
+            PhysicsObj.ProjectileTarget = null;
+
+            if (transition == null) return false;
+
+            // check if target object was reached
+            var isVisible = transition.CollisionInfo.CollideObject.FirstOrDefault(c => c.ID == wo.PhysicsObj.ID) != null;
+            return isVisible;
+        }
+
+        public bool IsMeleeVisible(WorldObject wo, float width, bool ethereal = false)
+        {
+            if (PhysicsObj == null || wo.PhysicsObj == null)
+                return false;
+
+            var offset = width / 2;
+
+            if (!IsMeleeVisibleWidthInternal(wo, offset, ethereal))
+                return false;
+            if (!IsMeleeVisibleWidthInternal(wo, -offset, ethereal))
+                return false;
+
+            return true;
+        }
+
+        private bool IsMeleeVisibleWidthInternal(WorldObject wo, float offset, bool ethereal = false)
+        {
+            if (PhysicsObj == null || wo.PhysicsObj == null)
+                return false;
+
+            var startPos = new Physics.Common.Position(PhysicsObj.Position);
+            var targetPos = new Physics.Common.Position(wo.PhysicsObj.Position);
+
+            startPos.add_offset(new Vector3(0, offset, 0));
+            targetPos.add_offset(new Vector3(0, offset, 0));
+
+            PhysicsObj.ProjectileTarget = wo.PhysicsObj;
+
+            bool isEthereal = PhysicsObj.State.HasFlag(PhysicsState.Ethereal);
+            if (ethereal && !isEthereal)
+                PhysicsObj.set_ethereal(true, false);
+
+            // perform line of sight test
+            var transition = PhysicsObj.transition(startPos, targetPos, false);
+
+            if (ethereal && !isEthereal)
+                PhysicsObj.set_ethereal(false, false);
 
             PhysicsObj.ProjectileTarget = null;
 
@@ -878,13 +1024,13 @@ namespace ACE.Server.WorldObjects
             if (this is Container container)
             {
                 foreach (var item in container.Inventory.Values)
-                    item.Destroy();
+                    item.Destroy(raiseNotifyOfDestructionEvent, fromLandblockUnload);
             }
 
             if (this is Creature creature)
             {
                 foreach (var item in creature.EquippedObjects.Values)
-                    item.Destroy();
+                    item.Destroy(raiseNotifyOfDestructionEvent, fromLandblockUnload);
 
                 foreach (var objInfo in creature.DeployedObjects)
                 {
@@ -898,16 +1044,31 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
-            if (this is Pet pet && pet.P_PetOwner?.CurrentActivePet == this)
-                pet.P_PetOwner.CurrentActivePet = null;
+            if (this is Pet pet)
+            {
+                if (pet.P_PetOwner?.CurrentActivePet == this)
+                    pet.P_PetOwner.CurrentActivePet = null;
+
+                if (pet.P_PetDevice?.Pet == Guid.Full)
+                    pet.P_PetDevice.Pet = null;
+            }
 
             if (this is Vendor vendor)
             {
                 foreach (var wo in vendor.DefaultItemsForSale.Values)
-                    wo.Destroy();
+                    wo.Destroy(raiseNotifyOfDestructionEvent, fromLandblockUnload);
 
                 foreach (var wo in vendor.UniqueItemsForSale.Values)
-                    wo.Destroy();
+                    wo.Destroy(raiseNotifyOfDestructionEvent, fromLandblockUnload);
+            }
+
+            if (!fromLandblockUnload)
+            {
+                if (this is House house && house.SlumLord != null && !house.SlumLord.IsDestroyed)
+                    HouseManager.DoHandleHouseRemoval(Guid.Full);
+
+                if (this is SlumLord slumlord && slumlord.House != null && !slumlord.House.IsDestroyed)
+                    HouseManager.DoHandleHouseRemoval(slumlord.House.Guid.Full);
             }
 
             if (raiseNotifyOfDestructionEvent)
@@ -1049,12 +1210,13 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public bool IsLinkSpot => WeenieType == WeenieType.Generic && WeenieClassName.Equals("portaldestination");
 
-        public static readonly float LocalBroadcastRange = 96.0f;
-        public static readonly float LocalBroadcastRangeSq = LocalBroadcastRange * LocalBroadcastRange;
+        public const float LocalBroadcastRange = 96.0f;
+        public const float LocalBroadcastRangeSq = LocalBroadcastRange * LocalBroadcastRange;
 
         public SetPosition ScatterPos { get; set; }
 
         public DestinationType DestinationType;
+        private Landblock currentLandblock;
 
         public Skill ConvertToMoASkill(Skill skill)
         {
@@ -1098,7 +1260,7 @@ namespace ACE.Server.WorldObjects
             }
         }
 
-        public virtual void HandleMotionDone(uint motionID, bool success)
+        public virtual void OnMotionDone(uint motionID, bool success)
         {
             // empty base
         }
@@ -1126,7 +1288,7 @@ namespace ACE.Server.WorldObjects
 
         public bool HasArmorLevel()
         {
-            return ArmorLevel > 0;
+            return ArmorLevel > 0 || IsClothArmor;
         }
 
         public virtual bool IsBeingTradedOrContainsItemBeingTraded(HashSet<ObjectGuid> guidList) => guidList.Contains(Guid);
@@ -1153,7 +1315,7 @@ namespace ACE.Server.WorldObjects
                 return Math.Max(ExtraSpellsMaxOverride ?? 0, 0);
 
             var baseSlots = (int)Math.Floor((ItemWorkmanship ?? 0) / 2f);
-            if (ItemType == ItemType.Clothing && ClothingPriority.HasValue && ClothingPriority.Value.HasFlag(CoverageMask.OuterwearChest)) // Robes
+            if(IsClothArmor)
                 return baseSlots == 0 ? 1 : (baseSlots * 2);
             return baseSlots;
         }
@@ -1168,7 +1330,7 @@ namespace ACE.Server.WorldObjects
 
         public int GetMaxTinkerCount()
         {
-            if (ItemWorkmanship > 0 && (ItemType & (ItemType.WeaponOrCaster | ItemType.Armor | ItemType.Jewelry)) != 0)
+            if (ItemWorkmanship > 0 && (ItemType & (ItemType.WeaponOrCaster | ItemType.Vestements | ItemType.Jewelry)) != 0)
                 return (int)Math.Floor((ItemWorkmanship ?? 0) / 3.1f) + 1;
             else
                 return 0;
@@ -1182,7 +1344,12 @@ namespace ACE.Server.WorldObjects
         public double GetHighestTierAroundObject(float maxDistance)
         {
             double? maxTier = null;
-            var instances = DatabaseManager.World.GetCachedInstancesByLandblock(CurrentLandblock.Id.Landblock);
+
+            if (CurrentLandblock == null)
+                return 0;
+
+            var landblockId = CurrentLandblock.Id.Landblock;
+            var instances = DatabaseManager.World.GetCachedInstancesByLandblock(landblockId);
             foreach (var instance in instances)
             {
                 Position instancePos = new Position(instance.ObjCellId, instance.OriginX, instance.OriginY, instance.OriginZ, instance.AnglesX, instance.AnglesY, instance.AnglesZ, instance.AnglesW);
@@ -1195,10 +1362,15 @@ namespace ACE.Server.WorldObjects
 
                     if (weenie.WeenieType == WeenieType.Creature)
                     {
-                        var level = weenie.GetProperty(PropertyInt.Level) ?? 1;
-                        var tier = Creature.CalculateExtendedTier(level);
-                        if (tier > (maxTier ?? 0))
-                            maxTier = tier;
+                        var playerKillerStatus = (PlayerKillerStatus?)weenie.GetProperty(PropertyInt.PlayerKillerStatus) ?? PlayerKillerStatus.NPK;
+                        var npcLooksLikeObject = weenie.GetProperty(PropertyBool.NpcLooksLikeObject) ?? false;
+                        if (playerKillerStatus != PlayerKillerStatus.RubberGlue && playerKillerStatus != PlayerKillerStatus.Protected && !npcLooksLikeObject)
+                        {
+                            var level = weenie.GetProperty(PropertyInt.Level) ?? 1;
+                            var tier = Creature.CalculateExtendedTier(level);
+                            if (tier > (maxTier ?? 0))
+                                maxTier = tier;
+                        }
                     }
                     else
                     {
@@ -1213,7 +1385,7 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
-            var encounters = DatabaseManager.World.GetCachedEncountersByLandblock(CurrentLandblock.Id.Landblock, out _);
+            var encounters = DatabaseManager.World.GetCachedEncountersByLandblock(landblockId, out _);
             foreach (var encounter in encounters)
             {
                 var xPos = Math.Clamp((encounter.CellX * 24.0f) + 12.0f, 0.5f, 191.5f);
@@ -1340,6 +1512,61 @@ namespace ACE.Server.WorldObjects
                 case 0x06020016:
                 case 0x06020017:
                     return true;
+            }
+        }
+
+        public int RollTier()
+        {
+            return RollTier(Tier ?? 1, this is Creature creature ? creature.GetCreatureVital(PropertyAttribute2nd.Health).MaxValue : 0);
+        }
+
+        public static int RollTier(double extendedTier, uint maxHealth = 0)
+        {
+            var extendedTierClamped = Math.Clamp(extendedTier, 1, 6);
+
+            var tierLevelUpChance = extendedTierClamped % 1;
+            var tierLevelUpRoll = ThreadSafeRandom.NextInterval(0);
+
+            int tier;
+            if (tierLevelUpRoll < tierLevelUpChance || maxHealth >= 1500)
+                tier = (int)Math.Ceiling(extendedTierClamped);
+            else
+                tier = (int)Math.Floor(extendedTierClamped);
+
+            return tier;
+        }
+
+        public bool InDungeon
+        {
+            get
+            {
+                if (CurrentLandblock == null || Location == null)
+                    return false;
+
+                return CurrentLandblock.IsDungeon || (CurrentLandblock.HasDungeon && Location.Indoors);
+            }
+        }
+
+        public bool Indoors
+        {
+            get
+            {
+                if (CurrentLandblock == null || Location == null)
+                    return false;
+
+                return Location.Indoors;
+            }
+        }
+
+        public bool Underground
+        {
+            get
+            {
+                if (CurrentLandblock == null || Location == null)
+                    return false;
+
+                var terrainZ = Location.GetTerrainZ();
+                return Location.PositionZ + Height < terrainZ;
             }
         }
     }

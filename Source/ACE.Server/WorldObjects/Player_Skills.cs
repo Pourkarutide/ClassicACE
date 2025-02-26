@@ -209,6 +209,9 @@ namespace ACE.Server.WorldObjects
                     creatureSkill.ExperienceSpent = 0;
             }
 
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                UpdateCustomSkillFormulae(true);
+
             AvailableSkillCredits -= creditsSpent;
 
             // Tinkering skills can be reset at Asheron's Castle and Enlightenment, so if player has the augmentation when they train the skill again immediately specialize it again.
@@ -258,7 +261,10 @@ namespace ACE.Server.WorldObjects
                 creatureSkill.Ranks = (ushort)CalcSkillRank(SkillAdvancementClass.Specialized, creatureSkill.ExperienceSpent);
             }
 
-            if(creatureSkill.IsSecondary)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                UpdateCustomSkillFormulae(true);
+
+            if (creatureSkill.IsSecondary)
                 creatureSkill.UpdateSecondarySkill();
 
             AvailableSkillCredits -= creditsSpent;
@@ -317,6 +323,9 @@ namespace ACE.Server.WorldObjects
 
                 creatureSkill.Ranks = 0;
                 creatureSkill.ExperienceSpent = 0;
+
+                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    UpdateCustomSkillFormulae(true);
             }
 
             return true;
@@ -350,6 +359,9 @@ namespace ACE.Server.WorldObjects
 
             creatureSkill.Ranks = 0;
             creatureSkill.ExperienceSpent = 0;
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                UpdateCustomSkillFormulae(true);
 
             if (creatureSkill.IsSecondary)
                 creatureSkill.UpdateSecondarySkill();
@@ -1083,6 +1095,17 @@ namespace ACE.Server.WorldObjects
             creatureSkill.ExperienceSpent = 0;
             creatureSkill.Ranks = 0;
 
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                switch(creatureSkill.AdvancementClass)
+                {
+                    case SkillAdvancementClass.Specialized: creatureSkill.InitLevel = 10; break;
+                    case SkillAdvancementClass.Trained: creatureSkill.InitLevel = 5; break;
+                    default: creatureSkill.InitLevel = 0; break;
+                }
+                UpdateCustomSkillFormulae(true);
+            }
+
             var updateSkill = new GameMessagePrivateUpdateSkill(this, creatureSkill);
             var availableSkillCredits = new GameMessagePrivateUpdatePropertyInt(this, PropertyInt.AvailableSkillCredits, AvailableSkillCredits ?? 0);
 
@@ -1103,6 +1126,42 @@ namespace ACE.Server.WorldObjects
 
             return true;
         }
+
+        public void UpdateCustomSkillFormulae(bool silent = false)
+        {
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                // Custom Arcane Lore formula needs some work arounds to work properly.
+                // The way we do this for creatures and players differs.
+                // For creatures we just override the Base and Current values to use the new formula.
+                // For players we cannot do that as the client calculates the skill value independently and will display wrong values on the skill list.
+                // To work around this we actually change the player's skill InitLevel.
+                var skill = GetCreatureSkill(Skill.ArcaneLore);
+                if (skill != null)
+                {
+                    var previous = skill.InitLevel;
+                    skill.InitLevel = ((uint)Level / 2) + 10;
+
+                    switch (skill.AdvancementClass)
+                    {
+                        case SkillAdvancementClass.Trained:
+                            skill.InitLevel += 5;
+                            break;
+                        case SkillAdvancementClass.Specialized:
+                            skill.InitLevel += 10;
+                            break;
+                    }
+
+                    if (previous != skill.InitLevel && Session != null)
+                    {
+                        Session.Network.EnqueueSend(new GameMessagePrivateUpdateSkill(this, skill));
+                        if(!silent)
+                            Session.Network.EnqueueSend(new GameMessageSystemChat($"Your base {Skill.ArcaneLore.ToSentence()} skill is now {skill.Base}!", ChatMessageType.Advancement));
+                    }
+                }
+            }
+        }
+
         static Player()
         {
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration)

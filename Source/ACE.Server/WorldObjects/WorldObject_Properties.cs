@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 using ACE.Common;
@@ -518,6 +519,232 @@ namespace ACE.Server.WorldObjects
             if (ephemeralPropertyStrings != null)
             {
                 foreach (var property in ephemeralPropertyStrings)
+                {
+                    if (property.Value != null)
+                        results[property.Key] = property.Value;
+                    else
+                        results.Remove(property.Key);
+                }
+            }
+
+            return results;
+        }
+        #endregion
+
+        #region GetAllProperty Where Functions
+        public Dictionary<PropertyBool, bool> GetAllPropertyBoolsWhere(HashSet<ushort> keys)
+        {
+            var results = new Dictionary<PropertyBool, bool>();
+
+            BiotaDatabaseLock.EnterReadLock();
+            try
+            {
+                if (Biota.PropertiesBool != null)
+                {
+                    foreach (var kvp in Biota.PropertiesBool.Where(r => keys.Contains((ushort)r.Key)))
+                        results[kvp.Key] = kvp.Value;
+                }
+            }
+            finally
+            {
+                BiotaDatabaseLock.ExitReadLock();
+            }
+
+            if (ephemeralPropertyBools != null)
+            {
+                foreach (var property in ephemeralPropertyBools.Where(r => keys.Contains((ushort)r.Key)))
+                {
+                    if (property.Value.HasValue)
+                        results[property.Key] = property.Value.Value;
+                    else
+                        results.Remove(property.Key);
+                }
+            }
+
+            return results;
+        }
+
+        public Dictionary<PropertyDataId, uint> GetAllPropertyDataIdWhere(HashSet<ushort> keys)
+        {
+            var results = new Dictionary<PropertyDataId, uint>();
+
+            BiotaDatabaseLock.EnterReadLock();
+            try
+            {
+                if (Biota.PropertiesDID != null)
+                {
+                    foreach (var kvp in Biota.PropertiesDID.Where(r => keys.Contains((ushort)r.Key)))
+                        results[kvp.Key] = kvp.Value;
+                }
+            }
+            finally
+            {
+                BiotaDatabaseLock.ExitReadLock();
+            }
+
+            if (ephemeralPropertyDataIds != null)
+            {
+                foreach (var property in ephemeralPropertyDataIds.Where(r => keys.Contains((ushort)r.Key)))
+                {
+                    if (property.Value.HasValue)
+                        results[property.Key] = property.Value.Value;
+                    else
+                        results.Remove(property.Key);
+                }
+            }
+
+            return results;
+        }
+
+        public Dictionary<PropertyFloat, double> GetAllPropertyFloatWhere(HashSet<ushort> keys)
+        {
+            var results = new Dictionary<PropertyFloat, double>();
+
+            BiotaDatabaseLock.EnterReadLock();
+            try
+            {
+                if (Biota.PropertiesFloat != null)
+                {
+                    foreach (var kvp in Biota.PropertiesFloat.Where(r => keys.Contains((ushort)r.Key)))
+                        results[kvp.Key] = kvp.Value;
+                }
+            }
+            finally
+            {
+                BiotaDatabaseLock.ExitReadLock();
+            }
+
+            if (ephemeralPropertyFloats != null)
+            {
+                foreach (var property in ephemeralPropertyFloats.Where(r => keys.Contains((ushort)r.Key)))
+                {
+                    if (property.Value.HasValue)
+                        results[property.Key] = property.Value.Value;
+                    else
+                        results.Remove(property.Key);
+                }
+            }
+
+            return results;
+        }
+
+        public Dictionary<PropertyInstanceId, uint> GetAllPropertyInstanceIdWhere(HashSet<ushort> keys)
+        {
+            var results = new Dictionary<PropertyInstanceId, uint>();
+
+            BiotaDatabaseLock.EnterReadLock();
+            try
+            {
+                if (Biota.PropertiesIID != null)
+                {
+                    foreach (var kvp in Biota.PropertiesIID.Where(r => keys.Contains((ushort)r.Key)))
+                        results[kvp.Key] = kvp.Value;
+                }
+            }
+            finally
+            {
+                BiotaDatabaseLock.ExitReadLock();
+            }
+
+            if (ephemeralPropertyInstanceIds != null)
+            {
+                foreach (var property in ephemeralPropertyInstanceIds.Where(r => keys.Contains((ushort)r.Key)))
+                {
+                    if (property.Value.HasValue)
+                        results[property.Key] = property.Value.Value;
+                    else
+                        results.Remove(property.Key);
+                }
+            }
+
+            return results;
+        }
+
+        public Dictionary<PropertyInt, int> GetAllPropertyIntWhere(HashSet<ushort> keys)
+        {
+            var results = new Dictionary<PropertyInt, int>();
+
+            BiotaDatabaseLock.EnterReadLock();
+            try
+            {
+                if (Biota.PropertiesInt != null)
+                {
+                    foreach (var kvp in Biota.PropertiesInt.Where(r => keys.Contains((ushort)r.Key)))
+                        results[kvp.Key] = kvp.Value;
+                }
+            }
+            finally
+            {
+                BiotaDatabaseLock.ExitReadLock();
+            }
+
+            if (ephemeralPropertyInts != null)
+            {
+                foreach (var property in ephemeralPropertyInts.Where(r => keys.Contains((ushort)r.Key)))
+                {
+                    if (property.Value.HasValue)
+                        results[property.Key] = property.Value.Value;
+                    else
+                        results.Remove(property.Key);
+                }
+            }
+
+            return results;
+        }
+
+        public Dictionary<PropertyInt64, long> GetAllPropertyInt64Where(HashSet<ushort> keys)
+        {
+            var results = new Dictionary<PropertyInt64, long>();
+
+            BiotaDatabaseLock.EnterReadLock();
+            try
+            {
+                if (Biota.PropertiesInt64 != null)
+                {
+                    foreach (var kvp in Biota.PropertiesInt64.Where(r => keys.Contains((ushort)r.Key)))
+                        results[kvp.Key] = kvp.Value;
+                }
+            }
+            finally
+            {
+                BiotaDatabaseLock.ExitReadLock();
+            }
+
+            if (ephemeralPropertyInt64s != null)
+            {
+                foreach (var property in ephemeralPropertyInt64s.Where(r => keys.Contains((ushort)r.Key)))
+                {
+                    if (property.Value.HasValue)
+                        results[property.Key] = property.Value.Value;
+                    else
+                        results.Remove(property.Key);
+                }
+            }
+
+            return results;
+        }
+
+        public Dictionary<PropertyString, string> GetAllPropertyStringWhere(HashSet<ushort> keys)
+        {
+            var results = new Dictionary<PropertyString, string>();
+
+            BiotaDatabaseLock.EnterReadLock();
+            try
+            {
+                if (Biota.PropertiesString != null)
+                {
+                    foreach (var kvp in Biota.PropertiesString.Where(r => keys.Contains((ushort)r.Key)))
+                        results[kvp.Key] = kvp.Value;
+                }
+            }
+            finally
+            {
+                BiotaDatabaseLock.ExitReadLock();
+            }
+
+            if (ephemeralPropertyStrings != null)
+            {
+                foreach (var property in ephemeralPropertyStrings.Where(r => keys.Contains((ushort)r.Key)))
                 {
                     if (property.Value != null)
                         results[property.Key] = property.Value;
@@ -1365,7 +1592,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// The house owned by this player
         /// </summary>
-        public uint? HouseId
+        public virtual uint? HouseId
         {
             get => GetProperty(PropertyDataId.HouseId);
             set { if (!value.HasValue) RemoveProperty(PropertyDataId.HouseId); else SetProperty(PropertyDataId.HouseId, value.Value); }
@@ -2245,7 +2472,7 @@ namespace ACE.Server.WorldObjects
         // ========================================
         //= ======== Position Properties ==========
         // ========================================
-        public Position Location
+        public virtual Position Location
         {
             get => GetPosition(PositionType.Location);
             set => SetPosition(PositionType.Location, value);
@@ -3290,10 +3517,10 @@ namespace ACE.Server.WorldObjects
             set { if (value == null) RemoveProperty(PropertyString.GameplayModeIdentifierString); else SetProperty(PropertyString.GameplayModeIdentifierString, value); }
         }
 
-        public double? ShieldDefense
+        public double? BlockMod
         {
-            get => GetProperty(PropertyFloat.ShieldDefense);
-            set { if (!value.HasValue) RemoveProperty(PropertyFloat.ShieldDefense); else SetProperty(PropertyFloat.ShieldDefense, value.Value); }
+            get => GetProperty(PropertyFloat.BlockMod);
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.BlockMod); else SetProperty(PropertyFloat.BlockMod, value.Value); }
         }
 
         public int? MaxReachedLevel
@@ -3312,6 +3539,24 @@ namespace ACE.Server.WorldObjects
         {
             get => GetProperty(PropertyInt.SlayerAdded);
             set { if (!value.HasValue) RemoveProperty(PropertyInt.SlayerAdded); else SetProperty(PropertyInt.SlayerAdded, value.Value); }
+        }
+
+        public double? NSCoordinates
+        {
+            get => GetProperty(PropertyFloat.NSCoordinates);
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.NSCoordinates); else SetProperty(PropertyFloat.NSCoordinates, value.Value); }
+        }
+
+        public double? EWCoordinates
+        {
+            get => GetProperty(PropertyFloat.EWCoordinates);
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.EWCoordinates); else SetProperty(PropertyFloat.EWCoordinates, value.Value); }
+        }
+
+        public bool UsesWeightAsGeneratorProbabilities
+        {
+            get => GetProperty(PropertyBool.UsesWeightAsGeneratorProbabilities) ?? false;
+            set { if (value == false) RemoveProperty(PropertyBool.UsesWeightAsGeneratorProbabilities); else SetProperty(PropertyBool.UsesWeightAsGeneratorProbabilities, value); }
         }
     }
 }

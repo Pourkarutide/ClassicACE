@@ -9,6 +9,7 @@ using ACE.DatLoader;
 using ACE.DatLoader.FileTypes;
 using ACE.Entity;
 using ACE.Entity.Enum;
+using ACE.Entity.Enum.Properties;
 using ACE.Entity.Models;
 using ACE.Server.Entity;
 using ACE.Server.Managers;
@@ -23,7 +24,15 @@ namespace ACE.Server.WorldObjects
     {
         public Player P_PetOwner;
 
+        public PetDevice P_PetDevice;
+
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        public uint? PetDevice
+        {
+            get => GetProperty(PropertyInstanceId.PetDevice);
+            set { if (value.HasValue) SetProperty(PropertyInstanceId.PetDevice, value.Value); else RemoveProperty(PropertyInstanceId.PetDevice); }
+        }
 
         /// <summary>
         /// A new biota be created taking all of its values from weenie.
@@ -93,6 +102,10 @@ namespace ACE.Server.WorldObjects
             }
 
             player.CurrentActivePet = this;
+
+            petDevice.Pet = Guid.Full;
+            PetDevice = petDevice.Guid.Full;
+            P_PetDevice = petDevice;
 
             if (IsPassivePet)
                 nextSlowTickTime = Time.GetUnixTime();
@@ -172,16 +185,14 @@ namespace ACE.Server.WorldObjects
             {
                 PhysicsObj.update_object();
 
-                UpdatePosition_SyncLocation();
-
-                SendUpdatePosition();
+                UpdatePosition();
             }
 
             if (currentUnixTime >= nextSlowTickTime)
                 SlowTick(currentUnixTime);
         }
 
-        private static readonly double slowTickSeconds = 1.0;
+        private const double slowTickSeconds = 1.0;
         private double nextSlowTickTime;
 
         /// <summary>
@@ -212,8 +223,8 @@ namespace ACE.Server.WorldObjects
         // if the passive pet is between min-max distance to owner,
         // it will turn and start running torwards its owner
 
-        private static readonly float MinDistance = 2.0f;
-        private static readonly float MaxDistance = 192.0f;
+        private const float MinDistance = 2.0f;
+        private const float MaxDistance = 192.0f;
 
         private void StartFollow()
         {
@@ -224,46 +235,45 @@ namespace ACE.Server.WorldObjects
             IsMoving = true;
 
             // broadcast to clients
-            MoveTo(P_PetOwner, RunRate);
-
-            // perform movement on server
-            var mvp = new MovementParameters();
-            mvp.DistanceToObject = MinDistance;
-            mvp.WalkRunThreshold = 0.0f;
-
-            //mvp.UseFinalHeading = true;
-
-            PhysicsObj.MoveToObject(P_PetOwner.PhysicsObj, mvp);
-
-            // prevent snap forward
-            PhysicsObj.UpdateTime = Physics.Common.PhysicsTimer.CurrentTime;
+            MoveTo(P_PetOwner);
         }
 
         /// <summary>
         /// Broadcasts passive pet movement to clients
         /// </summary>
-        public override void MoveTo(WorldObject target, float runRate = 1.0f)
+        public override void MoveTo(WorldObject target, float distanceToObject = 2.0f, float speed = 1.0f, bool clientOnly = false)
         {
             if (!IsPassivePet)
             {
-                base.MoveTo(target, runRate);
+                base.MoveTo(target, distanceToObject, speed, clientOnly);
                 return;
             }
 
             if (MoveSpeed == 0.0f)
-                GetMovementSpeed();
+                UpdateMovementSpeed();
 
             var motion = new Motion(this, target, MovementType.MoveToObject);
 
             motion.MoveToParameters.MovementParameters |= MovementParams.CanCharge;
             motion.MoveToParameters.DistanceToObject = MinDistance;
             motion.MoveToParameters.WalkRunThreshold = 0.0f;
+            motion.MoveToParameters.Speed = speed;
 
             motion.RunRate = RunRate;
 
+            EnqueueBroadcastMotion(motion);
+
+            if (clientOnly)
+                return;
+
             CurrentMotionState = motion;
 
-            EnqueueBroadcastMotion(motion);
+            // prevent initial snap forward
+            if (!PhysicsObj.IsMovingOrAnimating)
+                PhysicsObj.UpdateTime = Physics.Common.PhysicsTimer.CurrentTime;
+
+            var mvp = new MovementParameters(motion);
+            PhysicsObj.MoveToObject(P_PetOwner.PhysicsObj, mvp);
         }
 
         /// <summary>
@@ -282,8 +292,7 @@ namespace ACE.Server.WorldObjects
             if (status != WeenieError.None)
                 return;
 
-            PhysicsObj.CachedVelocity = Vector3.Zero;
-            IsMoving = false;
+            OnMovementStopped();
         }
 
         public static Dictionary<uint, float> PetRadiusCache = new Dictionary<uint, float>();

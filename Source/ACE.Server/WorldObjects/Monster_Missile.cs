@@ -14,7 +14,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// The delay between missile attacks (todo: find actual value)
         /// </summary>
-        public static readonly float MissileDelay = 1.0f;
+        public const float MissileDelay = 1.0f;
 
         /// <summary>
         /// Returns TRUE if monster has physical ranged attacks
@@ -24,43 +24,29 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Starts a monster missile attack
         /// </summary>
-        public void RangeAttack()
+        private void RangeAttack()
         {
-            var target = AttackTarget as Creature;
+            var targetCreature = AttackTarget as Creature;
 
-            if (target == null || !target.IsAlive)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && IsBlockedByDoor(targetCreature))
             {
-                FindNextTarget();
+                EndAttack();
                 return;
             }
 
             var weapon = GetEquippedMissileWeapon();
-            var ammo = GetEquippedAmmo();
-
-            if (weapon == null || weapon.IsAmmoLauncher && ammo == null) return;
-
-            // simulate accuracy bar / allow client rotate to fully complete
-            var actionChain = new ActionChain();
-            //IsTurning = true;
-            //actionChain.AddDelaySeconds(0.5f);
-
-            // do missile attack
-            actionChain.AddAction(this, LaunchMissile);
-            actionChain.EnqueueChain();
-        }
-
-        /// <summary>
-        /// Launches a missile attack from monster to target
-        /// </summary>
-        public void LaunchMissile()
-        {
-            //IsTurning = false;
-
-            var weapon = GetEquippedMissileWeapon();
-            if (weapon == null || AttackTarget == null) return;
+            if (weapon == null)
+            {
+                EndAttack();
+                return;
+            }
 
             var ammo = weapon.IsAmmoLauncher ? GetEquippedAmmo() : weapon;
-            if (ammo == null) return;
+            if (ammo == null)
+            {
+                EndAttack();
+                return;
+            }
 
             var launcher = GetEquippedMissileLauncher();
 
@@ -71,20 +57,12 @@ namespace ACE.Server.WorldObjects
                 SwitchToMeleeAttack();
                 return;
             }*/
-            if (SwitchWeaponsPending || PathfindingPending)
-            {
-                NextAttackTime = Timers.RunningTime + 1.0f;
-                return;
-            }
 
             // should this be called each launch?
             AttackHeight = ChooseAttackHeight();
 
             var dist = GetDistanceToTarget();
             //Console.WriteLine("RangeAttack: " + dist);
-
-            if (DebugMove)
-                Console.WriteLine($"[{Timers.RunningTime}] - {Name} ({Guid}) - LaunchMissile");
 
             var projectileSpeed = GetProjectileSpeed();
 
@@ -108,7 +86,11 @@ namespace ACE.Server.WorldObjects
             // launch projectile
             actionChain.AddAction(this, () =>
             {
-                if (IsDead) return;
+                if (AttackTarget == null || IsDead || targetCreature.IsDead)
+                {
+                    EndAttack();
+                    return;
+                }
 
                 // handle self-procs
                 TryProcEquippedItems(this, this, true, weapon);
@@ -166,6 +148,8 @@ namespace ACE.Server.WorldObjects
             actionChain.AddAction(this, () => EnqueueBroadcast(new GameMessageParentEvent(this, ammo,
                 ACE.Entity.Enum.ParentLocation.RightHand, ACE.Entity.Enum.Placement.RightHandCombat)));
 
+            actionChain.AddAction(this, () => EndAttack());
+
             actionChain.EnqueueChain();
 
             PrevAttackTime = Timers.RunningTime;
@@ -209,65 +193,140 @@ namespace ACE.Server.WorldObjects
             }
             else
             {
-                if (MonsterProjectile_OnCollideEnvironment_Counter > 1 && ThreadSafeRandom.Next(1, 3) != 3)
+                if (MonsterProjectile_OnCollideEnvironment_Counter >= 2 && ThreadSafeRandom.Next(1, 3) != 3)
                 {
                     MonsterProjectile_OnCollideEnvironment_Counter = 0;
 
-                    if (HasMeleeWeapon)
+                    int maxRoll = HasMeleeWeapon ? 3 : 2;
+
+                    var currentUnixTime = Time.GetUnixTime();
+
+                    var roll = ThreadSafeRandom.Next(1, maxRoll);
+                    switch (roll)
                     {
-                        var roll = ThreadSafeRandom.Next(1, 3);
-                        switch (roll)
-                        {
-                            case 1: TrySwitchToMeleeAttack(); break;
-                            case 2: TryPathfind(-45, 45, 2); break;
-                            case 3: MissileCombatMeleeRangeMode = true; break;
-                        }
-                    }
-                    else
-                    {
-                        var roll = ThreadSafeRandom.Next(1, 3);
-                        switch (roll)
-                        {
-                            case 1:
-                            case 2: TryPathfind(-45, 45, 2); break;
-                            case 3: MissileCombatMeleeRangeMode = true; break;
-                        }
+                        case 1:
+                            if (LastWanderTime + MaxWanderFrequency < currentUnixTime && WanderChance > ThreadSafeRandom.Next(0.0f, 1.0f))
+                                TryWandering(-45, 45, 4);
+                            break;
+                        case 2:
+                            if (PathfindingEnabled && Location.Indoors && !LastRouteStartAttemptWasNullRoute)
+                            {
+                                if (LastWanderTime + MaxWanderFrequency < currentUnixTime && WanderChance > ThreadSafeRandom.Next(0.0f, 1.0f))
+                                    TryWandering(160, 200, 5);
+                                TryRoute();
+                            }
+                            else
+                                MissileCombatMeleeRangeMode = true;
+                            break;
+                        case 3: TrySwitchToMeleeAttack(); break;
                     }
                 }
             }
         }
 
-        public bool SwitchWeaponsPending;
+        private bool IsSwitchWeaponsPending = false;
+        private bool IsSwitchingWeapons = false;
+        private CombatType WeaponSwitchType = 0;
+
         public double LastWeaponSwitchTime = 0;
+        private const double MaxSwitchWeaponFrequency = 10;
+
         public bool MissileCombatMeleeRangeMode = false;
 
         public void TrySwitchToMeleeAttack()
         {
-            // 24139 - Invisible Assailant never switches to melee?
-            if (AiAllowedCombatStyle == CombatStyle.StubbornMissile || Visibility) return;
+            if (DebugMove)
+                Console.WriteLine($"{Name} ({Guid}).TrySwitchToMeleeAttack()");
 
-            SwitchWeaponsPending = true;
+            if (IsSwitchingWeapons)
+                return;
 
-            if (NextMoveTime > Timers.RunningTime)
-            {
-                var actionChain = new ActionChain();
-                actionChain.AddDelaySeconds(NextMoveTime - Timers.RunningTime);
-                actionChain.AddAction(this, () => SwitchToMeleeAttack());
-                actionChain.EnqueueChain();
-            }
-            else
-                SwitchToMeleeAttack();
+            IsSwitchWeaponsPending = true;
+            WeaponSwitchType = CombatType.Melee;
         }
 
-        public void SwitchToMeleeAttack()
+        public void TrySwitchToMissileAttack()
         {
-            if (IsDead) return;
+            if (DebugMove)
+                Console.WriteLine($"{Name} ({Guid}).TrySwitchToMissileAttack()");
+
+            if (IsSwitchingWeapons)
+                return;
+
+            IsSwitchWeaponsPending = true;
+            WeaponSwitchType = CombatType.Missile;
+        }
+
+        private void EndSwitchWeapons()
+        {
+            if (DebugMove)
+                Console.WriteLine($"{Name} ({Guid}).EndSwitchWeapons()");
+
+            if (HasPendingMovement)
+                CancelMoveTo(WeenieError.ObjectGone);
+
+            IsSwitchWeaponsPending = false;
+            IsSwitchingWeapons = false;
+
+            WeaponSwitchType = 0;
+        }
+
+        private void SwitchWeapons()
+        {
+            switch (WeaponSwitchType)
+            {
+                case CombatType.Melee:
+                    SwitchToMeleeAttack();
+                    break;
+                case CombatType.Missile:
+                    SwitchToMissileAttack();
+                    break;
+                default:
+                    EndSwitchWeapons();
+                    break;
+            }
+        }
+
+        private void SwitchToMeleeAttack()
+        {
+            if (!MoveReady())
+                return;
+
+            if (DebugMove)
+                Console.WriteLine($"{Name} ({Guid}).SwitchToMeleeAttack()");
+
+            // 24139 - Invisible Assailant never switches to melee?
+            if (AiAllowedCombatStyle == CombatStyle.StubbornMissile || Visibility)
+            {
+                EndSwitchWeapons();
+                return;
+            }
+
+            if (IsSwitchingWeapons)
+                return;
+
+            if (HasPendingMovement)
+                CancelMoveTo(WeenieError.ObjectGone);
+
+            IsSwitchWeaponsPending = false;
+            IsSwitchingWeapons = true;
+
+            if (IsDead || !HasMeleeWeapon)
+            {
+                EndSwitchWeapons();
+                return;
+            }
+
+            CurrentAttackType = null;
 
             var weapon = GetEquippedMissileWeapon();
             var ammo = GetEquippedAmmo();
 
             if (weapon == null && ammo == null)
+            {
+                EndSwitchWeapons();
                 return;
+            }
 
             var actionChain = new ActionChain();
 
@@ -277,7 +336,11 @@ namespace ACE.Server.WorldObjects
 
             actionChain.AddAction(this, () =>
             {
-                if (IsDead) return;
+                if (IsDead)
+                {
+                    EndSwitchWeapons();
+                    return;
+                }
 
                 if (weapon != null)
                 {
@@ -301,7 +364,11 @@ namespace ACE.Server.WorldObjects
 
                 innerChain.AddAction(this, () =>
                 {
-                    if (IsDead) return;
+                    if (IsDead)
+                    {
+                        EndSwitchWeapons();
+                        return;
+                    }
 
                     //DoAttackStance();
 
@@ -318,9 +385,6 @@ namespace ACE.Server.WorldObjects
 
                     // end inline
 
-                    ResetAttack();
-
-                    SwitchWeaponsPending = false;
                     LastWeaponSwitchTime = Time.GetUnixTime();
 
                     // this is an unfortunate hack to fix the following scenario:
@@ -338,28 +402,42 @@ namespace ACE.Server.WorldObjects
 
                 });
                 innerChain.EnqueueChain();
+
+                if (PathfindingEnabled && Location.Indoors && AttackTarget != null)
+                {
+                    if (!IsMeleeVisible(AttackTarget, true))
+                        TryRoute();
+                }
+
+                EndSwitchWeapons();
             });
             actionChain.EnqueueChain();
         }
 
-        public void TrySwitchToMissileAttack()
+        private void SwitchToMissileAttack()
         {
-            SwitchWeaponsPending = true;
+            if (!MoveReady())
+                return;
 
-            if (NextMoveTime > Timers.RunningTime)
+            if (DebugMove)
+                Console.WriteLine($"{Name} ({Guid}).SwitchToMissileAttack()");
+
+            if (IsSwitchingWeapons)
+                return;
+
+            if (HasPendingMovement)
+                CancelMoveTo(WeenieError.ObjectGone);
+
+            IsSwitchWeaponsPending = false;
+            IsSwitchingWeapons = true;
+
+            if (IsDead || !HasRangedWeapon)
             {
-                var actionChain = new ActionChain();
-                actionChain.AddDelaySeconds(NextMoveTime - Timers.RunningTime);
-                actionChain.AddAction(this, () => SwitchToMissileAttack());
-                actionChain.EnqueueChain();
+                EndSwitchWeapons();
+                return;
             }
-            else
-                SwitchToMissileAttack();
-        }
 
-        public void SwitchToMissileAttack()
-        {
-            if (IsDead) return;
+            CurrentAttackType = null;
 
             var weapon = GetEquippedMeleeWeapon();
             var shield = GetEquippedShield();
@@ -372,7 +450,11 @@ namespace ACE.Server.WorldObjects
 
             actionChain.AddAction(this, () =>
             {
-                if (IsDead) return;
+                if (IsDead)
+                {
+                    EndSwitchWeapons();
+                    return;
+                }
 
                 if (weapon != null)
                 {
@@ -396,7 +478,11 @@ namespace ACE.Server.WorldObjects
 
                 innerChain.AddAction(this, () =>
                 {
-                    if (IsDead) return;
+                    if (IsDead)
+                    {
+                        EndSwitchWeapons();
+                        return;
+                    }
 
                     //DoAttackStance();
 
@@ -413,9 +499,6 @@ namespace ACE.Server.WorldObjects
 
                     // end inline
 
-                    ResetAttack();
-
-                    SwitchWeaponsPending = false;
                     LastWeaponSwitchTime = Time.GetUnixTime();
 
                     // this is an unfortunate hack to fix the following scenario:
@@ -433,6 +516,14 @@ namespace ACE.Server.WorldObjects
 
                 });
                 innerChain.EnqueueChain();
+
+                if (PathfindingEnabled && Location.Indoors && AttackTarget != null)
+                {
+                    if (!IsDirectVisible(AttackTarget, true) || GetDistanceToTarget() > GetMaxMissileRange())
+                        TryRoute();
+                }
+
+                EndSwitchWeapons();
             });
             actionChain.EnqueueChain();
         }

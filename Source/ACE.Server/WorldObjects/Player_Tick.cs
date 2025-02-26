@@ -17,8 +17,6 @@ using ACE.Server.Network.Sequence;
 using ACE.Server.Network.Structure;
 using ACE.Server.Physics;
 using ACE.Server.Physics.Common;
-using Google.Protobuf.WellKnownTypes;
-using Newtonsoft.Json.Linq;
 
 namespace ACE.Server.WorldObjects
 {
@@ -37,6 +35,9 @@ namespace ACE.Server.WorldObjects
 
         private double leyLineAmuletsTickTimestamp;
         private const double leyLineAmuletsTickInterval = 1800;
+
+        private double vitaeTickTimestamp;
+        private const double vitaeTickInterval = 300;
 
         private double enchantmentTickTimestamp;
         private const double enchantmentTickInterval = 0.5;
@@ -122,7 +123,20 @@ namespace ACE.Server.WorldObjects
                 leyLineAmuletsTickTimestamp = Time.GetFutureUnixTime(leyLineAmuletsTickInterval);
             }
 
-            if(PvPInciteTickTimestamp == 0)
+            if (currentUnixTime > vitaeTickTimestamp)
+            {
+                var vitae = EnchantmentManager.GetVitae();
+
+                if (vitae != null)
+                {
+                    ReduceVitae(1);
+                    VitaeDecayTimestamp = currentUnixTime;
+                }
+
+                vitaeTickTimestamp = Time.GetFutureUnixTime(vitaeTickInterval);
+            }
+
+            if (PvPInciteTickTimestamp == 0)
                 PvPInciteTickTimestamp = Time.GetFutureUnixTime(PvPInciteInitialDelay);
             else if (currentUnixTime > PvPInciteTickTimestamp)
             {
@@ -392,7 +406,7 @@ namespace ACE.Server.WorldObjects
                 if (elapsedSeconds >= 1) // Yea, that ain't good....
                     log.Warn($"[PERFORMANCE][PHYSICS] {Guid}:{Name} took {(elapsedSeconds * 1000):N1} ms to process UpdateObjectPhysics() at loc: {Location}");
                 else if (elapsedSeconds >= 0.010)
-                    log.Debug($"[PERFORMANCE][PHYSICS] {Guid}:{Name} took {(elapsedSeconds * 1000):N1} ms to process UpdateObjectPhysics() at loc: {Location}");
+                    log.DebugFormat("[PERFORMANCE][PHYSICS] {0}:{1} took {2:N1} ms to process UpdateObjectPhysics() at loc: {3}", Guid, Name, (elapsedSeconds * 1000), Location);
             }
         }
 
@@ -685,7 +699,7 @@ namespace ACE.Server.WorldObjects
                     if (elapsedSeconds >= 0.100) // Yea, that ain't good....
                         log.Warn($"[PERFORMANCE][PHYSICS] {Guid}:{Name} took {(elapsedSeconds * 1000):N1} ms to process UpdatePlayerPosition() at loc: {Location}");
                     else if (elapsedSeconds >= 0.010)
-                        log.Debug($"[PERFORMANCE][PHYSICS] {Guid}:{Name} took {(elapsedSeconds * 1000):N1} ms to process UpdatePlayerPosition() at loc: {Location}");
+                        log.DebugFormat("[PERFORMANCE][PHYSICS] {0}:{1} took {2:N1} ms to process UpdatePlayerPosition() at loc: {3}", Guid, Name, (elapsedSeconds * 1000), Location);
                 }
             }
         }
@@ -833,14 +847,14 @@ namespace ACE.Server.WorldObjects
                 if (PropertyManager.GetBool("bz_snitch_hcpk_top10").Item)
                 {
                     possiblePlayers =
-                        PlayerManager
-                        .FindAllByGameplayMode(GameplayMode)
-                        .Where(x => x is Player) // Filter by online
-                        .Cast<Player>()
-                        .Where(p => !p.IsOvertlyPlussed)
-                        .OrderByDescending(x => x.GetProperty(PropertyInt64.TotalExperience) ?? 0)
-                        .Take(15)
-                        .ToList();
+                       PlayerManager
+                       .FindAllByGameplayMode(GameplayMode)
+                       .Where(x => x is Player) // Filter by online
+                       .Cast<Player>()
+                       .Where(p => !p.IsOvertlyPlussed)
+                       .OrderByDescending(x => x.GetProperty(PropertyInt64.TotalExperience) ?? 0)
+                       .Take(15)
+                       .ToList();
                 }
                 else
                     possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid &&
@@ -849,7 +863,7 @@ namespace ACE.Server.WorldObjects
                     e.Level <= Level + 5 && e.Account.AccessLevel == 0).ToList();
             }
             else
-                possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && !e.IsOvertlyPlussed && e.Level.HasValue && Math.Abs(e.Level.Value - Level.Value) < levelDifference).ToList();
+                possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && e.Account.AccessLevel == 0 && e.Level.HasValue && Math.Abs(e.Level.Value - Level.Value) < levelDifference && !e.IsOvertlyPlussed).ToList();
 
             if (possiblePlayers.Count() > 0)
             {
@@ -887,7 +901,7 @@ namespace ACE.Server.WorldObjects
 
             foreach (var item in EquippedObjects.Values)
             {
-                if (!item.IsAffecting)
+                if (!item.IsAffecting && Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                     continue;
 
                 if (item.ItemCurMana == null || item.ItemMaxMana == null || item.ManaRate == null)
@@ -908,9 +922,32 @@ namespace ACE.Server.WorldObjects
                 if (manaToBurn > item.ItemCurMana)
                     manaToBurn = item.ItemCurMana.Value;
 
-                item.ItemCurMana -= manaToBurn;
-
                 item.ItemManaRateAccumulator -= manaToBurn;
+
+                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                {
+                    if (!item.IsAffecting)
+                    {
+                        if (CanActivateItemSpells(item, true))
+                        {
+                            Session.Network.EnqueueSend(new GameMessageSystemChat($"You now meet the requirements to activate the {item.NameWithMaterial}!", ChatMessageType.Magic));
+                            ActivateItemSpells(item);
+                        }
+                        continue;
+                    }
+                    else
+                    {
+                        var result = item.CheckUseRequirements(this, true);
+                        if (!result.Success)
+                        {
+                            Session.Network.EnqueueSend(new GameMessageSystemChat($"You no longer meet the requirements to activate the {item.NameWithMaterial}!", ChatMessageType.Magic));
+                            DeactivateItemSpells(item);
+                            continue;
+                        }
+                    }
+                }
+
+                item.ItemCurMana -= manaToBurn;
 
                 if (item.ItemCurMana > 0)
                     CheckLowMana(item, burnRate);
@@ -932,7 +969,7 @@ namespace ACE.Server.WorldObjects
             }
             if (!item.ItemManaDepletionMessage)
             {
-                Session.Network.EnqueueSend(new GameMessageSystemChat($"Your {item.Name} is low on Mana.", ChatMessageType.Magic));
+                Session.Network.EnqueueSend(new GameMessageSystemChat($"Your {item.NameWithMaterial} is low on Mana.", ChatMessageType.Magic));
                 item.ItemManaDepletionMessage = true;
             }
             return true;
@@ -940,7 +977,7 @@ namespace ACE.Server.WorldObjects
 
         private void HandleManaDepleted(WorldObject item)
         {
-            var msg = new GameMessageSystemChat($"Your {item.Name} is out of Mana.", ChatMessageType.Magic);
+            var msg = new GameMessageSystemChat($"Your {item.NameWithMaterial} is out of Mana.", ChatMessageType.Magic);
             var sound = new GameMessageSound(Guid, Sound.ItemManaDepleted);
             Session.Network.EnqueueSend(msg, sound);
 
@@ -949,17 +986,11 @@ namespace ACE.Server.WorldObjects
             // doing a delay here to prevent 'SpellExpired' sounds from overlapping with 'ItemManaDepleted'
             var actionChain = new ActionChain();
             actionChain.AddDelaySeconds(2.0f);
-            actionChain.AddAction(this, () =>
-            {
-                foreach (var spellId in item.Biota.GetKnownSpellsIds(item.BiotaDatabaseLock))
-                    RemoveItemSpell(item, (uint)spellId);
-            });
+            actionChain.AddAction(this, () => DeactivateItemSpells(item));
             actionChain.EnqueueChain();
-
-            item.OnSpellsDeactivated();
         }
 
-        public override void HandleMotionDone(uint motionID, bool success)
+        public override void OnMotionDone(uint motionID, bool success)
         {
             //Console.WriteLine($"{Name}.HandleMotionDone({(MotionCommand)motionID}, {success})");
 

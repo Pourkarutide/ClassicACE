@@ -63,6 +63,35 @@ namespace ACE.Entity
             Rotation = Quaternion.CreateFromYawPitchRoll(0, 0, (float)Math.Atan2(-dir.X, dir.Y));
         }
 
+        public void Rotate(float yaw, float pitch = 0, float roll = 0)
+        {
+            var yawRadians = (float)(Math.PI / 180) * yaw;
+            var pitchRadians = (float)(Math.PI / 180) * pitch;
+            var rollRadians = (float)(Math.PI / 180) * roll;
+
+            var rotateYaw = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, yawRadians);
+            var rotatePitch = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitchRadians);
+            var rotateRoll = Quaternion.CreateFromAxisAngle(Vector3.UnitY, rollRadians);
+            Rotation = Quaternion.Normalize(Rotation * rotateYaw * rotatePitch * rotateRoll);
+        }
+
+        public void SetRotation(float yaw, float pitch = 0, float roll = 0)
+        {
+            var yawRadians = (float)(Math.PI / 180) * yaw;
+            var pitchRadians = (float)(Math.PI / 180) * pitch;
+            var rollRadians = (float)(Math.PI / 180) * roll;
+
+            var rotateYaw = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, yawRadians);
+            var rotatePitch = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitchRadians);
+            var rotateRoll = Quaternion.CreateFromAxisAngle(Vector3.UnitY, rollRadians);
+            Rotation = Quaternion.Normalize(rotateYaw * rotatePitch * rotateRoll);
+        }
+
+        public void Translate(float x, float y, float z)
+        {
+            SetPosition(Pos + new Vector3(x, y, z));
+        }
+
         // TODO: delete this, use proper Vector3 and Quaternion
         public float PositionX { get; set; }
         public float PositionY { get; set; }
@@ -108,7 +137,7 @@ namespace ACE.Entity
             var bumpHeight = 0.05f;
             if (rotate180)
             {
-                var rotate = new Quaternion(0, 0, qz, qw) * Quaternion.CreateFromYawPitchRoll(0, 0, (float)Math.PI);
+                var rotate = new Quaternion(0, 0, qz, qw) * Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)Math.PI);
                 return new Position(LandblockId.Raw, PositionX + dx, PositionY + dy, PositionZ + bumpHeight, 0f, 0f, rotate.Z, rotate.W);
             }
             else
@@ -118,9 +147,9 @@ namespace ACE.Entity
         /// <summary>
         /// Handles the Position crossing over landblock boundaries
         /// </summary>
-        public bool SetLandblock()
+        public bool SetLandblock(bool force = false)
         {
-            if (Indoors) return false;
+            if (Indoors && !force) return false;
 
             var changedBlock = false;
 
@@ -186,9 +215,9 @@ namespace ACE.Entity
         /// <summary>
         /// Determines the outdoor landcell for current position
         /// </summary>
-        public bool SetLandCell()
+        public bool SetLandCell(bool force = false)
         {
-            if (Indoors) return false;
+            if (Indoors && !force) return false;
 
             var cellX = (uint)PositionX / CellLength;
             var cellY = (uint)PositionY / CellLength;
@@ -508,9 +537,9 @@ namespace ACE.Entity
             return $"0x{LandblockId.Raw:X8}, {PositionX:F6}, {PositionY:F6}, {PositionZ:F6}, {RotationW:F6}, {RotationX:F6}, {RotationY:F6}, {RotationZ:F6}";
         }
 
-        public static readonly int BlockLength = 192;
-        public static readonly int CellSide = 8;
-        public static readonly int CellLength = 24;
+        public const int BlockLength = 192;
+        public const int CellSide = 8;
+        public const int CellLength = 24;
 
         public bool Equals(Position p)
         {

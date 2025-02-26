@@ -49,6 +49,9 @@ namespace ACE.Server.WorldObjects
         {
             var strength = Attributes[PropertyAttribute.Strength].Current;
 
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                strength += 40;
+
             return (int)((150 * strength) + (AugmentationIncreasedCarryingCapacity * 30 * strength));
         }
 
@@ -95,7 +98,7 @@ namespace ACE.Server.WorldObjects
             if (!TryAddToInventory(ref item, out container, 0, false, true, allowStacking)) // We don't have enough burden available or no empty pack slot.
                 return false;
 
-            if(allowStacking && item.StackSize != currentStackSize)
+            if (allowStacking && item.StackSize != currentStackSize)
             {
                 // We've been merged.
                 item.EnqueueBroadcast(new GameMessageSetStackSize(item));
@@ -204,7 +207,7 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
-            DatabaseManager.Shard.SaveBiotasInParallel(biotas, result => { });
+            DatabaseManager.Shard.SaveBiotasInParallel(biotas, null);
         }
 
         public enum RemoveFromInventoryAction
@@ -274,6 +277,10 @@ namespace ACE.Server.WorldObjects
             // do the appropriate combat stance shuffling, based on the item types
             // todo: instead of switching the weapon immediately, the weapon should be swapped in the middle of the animation chain
 
+            // todo: find better / more appropriate logic for this
+            // should this be based on something else, such as CombatUse?
+            if ((wieldedLocation & EquipMask.Selectable) == 0) return;
+
             if (CombatMode != CombatMode.NonCombat && CombatMode != CombatMode.Undef)
             {
                 switch (wieldedLocation)
@@ -334,7 +341,7 @@ namespace ACE.Server.WorldObjects
             {
                 var leyLineAmulet = item as LeyLineAmulet;
                 if (leyLineAmulet != null)
-                    leyLineAmulet.OnEquip(this);
+                    leyLineAmulet.OnActivate(this);
             }
 
             // check activation requirements
@@ -378,6 +385,40 @@ namespace ACE.Server.WorldObjects
             }
 
             return true;
+        }
+
+        public override bool CanActivateItemSpells(WorldObject item, bool silent = false)
+        {
+            if (item.ItemCurMana > 0 || item.WeenieType == WeenieType.LeyLineAmulet)
+            {
+                // check activation requirements
+                var result = item.CheckUseRequirements(this, silent);
+
+                if (!result.Success)
+                {
+                    if (result.Message != null)
+                        Session.Network.EnqueueSend(result.Message);
+
+                    return false;
+                }
+
+                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                {
+                    if (item is LeyLineAmulet leyLineAmulet)
+                        leyLineAmulet.OnActivate(this);
+                }
+
+                // handle special case
+                if (item.ItemCurMana == 1)
+                {
+                    item.ItemCurMana = 0;
+                    return false;
+                }
+
+                return true;
+            }
+            else
+                return false;
         }
 
         public enum DequipObjectAction
@@ -499,17 +540,17 @@ namespace ACE.Server.WorldObjects
         [Flags]
         public enum SearchLocations
         {
-            None                = 0x00,
-            MyInventory         = 0x01,
-            MyEquippedItems     = 0x02,
-            Landblock           = 0x04,
-            LastUsedContainer   = 0x08,
-            WieldedByOther      = 0x10,
-            TradedByOther       = 0x20,
-            ObjectsKnownByMe    = 0x40,
-            LastUsedHook        = 0x80,
-            LocationsICanMove   = MyInventory | MyEquippedItems | Landblock | LastUsedContainer,
-            Everywhere          = 0xFF
+            None = 0x00,
+            MyInventory = 0x01,
+            MyEquippedItems = 0x02,
+            Landblock = 0x04,
+            LastUsedContainer = 0x08,
+            WieldedByOther = 0x10,
+            TradedByOther = 0x20,
+            ObjectsKnownByMe = 0x40,
+            LastUsedHook = 0x80,
+            LocationsICanMove = MyInventory | MyEquippedItems | Landblock | LastUsedContainer,
+            Everywhere = 0xFF
         }
 
         public WorldObject FindObject(uint objectGuid, SearchLocations searchLocations)
@@ -901,6 +942,13 @@ namespace ACE.Server.WorldObjects
                     return false;
                 }
 
+                if (itemRootOwner == this && item is PetDevice petDevice && petDevice.Pet is not null)
+                {
+                    Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, "You must unsummon your pet before you can transfer this item!"));
+                    Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, itemGuid, WeenieError.None));
+                    return false;
+                }
+
                 if (containerRootOwner != null && !containerRootOwner.IsOpen)
                 {
                     Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, itemGuid, WeenieError.TheContainerIsClosed));
@@ -1132,7 +1180,7 @@ namespace ACE.Server.WorldObjects
 
                                 if (isFromAPlayerCorpse)
                                 {
-                                    log.Debug($"[CORPSE] {Name} (0x{Guid}) picked up {item.Name} (0x{item.Guid}) from {itemRootOwner.Name} (0x{itemRootOwner.Guid})");
+                                    log.DebugFormat("[CORPSE] {0} (0x{1}) picked up {2} (0x{3}) from {4} (0x{5})", Name, Guid, item.Name, item.Guid, itemRootOwner.Name, itemRootOwner.Guid);
                                     item.SaveBiotaToDatabase();
                                 }
                             }
@@ -1294,7 +1342,11 @@ namespace ACE.Server.WorldObjects
                 var itemFoundOnMyCorpse = itemFoundOnCorpse && (itemRootOwner.VictimId == Guid.Full);
                 if (item.GeneratorId != null || (itemFoundOnCorpse && !itemFoundOnMyCorpse)) // item is controlled by a generator or is on a corpse that is not my own
                 {
-                    if (QuestManager.CanSolve(item.Quest))
+                    if (GameplayMode == GameplayModes.Limbo && (item.Quest == "SkillForgetfulnessGemPickedUp" || item.Quest == "SkillEnlightenmentGemPickedUp" || item.Quest == "AttributeLoweringGemPickedUp" || item.Quest == "AttributeRaisingGemPickedUp" || item.Quest == "SkillPrimaryGemPickedUp" || item.Quest == "SkillSecondaryGemPickedUp"))
+                    {
+                        questSolve = false;
+                    }
+                    else if (QuestManager.CanSolve(item.Quest))
                     {
                         questSolve = true;
                     }
@@ -1406,7 +1458,7 @@ namespace ACE.Server.WorldObjects
             if (prevContainer != null && !prevContainer.Stuck && container != prevContainer)
                 item.SaveBiotaToDatabase();
 
-            if(itemWasEquipped && (item.WeenieType == WeenieType.Ammunition || item.WeenieType == WeenieType.Missile) && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            if (itemWasEquipped && (item.WeenieType == WeenieType.Ammunition || item.WeenieType == WeenieType.Missile) && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
                 Session.Network.EnqueueSend(new GameMessagePrivateUpdatePropertyInt(this, PropertyInt.EncumbranceVal, EncumbranceVal ?? 0));
 
             Session.Network.EnqueueSend(
@@ -1443,6 +1495,13 @@ namespace ACE.Server.WorldObjects
             if (item.IsAttunedOrContainsAttuned)
             {
                 Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, itemGuid, WeenieError.AttunedItem));
+                return;
+            }
+
+            if (item is PetDevice petDevice && petDevice.Pet is not null)
+            {
+                Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, "You must unsummon your pet before you can drop this item!"));
+                Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, itemGuid, WeenieError.None));
                 return;
             }
 
@@ -1548,6 +1607,18 @@ namespace ACE.Server.WorldObjects
             }
             item.Ethereal = ethereal;
 
+            if (item.Ethereal == null)
+            {
+                var defaultPhysicsState = (PhysicsState)(item.GetProperty(PropertyInt.PhysicsState) ?? 0);
+
+                if (defaultPhysicsState.HasFlag(PhysicsState.Ethereal))
+                    item.Ethereal = true;
+                else
+                    item.Ethereal = false;
+            }
+
+            item.EnqueueBroadcastPhysicsState();
+
             return true;
         }
 
@@ -1563,13 +1634,12 @@ namespace ACE.Server.WorldObjects
         {
             //Console.WriteLine($"{Name}.HandleActionGetAndWieldItem({itemGuid:X8}, {wieldedLocation})");
 
-            // todo fix this, it seems IsAnimating is always true for a player
-            // todo we need to know when a player is busy to avoid additional actions during that time
-            /*if (IsAnimating)
+            if (IsBusy || suicideInProgress)
             {
-                Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, WeenieError.YoureTooBusy));
+                Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
+                Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, itemGuid));
                 return;
-            }*/
+            }
 
             var item = FindObject(new ObjectGuid(itemGuid), SearchLocations.LocationsICanMove, out var fromContainer, out var rootOwner, out var wasEquipped);
 
@@ -1671,7 +1741,7 @@ namespace ACE.Server.WorldObjects
 
                             if (isFromAPlayerCorpse)
                             {
-                                log.Debug($"[CORPSE] {Name} (0x{Guid}) picked up and wielded {item.Name} (0x{item.Guid}) from {rootOwner.Name} (0x{rootOwner.Guid})");
+                                log.DebugFormat("[CORPSE] {0} (0x{1}) picked up and wielded {2} (0x{3}) from {4} (0x{5})", Name, Guid, item.Name, item.Guid, rootOwner.Name, rootOwner.Guid);
                                 item.SaveBiotaToDatabase();
                             }
                         }
@@ -1714,7 +1784,7 @@ namespace ACE.Server.WorldObjects
             {
                 WorldObject equippedWeapon;
 
-                if(wieldedLocation == EquipMask.Shield)
+                if (wieldedLocation == EquipMask.Shield)
                     equippedWeapon = GetEquippedMeleeWeapon(true);
                 else
                     equippedWeapon = GetDualWieldWeapon();
@@ -1744,7 +1814,7 @@ namespace ACE.Server.WorldObjects
                     }
                 }
                 else // Unwield wand/missile launcher/two-handed if dual wielding
-                {                  
+                {
                     if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration)
                     {
                         Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, item.Guid.Full));
@@ -1849,8 +1919,8 @@ namespace ACE.Server.WorldObjects
             // verify Aetheria slot, client doesn't handle this
             if ((wieldedLocation & EquipMask.Sigil) != 0)
             {
-                if (wieldedLocation.HasFlag(EquipMask.SigilOne)   && !AetheriaFlags.HasFlag(AetheriaBitfield.Blue) ||
-                    wieldedLocation.HasFlag(EquipMask.SigilTwo)   && !AetheriaFlags.HasFlag(AetheriaBitfield.Yellow) ||
+                if (wieldedLocation.HasFlag(EquipMask.SigilOne) && !AetheriaFlags.HasFlag(AetheriaBitfield.Blue) ||
+                    wieldedLocation.HasFlag(EquipMask.SigilTwo) && !AetheriaFlags.HasFlag(AetheriaBitfield.Yellow) ||
                     wieldedLocation.HasFlag(EquipMask.SigilThree) && !AetheriaFlags.HasFlag(AetheriaBitfield.Red))
                 {
                     Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, item.Guid.Full));
@@ -2001,7 +2071,7 @@ namespace ACE.Server.WorldObjects
                         {
                             if (mainhand != null)
                             {
-                                if(mainhand.IsCaster || mainhand.IsAmmoLauncher)
+                                if (mainhand.IsCaster || mainhand.IsAmmoLauncher)
                                 {
                                     if (item.Mass > 140)
                                         return false;
@@ -2242,6 +2312,12 @@ namespace ACE.Server.WorldObjects
             if (IsOlthoiPlayer)
             {
                 if (heritageSpecificArmor == null || (HeritageGroup)heritageSpecificArmor != HeritageGroup)
+                    return WeenieError.HeritageRequiresSpecificArmor;
+            }
+            else if (IsGearKnightPlayer)
+            {
+                if (((item.ValidLocations & (EquipMask.Clothing | EquipMask.Armor)) != 0)
+                    && (heritageSpecificArmor == null || (HeritageGroup)heritageSpecificArmor != HeritageGroup))
                     return WeenieError.HeritageRequiresSpecificArmor;
             }
             else
@@ -2494,7 +2570,7 @@ namespace ACE.Server.WorldObjects
                 Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, stackId));
                 return;
             }
-            
+
             ItemType containerValidTypes = (ItemType)(container.MerchandiseItemTypes ?? 0);
             if (containerValidTypes != 0 && (stack.ItemType & containerValidTypes) == 0)
             {
@@ -2503,7 +2579,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if ((stackRootOwner == this && containerRootOwner != this)  || (stackRootOwner != this && containerRootOwner == this)) // Movement is between the player and the world
+            if ((stackRootOwner == this && containerRootOwner != this) || (stackRootOwner != this && containerRootOwner == this)) // Movement is between the player and the world
             {
                 if (stackRootOwner is Vendor)
                 {
@@ -3239,7 +3315,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if ((sourceStackRootOwner == this && targetStackRootOwner != this)  || (sourceStackRootOwner != this && targetStackRootOwner == this)) // Movement is between the player and the world
+            if ((sourceStackRootOwner == this && targetStackRootOwner != this) || (sourceStackRootOwner != this && targetStackRootOwner == this)) // Movement is between the player and the world
             {
                 if (sourceStackRootOwner is Vendor)
                 {
@@ -3444,7 +3520,8 @@ namespace ACE.Server.WorldObjects
 
             if (isFromAPlayerCorpse)
             {
-                log.Debug($"[CORPSE] {Name} (0x{Guid}) merged {amount:N0} {(sourceStack.IsDestroyed ? $"which resulted in the destruction" : $"leaving behind {sourceStack.StackSize:N0}")} of {sourceStack.Name} (0x{sourceStack.Guid}) to {targetStack.Name} (0x{targetStack.Guid}) from {sourceStackRootOwner.Name} (0x{sourceStackRootOwner.Guid})");
+                if (log.IsDebugEnabled)
+                    log.Debug($"[CORPSE] {Name} (0x{Guid}) merged {amount:N0} {(sourceStack.IsDestroyed ? $"which resulted in the destruction" : $"leaving behind {sourceStack.StackSize:N0}")} of {sourceStack.Name} (0x{sourceStack.Guid}) to {targetStack.Name} (0x{targetStack.Guid}) from {sourceStackRootOwner.Name} (0x{sourceStackRootOwner.Guid})");
                 targetStack.SaveBiotaToDatabase();
             }
 
@@ -3538,6 +3615,13 @@ namespace ACE.Server.WorldObjects
         {
             if (item.IsAttunedOrContainsAttuned)
             {
+                Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, item.Guid.Full, WeenieError.AttunedItem));
+                return;
+            }
+
+            if (item is PetDevice petDevice && petDevice.Pet is not null)
+            {
+                Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, "You must unsummon your pet before you can transfer this item!"));
                 Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, item.Guid.Full, WeenieError.AttunedItem));
                 return;
             }
@@ -3666,6 +3750,13 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            if (item is PetDevice petDevice && petDevice.Pet is not null)
+            {
+                Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, "You must unsummon your pet before you can transfer this item!"));
+                Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, item.Guid.Full, WeenieError.AttunedItem));
+                return;
+            }
+
             if (IsOlthoiPlayer && target.CreatureType != ACE.Entity.Enum.CreatureType.Olthoi)
             {
                 Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, item.Guid.Full));
@@ -3690,6 +3781,16 @@ namespace ACE.Server.WorldObjects
             {
                 if (acceptAll || (emoteResult.Category == EmoteCategory.Give && target.AllowGive))
                 {
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && !acceptAll && item.MaxStructure.HasValue && item.Structure < item.MaxStructure)
+                    {
+                        if (item.ItemType == ItemType.TinkeringMaterial)
+                            Session.Network.EnqueueSend(new GameMessageSystemChat($"{target.Name} is not interested in partial bags of {item.NameWithMaterial.Substring(0, item.NameWithMaterial.LastIndexOf(' '))}.", ChatMessageType.Broadcast));
+                        else
+                            Session.Network.EnqueueSend(new GameMessageSystemChat($"{target.Name} is not interested in the {item.NameWithMaterial} as it is partially used up.", ChatMessageType.Broadcast));
+                        Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, item.Guid.Full, WeenieError.TradeAiRefuseEmote));
+                        return;
+                    }
+
                     // for NPCs that accept items with EmoteCategory.Give,
                     // if stacked item, only give 1, ignoring amount indicated, unless they are AiAcceptEverything in which case, take full amount indicated
                     if (RemoveItemForGive(item, itemFoundInContainer, itemWasEquipped, itemRootOwner, acceptAll ? amount : 1, out WorldObject itemToGive))
@@ -3705,7 +3806,11 @@ namespace ACE.Server.WorldObjects
                         Session.Network.EnqueueSend(new GameMessageSystemChat($"You give {target.Name} {stackMsg}{itemName}.", ChatMessageType.Broadcast));
                         target.EnqueueBroadcast(new GameMessageSound(target.Guid, Sound.ReceiveItem));
 
-                        target.EmoteManager.ExecuteEmoteSet(emoteResult, this);
+                        var campBonus = 1.0f;
+                        if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                            CampManager.HandleCampInteraction(itemToGive.WeenieClassId ^ 0xFFFF0000, null, 1, out campBonus, out _, out _);
+
+                        target.EmoteManager.ExecuteEmoteSet(emoteResult, this, false, campBonus);
 
                         itemToGive.Destroy();
                     }
@@ -3728,7 +3833,7 @@ namespace ACE.Server.WorldObjects
             else
             {
                 if (item.WeenieType == WeenieType.Deed && target.AllowGive && target.AiAcceptEverything) // http://acpedia.org/wiki/Housing_FAQ#House_deeds
-                {                    
+                {
                     var stackSize = item.StackSize ?? 1;
 
                     var stackMsg = stackSize != 1 ? $"{stackSize} " : "";
@@ -3778,7 +3883,7 @@ namespace ACE.Server.WorldObjects
                     {
                         var success = uint.TryParse(split[0], out var wcid);
 
-                        //Console.WriteLine($"{success.ToString()} {wcid}");
+                        //Console.WriteLine($"{success} {wcid}");
 
                         Session.Network.EnqueueSend(new GameEventTell(target, "Ahh, an IOU! You know, I collect these for some reason. Let me see if I have something for it somewhere in my pack...", this, ChatMessageType.Tell));
 
@@ -3805,7 +3910,7 @@ namespace ACE.Server.WorldObjects
                                     if (PropertyManager.GetBool("player_receive_immediate_save").Item)
                                         RushNextPlayerSave(5);
 
-                                    log.Debug($"[IOU] {Name} (0x{Guid}) traded in a IOU (0x{iouToTurnIn.Guid}) for {wcid} which became {item.Name} (0x{item.Guid}).");
+                                    log.DebugFormat("[IOU] {0} (0x{1}) traded in a IOU (0x{2}) for {3} which became {4} (0x{5}).", Name, Guid, iouToTurnIn.Guid, wcid, item.Name, item.Guid);
                                 }
                                 return;
                             }
@@ -3996,8 +4101,8 @@ namespace ACE.Server.WorldObjects
             Prev_PutItemInContainer[1] = Prev_PutItemInContainer[0];
             Prev_PutItemInContainer[0] = new PutItemInContainerEvent(itemGuid, containerGuid, placement);
         }
-        
-        public void GiveFromEmote(WorldObject emoter, uint weenieClassId, int amount = 1, int palette = 0, float shade = 0)
+
+        public void GiveFromEmote(WorldObject emoter, uint weenieClassId, int amount = 1, int palette = 0, float shade = 0, string extraMessage = "")
         {
             if (emoter is null || weenieClassId == 0)
             {
@@ -4060,7 +4165,7 @@ namespace ACE.Server.WorldObjects
                     if (shade > 0)
                         item.Shade = shade;
 
-                    TryCreateForGive(emoter, item);
+                    TryCreateForGive(emoter, item, extraMessage);
                 }
             }
             else
@@ -4070,12 +4175,12 @@ namespace ACE.Server.WorldObjects
                 if (PropertyManager.GetBool("iou_trades").Item)
                 {
                     var item = PlayerFactory.CreateIOU(weenieClassId);
-                    TryCreateForGive(emoter, item);
+                    TryCreateForGive(emoter, item, extraMessage);
                 }
             }
         }
 
-        public bool TryCreateForGive(WorldObject giver, WorldObject itemBeingGiven)
+        public bool TryCreateForGive(WorldObject giver, WorldObject itemBeingGiven, string extraMessage = "")
         {
             if (itemBeingGiven.IsUniqueOrContainsUnique && !CheckUniques(itemBeingGiven, giver))
                 return false;
@@ -4084,14 +4189,14 @@ namespace ACE.Server.WorldObjects
 
             if (!TryCreateInInventoryWithNetworking(itemBeingGiven, out _, true))
             {
-                var msg = new GameMessageSystemChat($"{giver.Name} tries to give you {(itemBeingGiven.StackSize > 1 ? $"{itemBeingGiven.StackSize} " : "")}{itemBeingGiven.GetNameWithMaterial(itemBeingGiven.StackSize)}.", ChatMessageType.Broadcast);
+                var msg = new GameMessageSystemChat($"{giver.Name} tries to give you {(itemBeingGiven.StackSize > 1 ? $"{itemBeingGiven.StackSize} " : "")}{itemBeingGiven.GetNameWithMaterial(itemBeingGiven.StackSize)}.{(extraMessage.Length > 0 ? $" {extraMessage}" : "")}", ChatMessageType.Broadcast);
                 Session.Network.EnqueueSend(msg);
                 return false;
             }
 
             if (!(giver.GetProperty(PropertyBool.NpcInteractsSilently) ?? false))
             {
-                var msg = new GameMessageSystemChat($"{giver.Name} gives you {(itemBeingGiven.StackSize > 1 ? $"{itemBeingGiven.StackSize} " : "")}{itemBeingGiven.GetNameWithMaterial(itemBeingGiven.StackSize)}.", ChatMessageType.Broadcast);
+                var msg = new GameMessageSystemChat($"{giver.Name} gives you {(itemBeingGiven.StackSize > 1 ? $"{itemBeingGiven.StackSize} " : "")}{itemBeingGiven.GetNameWithMaterial(itemBeingGiven.StackSize)}.{(extraMessage.Length > 0 ? $" {extraMessage}" : "")}", ChatMessageType.Broadcast);
                 Session.Network.EnqueueSend(msg);
 
                 if (!string.IsNullOrEmpty(mutationResult))
@@ -4276,24 +4381,72 @@ namespace ACE.Server.WorldObjects
             {
                 // The following code makes sure the item fits into CustomDM's ruleset as not all database entries have been updated.
                 // Remove invalid spells from items accessible by players, keep the spells on monster's items.
-                var list = worldObject.Biota.GetKnownSpellsIds(BiotaDatabaseLock);
-                foreach (var entry in list)
+
+                if (worldObject.SpellDID.HasValue)
                 {
-                    int replacementId;
-                    if (SpellsToReplace.TryGetValue((SpellId)entry, out replacementId))
+                    if (SpellsToReplace.TryGetValue((SpellId)worldObject.SpellDID, out var replacementId))
                     {
-                        if (worldObject.Biota.TryRemoveKnownSpell(entry, BiotaDatabaseLock))
+                        if (replacementId < 0)
                         {
-                            if (replacementId < 0 && (worldObject is MeleeWeapon || worldObject is MissileLauncher || worldObject is Missile))
+                            var originalSpellId = (SpellId)worldObject.SpellDID;
+                            Spell originalSpell = new Spell(originalSpellId);
+
+                            int level = Math.Clamp(Math.Abs(replacementId), 1, 8);
+
+                            SpellId spellLevel1Id = SpellId.Undef;
+                            if (worldObject is Caster)
+                                spellLevel1Id = CasterSlotSpells.PseudoRandomRoll(worldObject, (int)worldObject.WeenieClassId);
+                            else if (worldObject is Gem)
+                                spellLevel1Id = SpellSelectionTable.PseudoRandomRoll(1, (int)worldObject.WeenieClassId);
+
+                            if (spellLevel1Id != SpellId.Undef)
                             {
-                                int level = Math.Clamp(Math.Abs(replacementId), 1, 8);
+                                var spellId = SpellLevelProgression.GetSpellAtLevel(spellLevel1Id, level);
 
-                                SpellId procSpellLevel1Id;
-                                if (worldObject is MeleeWeapon)
-                                    procSpellLevel1Id = MeleeSpells.PseudoRandomRollProc((int)worldObject.WeenieClassId);
-                                else
-                                    procSpellLevel1Id = MissileSpells.PseudoRandomRollProc((int)worldObject.WeenieClassId);
+                                worldObject.SpellDID = (uint)spellId;
 
+                                log.Warn($"Replaced invalid spell {originalSpellId} with {spellId} as a DID spell on {worldObject.Name}.");
+                            }
+                            else
+                                log.Warn($"Failed to replace invalid spell {originalSpellId} as a DID spell on {worldObject.Name}. Unhandled item type.");
+                        }
+                        else if (replacementId > 0)
+                        {
+                            var originalSpellId = (SpellId)worldObject.SpellDID;
+
+                            worldObject.SpellDID = (uint)replacementId;
+
+                            log.Warn($"Replaced invalid spell {originalSpellId} with {(SpellId)replacementId} as a DID spell on {worldObject.Name}.");
+                        }
+                        else
+                        {
+                            var originalSpellId = (SpellId)worldObject.SpellDID;
+
+                            worldObject.RemoveProperty(PropertyDataId.Spell);
+
+                            log.Warn($"Removed invalid spell {originalSpellId} as a DID spell on {worldObject.Name}.");
+                        }
+                    }
+                }
+
+                if (worldObject.ProcSpell.HasValue)
+                {
+                    if (SpellsToReplace.TryGetValue((SpellId)worldObject.ProcSpell, out var replacementId))
+                    {
+                        if (replacementId < 0)
+                        {
+                            var originalSpellId = (SpellId)worldObject.ProcSpell;
+
+                            int level = Math.Clamp(Math.Abs(replacementId), 1, 8);
+
+                            SpellId procSpellLevel1Id = SpellId.Undef;
+                            if (worldObject is MeleeWeapon)
+                                procSpellLevel1Id = MeleeSpells.PseudoRandomRollProc((int)worldObject.WeenieClassId);
+                            else if (worldObject is MissileLauncher || worldObject is Missile)
+                                procSpellLevel1Id = MissileSpells.PseudoRandomRollProc((int)worldObject.WeenieClassId);
+
+                            if (procSpellLevel1Id != SpellId.Undef)
+                            {
                                 var procSpellId = SpellLevelProgression.GetSpellAtLevel(procSpellLevel1Id, level);
 
                                 Spell spell = new Spell(procSpellId);
@@ -4301,28 +4454,54 @@ namespace ACE.Server.WorldObjects
                                 worldObject.ProcSpell = (uint)procSpellId;
                                 worldObject.ProcSpellSelfTargeted = spell.IsSelfTargeted;
 
-                                log.Warn($"Replaced invalid spell {(SpellId)entry} with {procSpellId} as a proc on {worldObject.GetProperty(PropertyString.Name)}.");
+                                log.Warn($"Replaced invalid spell {originalSpellId} with {procSpellId} as a proc on {worldObject.Name}.");
+                            }
+                            else
+                                log.Warn($"Failed to replace invalid spell {originalSpellId} as a proc spell on {worldObject.Name}. Unhandled item type.");
+                        }
+                        else if (replacementId > 0)
+                        {
+                            var originalSpellId = (SpellId)worldObject.ProcSpell;
+
+                            Spell spell = new Spell(replacementId);
+
+                            worldObject.ProcSpellRate = 0.15f;
+                            worldObject.ProcSpell = (uint)replacementId;
+                            worldObject.ProcSpellSelfTargeted = spell.IsSelfTargeted;
+
+                            log.Warn($"Replaced invalid spell {originalSpellId} with {(SpellId)replacementId} as a proc on {worldObject.Name}.");
+                        }
+                        else
+                        {
+                            var originalSpellId = (SpellId)worldObject.ProcSpell;
+
+                            worldObject.RemoveProperty(PropertyFloat.ProcSpellRate);
+                            worldObject.RemoveProperty(PropertyDataId.ProcSpell);
+                            worldObject.RemoveProperty(PropertyBool.ProcSpellSelfTargeted);
+
+                            log.Warn($"Removed invalid spell {originalSpellId} as a proc on {worldObject.Name}.");
+                        }
+                    }
+                }
+
+                var list = worldObject.Biota.GetKnownSpellsIds(BiotaDatabaseLock);
+                foreach (var entry in list)
+                {
+                    if (SpellsToReplace.TryGetValue((SpellId)entry, out var replacementId))
+                    {
+                        if (worldObject.Biota.TryRemoveKnownSpell(entry, BiotaDatabaseLock))
+                        {
+                            if (replacementId < 0)
+                            {
+                                log.Warn($"Failed to replace invalid spell {(SpellId)entry} as a proc spell on {worldObject.Name}. Unhandled item type.");
                             }
                             else if (replacementId > 0)
                             {
-                                Spell spell = new Spell(replacementId);
-
-                                if (spell.IsBeneficial)
-                                {
-                                    worldObject.Biota.GetOrAddKnownSpell(replacementId, BiotaDatabaseLock, out _);
-                                    log.Warn($"Replaced invalid spell {(SpellId)entry} with {(SpellId)replacementId} on {worldObject.GetProperty(PropertyString.Name)}.");
-                                }
-                                else
-                                {
-                                    worldObject.ProcSpellRate = 0.15f;
-                                    worldObject.ProcSpell = (uint)replacementId;
-                                    worldObject.ProcSpellSelfTargeted = spell.IsSelfTargeted;
-
-                                    log.Warn($"Replaced invalid spell {(SpellId)entry} with {(SpellId)replacementId} as a proc on {worldObject.GetProperty(PropertyString.Name)}.");
-                                }
+                                worldObject.Biota.GetOrAddKnownSpell(replacementId, BiotaDatabaseLock, out _);
+                                log.Warn($"Replaced invalid spell {(SpellId)entry} with {(SpellId)replacementId} on {worldObject.Name}.");
                             }
                             else
-                                log.Warn($"Removed invalid spell {(SpellId)entry} from {worldObject.GetProperty(PropertyString.Name)}.");
+                                log.Warn($"Removed invalid spell {(SpellId)entry} from {worldObject.Name}.");
                         }
                     }
                 }
@@ -4480,6 +4659,39 @@ namespace ACE.Server.WorldObjects
             { SpellId.CreatureEnchantmentMasteryOther6, 0 },
             { SpellId.CreatureEnchantmentMasteryOther7, 0 },
             { SpellId.CreatureEnchantmentMasteryOther8, 0 },
+
+            { SpellId.ArmorSelf1, 0 },
+            { SpellId.ArmorSelf2, 0 },
+            { SpellId.ArmorSelf3, 0 },
+            { SpellId.ArmorSelf4, 0 },
+            { SpellId.ArmorSelf5, 0 },
+            { SpellId.ArmorSelf6, 0 },
+            { SpellId.ArmorSelf7, 0 },
+            { SpellId.ArmorSelf8, 0 },
+
+            { SpellId.ArmorOther1, 0 },
+            { SpellId.ArmorOther2, 0 },
+            { SpellId.ArmorOther3, 0 },
+            { SpellId.ArmorOther4, 0 },
+            { SpellId.ArmorOther5, 0 },
+            { SpellId.ArmorOther6, 0 },
+            { SpellId.ArmorOther7, 0 },
+            { SpellId.ArmorOther8, 0 },
+
+            { SpellId.ForceArmor, 0 },
+            { SpellId.PanoplyQueenslayer, 0 },
+            { SpellId.TuskerHideLesser, 0 },
+            { SpellId.TuskerHide, 0 },
+            { SpellId.LesserMistsBur, 0 },
+            { SpellId.MinorMistsBur, 0 },
+            { SpellId.MistsBur, 0 },
+            { SpellId.ArmorSelfAegisGoldenFlame, 0 },
+            { SpellId.KukuurHide, 0 },
+            { SpellId.DrudgeArmor, 0 },
+            { SpellId.FrozenArmor, 0 },
+            { SpellId.ArmorProdigalHarbinger, 0 },
+            { SpellId.BaelzharonArmorOther, 0 },
         };
     }
 }
+
