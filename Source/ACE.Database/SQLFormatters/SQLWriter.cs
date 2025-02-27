@@ -6,11 +6,14 @@ using System.Text.RegularExpressions;
 using ACE.Database.Models.World;
 using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
+using log4net;
 
 namespace ACE.Database.SQLFormatters
 {
     public abstract class SQLWriter
     {
+        private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         protected static readonly Regex IllegalInFileName = new Regex($"[{Regex.Escape(new string(Path.GetInvalidFileNameChars()))}]", RegexOptions.Compiled);
 
         /// <summary>
@@ -315,7 +318,19 @@ namespace ACE.Database.SQLFormatters
                         treasureItem += $"{maxStack}x ";
                 }
 
-                treasureItem += $"{WeenieNames[item.WeenieClassId]} ({item.WeenieClassId})";
+                string weenieName = null;
+                string weenieClassName = null;
+
+                if (WeenieNames != null)
+                    WeenieNames.TryGetValue(item.WeenieClassId, out weenieName);
+
+                if (WeenieClassNames != null)
+                    WeenieClassNames.TryGetValue(item.WeenieClassId, out weenieClassName);
+
+                if (weenieClassName == null)
+                    log.Warn($"[SQLWRITER] WieldedTreasureType has entry to unknown weenieClassId: {item.WeenieClassId}");
+
+                treasureItem += $"{weenieName} ({item.WeenieClassId}/{weenieClassName})";
 
                 if (item.PaletteId > 0)
                     treasureItem += $" | Palette: {Enum.GetName(typeof(PaletteTemplate), item.PaletteId)} ({item.PaletteId})";
@@ -424,7 +439,7 @@ namespace ACE.Database.SQLFormatters
 
         protected string GetValueForTreasureData(uint weenieOrType, bool isWeenieClassID = false)
         {
-            string label = "Random Loot: Unknown Tier";
+            string label = "DeathTreasureType: 0";
 
             uint? deathTreasureType = null;
             uint? wieldedTreasureType = null;
@@ -447,7 +462,7 @@ namespace ACE.Database.SQLFormatters
             {
                 if (TreasureDeath != null && TreasureDeath.ContainsKey(deathTreasureType.Value))
                 {
-                    label = $"Random Loot: Tier {TreasureDeath[deathTreasureType.Value].Tier} - DeathTreasureType: {deathTreasureType}({(TreasureDeathDesc)deathTreasureType})";
+                    label = $"DeathTreasureType: {(TreasureDeathDesc)deathTreasureType}(T{TreasureDeath[deathTreasureType.Value].Tier})";
                 }
                 else if (TreasureWielded != null && TreasureWielded.ContainsKey(wieldedTreasureType.Value))
                 {

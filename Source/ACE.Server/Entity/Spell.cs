@@ -81,7 +81,7 @@ namespace ACE.Server.Entity
                 Formula = new SpellFormula(this, _formula);
 
             if (loadDB && (_spell == null || _spellBase == null))
-                log.Debug($"Spell.Init(spellID = {spellID}, loadDB = {loadDB}) failed! {(_spell == null ? "_spell was null" : "")} {(_spellBase == null ? "_spellBase was null" : "")}");
+                log.DebugFormat("Spell.Init(spellID = {0}, loadDB = {1}) failed! {2} {3}", spellID, loadDB, (_spell == null ? "_spell was null" : ""), (_spellBase == null ? "_spellBase was null" : ""));
 
             IntensityMod = 1.0f;
         }
@@ -146,17 +146,27 @@ namespace ACE.Server.Entity
             var magicSkill = GetMagicSkill();
             var playerSkill = player.GetCreatureSkill(magicSkill);
             var skillMod = Math.Min(1.0f, (float)Power / playerSkill.Current);
-            //Console.WriteLine($"TryBurnComponents.SkillMod: {skillMod}");
-
-            //DebugComponents();
 
             var componentBurnChanceMod = 1.0f + player.CachedComponentBurnRateMod;
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
             {
+                var alchemySkill = player.GetCreatureSkill(Skill.Alchemy);
+                if (alchemySkill.AdvancementClass >= SkillAdvancementClass.Trained)
+                {
+                    var alchemySkillMod = Math.Min(1.0f, (float)Power / alchemySkill.Current * 0.8f);
+                    Proficiency.OnSuccessUse(player, alchemySkill, Power);
+
+                    skillMod *= alchemySkillMod;
+                }
+
                 var amulet = player.GetEquippedLeyLineAmulet();
                 if (amulet != null && (amulet.LeyLineTriggerChance ?? 0) > 0 && (amulet.LeyLineEffectId == (uint)LeyLineEffect.LowerCompBurnChanceAllSpells) && School == (MagicSchool)amulet.LeyLineSchool)
                     componentBurnChanceMod *= 0.7f;
             }
+
+            //Console.WriteLine($"TryBurnComponents.SkillMod: {skillMod}");
+
+            //DebugComponents();
 
             foreach (var component in Formula.CurrentFormula)
             {

@@ -27,7 +27,7 @@ namespace ACE.Server.WorldObjects
         /// <param name="amount">The amount of XP being added</param>
         /// <param name="xpType">The source of XP being added</param>
         /// <param name="shareable">True if this XP can be shared with Fellowship</param>
-        public void EarnXP(long amount, XpType xpType, int? xpSourceLevel, uint? xpSourceId, uint xpSourceCampValue, double? xpSourceTier, ShareType shareType = ShareType.All, string xpMessage = "")
+        public void EarnXP(long amount, XpType xpType, int? xpSourceLevel, uint? xpSourceId, uint xpSourceCampValue, double? xpSourceTier, ShareType shareType = ShareType.All, string xpMessage = "", double extraXpMultiplier = 1.0f)
         {
             //Console.WriteLine($"{Name}.EarnXP({amount}, {sharable}, {fixedAmount})");
 
@@ -77,14 +77,14 @@ namespace ACE.Server.WorldObjects
 
                 float totalXP = GetCreatureDeathXP(xpSourceLevel.Value, 0, false, false, formulaVersion);
 
-                if (xpSourceId != null && xpSourceId != 0)
+                if (xpSourceId.HasValue && xpSourceId != 0)
                 {
-                    float typeCampBonus;
-                    CampManager.HandleCampInteraction(xpSourceId.Value ^ 0xFFFF0000, null, xpSourceCampValue, out typeCampBonus, out _, out _);
+                    var typeCampBonus = xpSourceCampValue / 100f;
 
                     totalXP = totalXP * typeCampBonus;
 
-                    xpMessage = $"T: {(typeCampBonus * 100).ToString("0")}%";
+                    if(xpSourceCampValue < 100)
+                        xpMessage = $"T: {xpSourceCampValue.ToString("0")}%";
                 }
 
                 amount = (long)Math.Round(totalXP);
@@ -96,15 +96,15 @@ namespace ACE.Server.WorldObjects
             }
             else if (xpType == XpType.Kill && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
             {
-                float typeCampBonus;
-                float areaCampBonus;
-                float restCampBonus;
-
                 float totalXP = amount;
 
-                if (xpSourceId != null && xpSourceId != 0)
+                if (xpSourceId.HasValue && xpSourceId != 0)
                 {
-                    CampManager.HandleCampInteraction(xpSourceId.Value, CurrentLandblock, xpSourceCampValue, out typeCampBonus, out areaCampBonus, out restCampBonus);
+                    CampManager.HandleCampInteraction(xpSourceId.Value, CurrentLandblock, xpSourceCampValue, out var typeCampBonus, out var areaCampBonus, out var restCampBonus);
+
+                    typeCampBonus = (float)Math.Round(typeCampBonus, 2);
+                    areaCampBonus = (float)Math.Round(areaCampBonus, 2);
+                    restCampBonus = (float)Math.Round(restCampBonus, 2);
 
                     float thirdXP = totalXP / 3.0f;
                     totalXP = (thirdXP * typeCampBonus) + (thirdXP * areaCampBonus) + (thirdXP * restCampBonus);
@@ -118,6 +118,8 @@ namespace ACE.Server.WorldObjects
             // apply xp modifiers.  Quest XP is multiplicative with general XP modification
             var questModifier = PropertyManager.GetDouble("quest_xp_modifier").Item;
             var modifier = PropertyManager.GetDouble("xp_modifier").Item;
+
+            modifier *= extraXpMultiplier;
             if (xpType == XpType.Quest)
                 modifier *= questModifier;
 
@@ -267,7 +269,7 @@ namespace ACE.Server.WorldObjects
                     float totalNotSharedExtraXP = 0;
                     if (xpType == XpType.Quest || xpType == XpType.Exploration || (xpType == XpType.Fellowship && PropertyManager.GetBool("relive_bonus_applies_to_received_fellow_xp").Item))
                     {
-                        if (Level < (MaxReachedLevel ?? 1))
+                        if (Level < (MaxReachedLevel ?? 1) && IsHardcore)
                         {
                             var extraXP = m_amount * (float)PropertyManager.GetDouble("relive_bonus_xp").Item;
                             totalNotSharedExtraXP += extraXP;
@@ -285,15 +287,7 @@ namespace ACE.Server.WorldObjects
                             xpMessage = $"Hot Dungeon Bonus: +{extraXP:N0}xp {xpMessage}";
                         }
 
-                        if (CurrentLandblock != null && !(CurrentLandblock.IsDungeon || (CurrentLandblock.HasDungeon && Location.Indoors)))
-                        {
-                            var extraXP = m_amount * (float)PropertyManager.GetDouble("surface_bonus_xp").Item; // Surface provides extra xp to account for lower creature density.
-                            totalExtraXP += extraXP;
-
-                            xpMessage = $"Surface Bonus: +{extraXP:N0}xp {xpMessage}";
-                        }
-
-                        if (Level < (MaxReachedLevel ?? 1))
+                        if (Level < (MaxReachedLevel ?? 1) && IsHardcore)
                         {
                             var extraXP = m_amount * (float)PropertyManager.GetDouble("relive_bonus_xp").Item;
                             totalNotSharedExtraXP += extraXP;
@@ -316,30 +310,42 @@ namespace ACE.Server.WorldObjects
                     Exploration1KillProgressTracker--;
                     long explorationXP = (long)(m_amount_before_extra * (float)PropertyManager.GetDouble("exploration_bonus_xp_kills").Item);
                     xpMessage = $"{Exploration1KillProgressTracker:N0} kill{(Exploration1KillProgressTracker != 1 ? "s" : "")} remaining.";
-                    GrantXP(explorationXP, XpType.Exploration, ShareType.Fellowship, xpMessage);
+                    GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
 
-                    if(Exploration1KillProgressTracker == 0)
+                    if (Exploration1KillProgressTracker == 0)
+                    {
                         PlayParticleEffect(PlayScript.AugmentationUseSkill, Guid);
+                        if (Exploration1LandblockReached && Exploration1MarkerProgressTracker == 0)
+                            Session.Network.EnqueueSend(new GameMessageSystemChat("Your exploration assignment is now fulfilled!", ChatMessageType.Broadcast));
+                    }
                 }
                 else if (Exploration2LandblockId == CurrentLandblock.Id.Raw >> 16 && Exploration2KillProgressTracker > 0)
                 {
                     Exploration2KillProgressTracker--;
                     long explorationXP = (long)(m_amount_before_extra * (float)PropertyManager.GetDouble("exploration_bonus_xp_kills").Item);
                     xpMessage = $"{Exploration2KillProgressTracker:N0} kill{(Exploration2KillProgressTracker != 1 ? "s" : "")} remaining.";
-                    GrantXP(explorationXP, XpType.Exploration, ShareType.Fellowship, xpMessage);
+                    GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
 
                     if (Exploration2KillProgressTracker == 0)
+                    {
                         PlayParticleEffect(PlayScript.AugmentationUseSkill, Guid);
+                        if (Exploration2LandblockReached && Exploration2MarkerProgressTracker == 0)
+                            Session.Network.EnqueueSend(new GameMessageSystemChat("Your exploration assignment is now fulfilled!", ChatMessageType.Broadcast));
+                    }
                 }
                 else if (Exploration3LandblockId == CurrentLandblock.Id.Raw >> 16 && Exploration3KillProgressTracker > 0)
                 {
                     Exploration3KillProgressTracker--;
                     long explorationXP = (long)(m_amount_before_extra * (float)PropertyManager.GetDouble("exploration_bonus_xp_kills").Item);
                     xpMessage = $"{Exploration3KillProgressTracker:N0} kill{(Exploration3KillProgressTracker != 1 ? "s" : "")} remaining.";
-                    GrantXP(explorationXP, XpType.Exploration, ShareType.Fellowship, xpMessage);
+                    GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
 
                     if (Exploration3KillProgressTracker == 0)
+                    {
                         PlayParticleEffect(PlayScript.AugmentationUseSkill, Guid);
+                        if (Exploration3LandblockReached && Exploration3MarkerProgressTracker == 0)
+                            Session.Network.EnqueueSend(new GameMessageSystemChat("Your exploration assignment is now fulfilled!", ChatMessageType.Broadcast));
+                    }
                 }
             }
         }
@@ -429,6 +435,20 @@ namespace ACE.Server.WorldObjects
             var totalXpCap = Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration ? maxLevelXp : long.MaxValue; // At what value the total xp counter will stop counting.
             var availableXpCap = Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration ? uint.MaxValue : long.MaxValue; // Max unassigned xp amount.
 
+
+            long vitaeRedirectedAmount;
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                long xpLeft = amount;
+                if (HasVitae && IsHardcore && xpType == XpType.Kill)
+                    xpLeft = UpdateXpVitae(amount); // Only kill xp reduces hardcore vitae penalty.
+                else if (HasVitae && xpType != XpType.Allegiance)
+                    xpLeft = UpdateXpVitae(amount);
+
+                vitaeRedirectedAmount = amount - xpLeft;
+                amount = xpLeft;
+            }
+
             if (Level != maxLevel || allowXpAtMaxLevel)
             {
                 var addAmount = amount;
@@ -452,7 +472,7 @@ namespace ACE.Server.WorldObjects
                 CheckForLevelup();
             }
 
-            if(xpMessage != "")
+            if (xpMessage != "")
                 xpMessage = $" {xpMessage.Trim()}";
 
             if (xpType == XpType.Quest)
@@ -476,11 +496,14 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
-            if (HasVitae && IsHardcore && xpType != XpType.Kill)
-                return; // Only kill xp reduces hardcore vitae penalty.
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+            {
+                if (HasVitae && IsHardcore && xpType != XpType.Kill)
+                    return; // Only kill xp reduces hardcore vitae penalty.
 
-            if (HasVitae && xpType != XpType.Allegiance)
-                UpdateXpVitae(amount);
+                if (HasVitae && xpType != XpType.Allegiance)
+                    UpdateXpVitae(amount);
+            }
         }
 
         /// <summary>
@@ -493,41 +516,57 @@ namespace ACE.Server.WorldObjects
             AllegianceManager.PassXP(AllegianceNode, (ulong)amount, true);
         }
 
-        /// <summary>
-        /// Handles updating the vitae penalty through earned XP
-        /// </summary>
-        /// <param name="amount">The amount of XP to apply to the vitae penalty</param>
-        private void UpdateXpVitae(long amount)
+        private void HandleVitaeOnLogin(double currentUnixTime)
         {
+            vitaeTickTimestamp = currentUnixTime + vitaeTickInterval + 10;
+
+            var vitae = EnchantmentManager.GetVitae();
+
+            if (vitae == null || !VitaeDecayTimestamp.HasValue)
+                return;
+
+            var actionChain = new ActionChain();
+            actionChain.AddDelaySeconds(10.0f);
+            actionChain.AddAction(this, () =>
+            {
+                var times = (int)Math.Floor((currentUnixTime - VitaeDecayTimestamp).Value / vitaeTickInterval);
+
+                ReduceVitae(times);
+            });
+        }
+
+        /// <summary>
+        /// Lowers vitae penalty directly
+        /// </summary>
+        /// <param name="amount">The amount of points to lower the vitae penalty by</param>
+        public void ReduceVitae(int amount)
+        {
+            if (amount <= 0)
+                return;
+
             var vitae = EnchantmentManager.GetVitae();
 
             if (vitae == null)
-            {
-                log.Error($"{Name}.UpdateXpVitae({amount}) vitae null, likely due to cross-thread operation or corrupt EnchantmentManager cache. Please report this.");
-                log.Error(Environment.StackTrace);
                 return;
-            }
 
             var vitaePenalty = vitae.StatModValue;
             var startPenalty = vitaePenalty;
 
-            var maxPool = (int)VitaeCPPoolThreshold(vitaePenalty, DeathLevel.Value);
-            var curPool = VitaeCpPool + amount;
-            while (curPool >= maxPool)
+            for(int i = 0; i < amount; i++)
             {
-                curPool -= maxPool;
                 vitaePenalty = EnchantmentManager.ReduceVitae();
                 if (vitaePenalty == 1.0f)
+                {
+                    VitaeCpPool = 0;
                     break;
-                maxPool = (int)VitaeCPPoolThreshold(vitaePenalty, DeathLevel.Value);
+                }
             }
-            VitaeCpPool = (int)curPool;
 
             Session.Network.EnqueueSend(new GameMessagePrivateUpdatePropertyInt(this, PropertyInt.VitaeCpPool, VitaeCpPool.Value));
 
             if (vitaePenalty != startPenalty)
             {
-                Session.Network.EnqueueSend(new GameMessageSystemChat("Your experience has reduced your Vitae penalty!", ChatMessageType.Magic));
+                Session.Network.EnqueueSend(new GameMessageSystemChat($"Your Vitae recovers! Your Vitae penalty is now {(int)(100 - (vitaePenalty * 100))}%.", ChatMessageType.Magic));
                 EnchantmentManager.SendUpdateVitae();
             }
 
@@ -547,6 +586,88 @@ namespace ACE.Server.WorldObjects
                 });
                 actionChain.EnqueueChain();
             }
+
+            return;
+        }
+
+        /// <summary>
+        /// Handles updating the vitae penalty through earned XP
+        /// </summary>
+        /// <param name="amount">The amount of XP to apply to the vitae penalty</param>
+        private long UpdateXpVitae(long amount)
+        {
+            var vitae = EnchantmentManager.GetVitae();
+
+            var isDecay = amount < 0;
+            amount = Math.Abs(amount);
+
+            long xpLeft = amount;
+
+            if (vitae == null)
+            {
+                log.Error($"{Name}.UpdateXpVitae({amount}) vitae null, likely due to cross-thread operation or corrupt EnchantmentManager cache. Please report this.");
+                log.Error(Environment.StackTrace);
+                return xpLeft;
+            }
+
+            var vitaePenalty = vitae.StatModValue;
+            var startPenalty = vitaePenalty;
+
+            var maxPool = (int)VitaeCPPoolThreshold(vitaePenalty, DeathLevel.Value);
+            var curPool = VitaeCpPool + amount;
+
+            xpLeft -= maxPool - (int)VitaeCpPool;
+            while (curPool >= maxPool)
+            {
+                curPool -= maxPool;
+                vitaePenalty = EnchantmentManager.ReduceVitae();
+                if (vitaePenalty == 1.0f)
+                    break;
+                maxPool = (int)VitaeCPPoolThreshold(vitaePenalty, DeathLevel.Value);
+
+                xpLeft -= maxPool;
+            }
+            VitaeCpPool = (int)curPool;
+
+            xpLeft = Math.Max(xpLeft, 0);
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && !isDecay)
+                Session.Network.EnqueueSend(new GameMessageSystemChat($"Your Vitae penalty consumes {amount - xpLeft} experience!", ChatMessageType.Magic));
+
+            Session.Network.EnqueueSend(new GameMessagePrivateUpdatePropertyInt(this, PropertyInt.VitaeCpPool, VitaeCpPool.Value));
+
+            if (vitaePenalty != startPenalty)
+            {
+                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                {
+                    if(isDecay)
+                        Session.Network.EnqueueSend(new GameMessageSystemChat($"Your Vitae recovers! Your Vitae penalty is now {(int)(100 - (vitaePenalty * 100))}%.", ChatMessageType.Magic));
+                    else
+                        Session.Network.EnqueueSend(new GameMessageSystemChat($"Your experience has reduced your Vitae penalty! It is now {(int)(100 - (vitaePenalty * 100))}%.", ChatMessageType.Magic));
+                }
+                else
+                    Session.Network.EnqueueSend(new GameMessageSystemChat("Your experience has reduced your Vitae penalty!", ChatMessageType.Magic));
+                EnchantmentManager.SendUpdateVitae();
+            }
+
+            if (vitaePenalty.EpsilonEquals(1.0f) || vitaePenalty > 1.0f)
+            {
+                var actionChain = new ActionChain();
+                actionChain.AddDelaySeconds(2.0f);
+                actionChain.AddAction(this, () =>
+                {
+                    var vitae = EnchantmentManager.GetVitae();
+                    if (vitae != null)
+                    {
+                        var curPenalty = vitae.StatModValue;
+                        if (curPenalty.EpsilonEquals(1.0f) || curPenalty > 1.0f)
+                            EnchantmentManager.RemoveVitae();
+                    }
+                });
+                actionChain.EnqueueChain();
+            }
+
+            return xpLeft;
         }
 
         /// <summary>
@@ -719,6 +840,9 @@ namespace ACE.Server.WorldObjects
 
                 Session.Network.EnqueueSend(new GameMessageSystemChat(message, ChatMessageType.Advancement), currentCredits);
 
+                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    UpdateCustomSkillFormulae();
+
                 // Let's take the opportinity to send an activity recommendation to the player.
                 var recommendationChain = new ActionChain();
                 recommendationChain.AddDelaySeconds(5.0f);
@@ -845,7 +969,7 @@ namespace ACE.Server.WorldObjects
                 scaledXP = Math.Max(scaledXP, min);
 
             // apply xp modifiers?
-            EarnXP(scaledXP, XpType.Quest, Level, null, 1, null, ShareType.Allegiance);
+            EarnXP(scaledXP, XpType.Quest, Level, null, 0, null, ShareType.Allegiance);
         }
 
         /// <summary>
@@ -1375,6 +1499,336 @@ namespace ACE.Server.WorldObjects
             SendInventoryAndWieldedItems();
             UpdateCoinValue();
             UpdateTradeNoteValue();
+        }
+
+        public CreatureAttribute GetCostToRaiseViaAttribute(Skill skill, PropertyAttribute2nd vital, out uint xpToSkillUpViaAttribute, out int ranksForSkillPoint)
+        {
+            var skillTable = DatManager.PortalDat.SkillTable;
+            var vitalTable = DatManager.PortalDat.SecondaryAttributeTable;
+
+            var attributeXpTable = DatManager.PortalDat.XpTable.AttributeXpList;
+
+            var maxRank = attributeXpTable.Count - 1;
+
+            DatLoader.Entity.SkillFormula formula;
+
+            if (skill != Skill.None)
+            {
+                if (!skillTable.SkillBaseHash.TryGetValue((uint)skill, out SkillBase skillBase))
+                {
+                    xpToSkillUpViaAttribute = uint.MaxValue;
+                    ranksForSkillPoint = 0;
+                    return null;
+                }
+                formula = skillBase.Formula;
+            }
+            else
+            {
+                switch (vital)
+                {
+                    case PropertyAttribute2nd.MaxHealth:  formula = vitalTable.MaxHealth.Formula; break;
+                    case PropertyAttribute2nd.MaxStamina: formula = vitalTable.MaxStamina.Formula; break;
+                    case PropertyAttribute2nd.MaxMana:    formula = vitalTable.MaxMana.Formula; break;
+                    default:
+                        xpToSkillUpViaAttribute = uint.MaxValue;
+                        ranksForSkillPoint = 0;
+                        return null;
+                }
+            }
+
+            var ranksForSkillPointAttr1 = (int)Math.Ceiling((float)formula.Z / formula.X);
+            var xpToSkillUpAttr1 = uint.MaxValue;
+            CreatureAttribute attribute1 = null;
+            if (formula.Attr1 != 0)
+            {
+                attribute1 = Attributes[(PropertyAttribute)formula.Attr1];
+                if (!attribute1.IsMaxRank)
+                {
+                    var startRank = (int)(attribute1.Base - attribute1.StartingValue);
+                    var destRank = Math.Min(startRank + ranksForSkillPointAttr1, maxRank);
+                    ranksForSkillPointAttr1 = destRank - startRank;
+
+                    xpToSkillUpAttr1 = (uint)GetXPBetweenAttributeLevels(startRank, destRank);
+                }
+            }
+
+            var ranksForSkillPointAttr2 = (int)Math.Ceiling((float)formula.Z / formula.Y);
+            var xpToSkillUpAttr2 = uint.MaxValue;
+            CreatureAttribute attribute2 = null;
+            if (formula.Attr2 != 0)
+            {
+                attribute2 = Attributes[(PropertyAttribute)formula.Attr2];
+                if (!attribute2.IsMaxRank)
+                {
+                    var startRank = (int)(attribute2.Base - attribute2.StartingValue);
+                    var destRank = Math.Min(startRank + ranksForSkillPointAttr2, maxRank);
+                    ranksForSkillPointAttr2 = destRank - startRank;
+
+                    xpToSkillUpAttr2 = (uint)GetXPBetweenAttributeLevels(startRank, destRank);
+                }
+            }
+
+            if (xpToSkillUpAttr1 <= xpToSkillUpAttr2)
+            {
+                xpToSkillUpViaAttribute = xpToSkillUpAttr1;
+                ranksForSkillPoint = ranksForSkillPointAttr1;
+                return attribute1;
+            }
+            else
+            {
+                xpToSkillUpViaAttribute = xpToSkillUpAttr2;
+                ranksForSkillPoint = ranksForSkillPointAttr2;
+                return attribute2;
+            }
+        }
+
+        private struct CreatureSkillVitalOrAttribute
+        {
+            public CreatureSkill Skill;
+            public CreatureVital Vital;
+            public CreatureAttribute Attribute;
+
+            public CreatureSkillVitalOrAttribute(CreatureSkill skill)
+            {
+                Skill = skill;
+                Vital = null;
+                Attribute = null;
+            }
+
+            public CreatureSkillVitalOrAttribute(CreatureVital vital)
+            {
+                Skill = null;
+                Vital = vital;
+                Attribute = null;
+            }
+
+            public CreatureSkillVitalOrAttribute(CreatureAttribute attribute)
+            {
+                Skill = null;
+                Vital = null;
+                Attribute = attribute;
+            }
+
+            public bool IsVital()
+            {
+                return Vital != null;
+            }
+
+            public bool IsSkill()
+            {
+                return Skill != null;
+            }
+
+            public bool IsAttribute()
+            {
+                return Attribute != null;
+            }
+        }
+        public void AutoSpendXp(Dictionary<Skill, float> prioritiesPreset)
+        {
+            if (prioritiesPreset == null || prioritiesPreset.Count == 0)
+                return;
+
+            List<Tuple<long, CreatureSkillVitalOrAttribute>> currentPriorityList = new List<Tuple<long, CreatureSkillVitalOrAttribute>>();
+
+            SortedDictionary<PropertyAttribute, int> spentMapAttribute = new SortedDictionary<PropertyAttribute, int>();
+            SortedDictionary<PropertyAttribute2nd, int> spentMapVital = new SortedDictionary<PropertyAttribute2nd, int>();
+            SortedDictionary<Skill, int> spentMapSkill = new SortedDictionary<Skill, int>();
+
+            long totalExperienceSpent = 0;
+
+            for (var attemptCount = 0; attemptCount < 10000; attemptCount++)
+            {
+                currentPriorityList.Clear();
+
+                foreach (var skill in Skills)
+                {
+                    if (skill.Value.AdvancementClass < SkillAdvancementClass.Trained)
+                        continue;
+
+                    if (prioritiesPreset.TryGetValue(skill.Key, out var priority))
+                    {
+                        if (priority == 0)
+                            continue;
+
+                        var experienceSpent = (long)Math.Max(skill.Value.ExperienceSpent / priority, 1);
+
+                        currentPriorityList.Add(new Tuple<long, CreatureSkillVitalOrAttribute>(experienceSpent, new CreatureSkillVitalOrAttribute(skill.Value)));
+                    }
+                }
+
+                foreach (var vital in Vitals)
+                {
+                    var skill = Skill.None;
+                    switch(vital.Key)
+                    {
+                        case PropertyAttribute2nd.MaxHealth: skill = (Skill)100; break;
+                        case PropertyAttribute2nd.MaxStamina: skill = (Skill)101; break;
+                        case PropertyAttribute2nd.MaxMana: skill = (Skill)102; break;
+                        default:
+                            continue;
+                    }
+                    if (prioritiesPreset.TryGetValue(skill, out var priority))
+                    {
+                        if (priority == 0)
+                            continue;
+
+                        var experienceSpent = (long)Math.Max(vital.Value.ExperienceSpent / priority, 1);
+                        currentPriorityList.Add(new Tuple<long, CreatureSkillVitalOrAttribute>(experienceSpent, new CreatureSkillVitalOrAttribute(vital.Value)));
+                    }
+                }
+
+                foreach (var attribute in Attributes)
+                {
+                    var skill = Skill.None;
+                    switch (attribute.Key)
+                    {
+                        case PropertyAttribute.Strength: skill = (Skill)200; break;
+                        case PropertyAttribute.Endurance: skill = (Skill)201; break;
+                        case PropertyAttribute.Coordination: skill = (Skill)202; break;
+                        case PropertyAttribute.Quickness: skill = (Skill)203; break;
+                        case PropertyAttribute.Focus: skill = (Skill)204; break;
+                        case PropertyAttribute.Self: skill = (Skill)205; break;
+                        default:
+                            continue;
+                    }
+                    if (prioritiesPreset.TryGetValue(skill, out var priority))
+                    {
+                        if (priority == 0)
+                            continue;
+
+                        var experienceSpent = (long)Math.Max(attribute.Value.ExperienceSpent / priority, 1);
+                        currentPriorityList.Add(new Tuple<long, CreatureSkillVitalOrAttribute>(experienceSpent, new CreatureSkillVitalOrAttribute(attribute.Value)));
+                    }
+                }
+
+                var skillIncreased = false;
+                currentPriorityList.Sort((x, y) => x.Item1.CompareTo(y.Item1));
+                foreach (var skillPriority in currentPriorityList)
+                {
+                    if (skillPriority.Item2.IsSkill())
+                    {
+                        var skill = skillPriority.Item2.Skill;
+                        var skillXPTable = GetSkillXPTable(skill.AdvancementClass);
+
+                        if (skill.AdvancementClass <= SkillAdvancementClass.Untrained)
+                            continue;
+
+                        var xpToNextRank = GetXpToNextRank(skill) ?? uint.MaxValue;
+
+                        var attribute = GetCostToRaiseViaAttribute(skill.Skill, PropertyAttribute2nd.Undef, out var xpToSkillUpViaAttribute, out var ranksForSkillPoint);
+
+                        if (!skill.IsMaxRank && xpToSkillUpViaAttribute > xpToNextRank)
+                        {
+                            if (AvailableExperience < xpToNextRank)
+                                continue;
+
+                            SpendSkillXp(skill, xpToNextRank, false);
+                            totalExperienceSpent += xpToNextRank;
+
+                            spentMapSkill.TryGetValue(skill.Skill, out var timesRaised);
+                            spentMapSkill[skill.Skill] = timesRaised + 1;
+
+                        }
+                        else if (attribute != null)
+                        {
+                            if (attribute.IsMaxRank || AvailableExperience < xpToSkillUpViaAttribute)
+                                continue;
+
+                            SpendAttributeXp(attribute, xpToSkillUpViaAttribute, false);
+                            totalExperienceSpent += xpToSkillUpViaAttribute;
+
+                            spentMapAttribute.TryGetValue(attribute.Attribute, out var timesRaised);
+                            spentMapAttribute[attribute.Attribute] = timesRaised + ranksForSkillPoint;
+                        }
+                        else
+                            continue;
+                    }
+                    else if (skillPriority.Item2.IsVital())
+                    {
+                        var vital = skillPriority.Item2.Vital;
+                        var vitalXPTable = DatManager.PortalDat.XpTable.VitalXpList;
+
+                        var xpToNextRank = GetXpToNextRank(vital) ?? uint.MaxValue;
+
+                        var attribute = GetCostToRaiseViaAttribute(Skill.None, vital.Vital, out var xpToSkillUpViaAttribute, out var ranksForSkillPoint);
+
+                        if (!vital.IsMaxRank && xpToSkillUpViaAttribute > xpToNextRank)
+                        {
+                            if (AvailableExperience < xpToNextRank)
+                                continue;
+
+                            SpendVitalXp(vital, xpToNextRank, false);
+                            totalExperienceSpent += xpToNextRank;
+
+                            spentMapVital.TryGetValue(vital.Vital, out var timesRaised);
+                            spentMapVital[vital.Vital] = timesRaised + 1;
+
+                        }
+                        else if (attribute != null)
+                        {
+                            if (attribute.IsMaxRank || AvailableExperience < xpToSkillUpViaAttribute)
+                                continue;
+
+                            SpendAttributeXp(attribute, xpToSkillUpViaAttribute, false);
+                            totalExperienceSpent += xpToSkillUpViaAttribute;
+
+                            spentMapAttribute.TryGetValue(attribute.Attribute, out var timesRaised);
+                            spentMapAttribute[attribute.Attribute] = timesRaised + ranksForSkillPoint;
+                        }
+                        else
+                            continue;
+                    }
+                    else if (skillPriority.Item2.IsAttribute())
+                    {
+                        var attribute = skillPriority.Item2.Attribute;
+                        var attributeXPTable = DatManager.PortalDat.XpTable.AttributeXpList;
+
+                        var xpToNextRank = GetXpToNextRank(attribute) ?? uint.MaxValue;
+
+                        if (!attribute.IsMaxRank)
+                        {
+                            if (AvailableExperience < xpToNextRank)
+                                continue;
+
+                            SpendAttributeXp(attribute, xpToNextRank);
+                            totalExperienceSpent += xpToNextRank;
+
+                            spentMapAttribute.TryGetValue(attribute.Attribute, out var timesRaised);
+                            spentMapAttribute[attribute.Attribute] = timesRaised + 1;
+                        }
+                        else
+                            continue;
+                    }
+                    else
+                        continue;
+
+                    skillIncreased = true;
+                    break;
+                }
+
+                if (!skillIncreased)
+                    break;
+            }
+
+            Session.Network.EnqueueSend(new GameEventPlayerDescription(Session));
+
+            foreach (var entry in spentMapAttribute)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat($"Your {entry.Key} has been raised {entry.Value} times.", ChatMessageType.Broadcast));
+            }
+
+            foreach (var entry in spentMapVital)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat($"Your {entry.Key.ToSentence()} has been raised {entry.Value} times.", ChatMessageType.Broadcast));
+            }
+
+            foreach (var entry in spentMapSkill)
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat($"Your {entry.Key.ToSentence()} skill has been raised {entry.Value} times.", ChatMessageType.Broadcast));
+            }
+
+            Session.Network.EnqueueSend(new GameMessageSystemChat($"Total experience spent: {totalExperienceSpent:N0}.", ChatMessageType.Broadcast));
         }
     }
 }

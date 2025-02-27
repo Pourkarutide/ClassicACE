@@ -399,15 +399,23 @@ namespace ACE.Server.WorldObjects
             {
                 var criticalStrikeBonus = GetCriticalStrikeMod(wielder, skill, isPvP);
 
-                critRate = Math.Max(critRate, criticalStrikeBonus);
+                if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                    critRate = Math.Max(critRate, criticalStrikeBonus);
+                else if(critRate > defaultPhysicalCritFrequency)
+                    critRate = 0.25f;
+                else
+                    critRate = Math.Max(critRate, criticalStrikeBonus);
             }
 
             if (wielder != null)
                 critRate += wielder.GetCritRating() * 0.01f;
 
             // mitigation
-            var critResistRatingMod = Creature.GetNegativeRatingMod(target.GetCritResistRating());
-            critRate *= critResistRatingMod;
+            if (target != null)
+            {
+                var critResistRatingMod = Creature.GetNegativeRatingMod(target.GetCritResistRating());
+                critRate *= critResistRatingMod;
+            }
 
             return critRate;
         }
@@ -453,9 +461,14 @@ namespace ACE.Server.WorldObjects
 
             if (weapon.HasImbuedEffect(ImbuedEffectType.CriticalStrike))
             {
-                var criticalStrikeMod = GetCriticalStrikeMod(wielder, skill, isPvP);
+                var criticalStrikeBonus = GetCriticalStrikeMod(wielder, skill, isPvP);
 
-                critRate = Math.Max(critRate, criticalStrikeMod);
+                if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                    critRate = Math.Max(critRate, criticalStrikeBonus);
+                else if (critRate > defaultMagicCritFrequency)
+                    critRate = 0.20f;
+                else
+                    critRate = Math.Max(critRate, criticalStrikeBonus);
             }
 
             critRate += wielder.GetCritRating() * 0.01f;
@@ -474,7 +487,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public static float GetWeaponCritDamageMod(WorldObject weapon, Creature wielder, CreatureSkill skill, Creature target, bool isPvP)
         {
-            var critDamageMod = (float)(weapon?.GetProperty(PropertyFloat.CriticalMultiplier) ?? defaultCritDamageMultiplier);
+            var critDamageMod = (float)(weapon?.CriticalMultiplier ?? defaultCritDamageMultiplier);
 
             if (isPvP && critDamageMod > defaultCritDamageMultiplier)
             {
@@ -532,7 +545,15 @@ namespace ACE.Server.WorldObjects
             {
                 var cripplingBlowMod = GetCripplingBlowMod(wielder, skill, isPvP);
 
-                critDamageMod = Math.Max(critDamageMod, cripplingBlowMod);
+                if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                    critDamageMod = Math.Max(critDamageMod, cripplingBlowMod);
+                else if(critDamageMod > defaultCritDamageMultiplier)
+                {
+                    if (GetImbuedSkillType(skill) == ImbuedSkillType.Magic)
+                        critDamageMod = 2.5f;
+                    else
+                        critDamageMod = 3.0f;
+                }
             }
             return critDamageMod;
         }
@@ -540,7 +561,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// PvP damaged is halved, automatically displayed in the client
         /// </summary>
-        public static readonly float ElementalDamageBonusPvPReduction = 0.5f;
+        public const float ElementalDamageBonusPvPReduction = 0.5f;
 
         /// <summary>
         /// Returns a multiplicative elemental damage modifier for the magic caster weapon type
@@ -692,20 +713,32 @@ namespace ACE.Server.WorldObjects
                 if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                     resistMod = 1.0f + (float)(weapon.ResistanceModifier ?? defaultModifier);       // 1.0 in the data, equivalent to a level 5 vuln
                 else
-                    resistMod = (float)(weapon.ResistanceModifier ?? 1.5f); // Equivalent to level III Elemental Vulnerability.
+                {
+                    var multiplier = (float)(weapon.ResistanceModifier ?? 0.6f);
+
+                    resistMod = GetRendingMod(skill, multiplier);
+                }
             }
 
             // handle elemental resistance rending
             var rendDamageType = GetRendDamageType(damageType);
 
             if (rendDamageType == ImbuedEffectType.Undef)
-                log.Debug($"{wielder.Name}.GetRendDamageType({damageType}) unexpected damage type for {weapon.Name} ({weapon.Guid})");
+                log.DebugFormat("{0}.GetRendDamageType({1}) unexpected damage type for {2} ({3})", wielder.Name, damageType, weapon.Name, weapon.Guid);
 
             if (rendDamageType != ImbuedEffectType.Undef && weapon.HasImbuedEffect(rendDamageType) && skill != null)
             {
                 var rendingMod = GetRendingMod(skill);
 
-                resistMod = Math.Max(resistMod, rendingMod);
+                if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                    resistMod = Math.Max(resistMod, rendingMod);
+                else if (resistMod > defaultModifier)
+                {
+                    var multiplier = CustomDMDefaultRendingMultiplier + Math.Abs(CustomDMDefaultRendingMultiplier - (float)(weapon.ResistanceModifier ?? 0.6f));
+                    resistMod = GetRendingMod(skill, multiplier);
+                }
+                else
+                    resistMod = Math.Max(resistMod, rendingMod);
             }
 
             return resistMod;
@@ -747,7 +780,7 @@ namespace ACE.Server.WorldObjects
                 case DamageType.Nether:
                     return ImbuedEffectType.NetherRending;
                 default:
-                    //log.Debug($"GetRendDamageType({damageType}) unexpected damage type");
+                    //log.DebugFormat("GetRendDamageType({0}) unexpected damage type", damageType);
                     return ImbuedEffectType.Undef;
             }
         }
@@ -840,7 +873,12 @@ namespace ACE.Server.WorldObjects
             float criticalStrikeMod;
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
-                criticalStrikeMod = 0.2f;
+            {
+                if (GetImbuedSkillType(skill) == ImbuedSkillType.Magic)
+                    criticalStrikeMod = 0.15f;
+                else
+                    criticalStrikeMod = 0.20f;
+            }
             else
             {
                 var skillType = GetImbuedSkillType(skill);
@@ -849,7 +887,7 @@ namespace ACE.Server.WorldObjects
 
                 var defaultCritFrequency = skillType == ImbuedSkillType.Magic ? defaultMagicCritFrequency : defaultPhysicalCritFrequency;
 
-                
+
                 var baseMod = 0.0f;
 
                 switch (skillType)
@@ -987,14 +1025,6 @@ namespace ACE.Server.WorldObjects
 
                 var baseMod = 1.0f;
 
-                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
-                {
-                    if (GetImbuedSkillType(skill) == ImbuedSkillType.Magic)
-                        return 2.0f;
-                    else
-                        return 2.5f;
-                }
-
                 switch (GetImbuedSkillType(skill))
                 {
                     case ImbuedSkillType.Melee:
@@ -1069,8 +1099,8 @@ namespace ACE.Server.WorldObjects
 
         // elemental rending cap, equivalent to level 6 vuln
         public static float MaxRendingMod = 2.5f;
-
-        public static float GetRendingMod(CreatureSkill skill)
+        public const float CustomDMDefaultRendingMultiplier = 0.8f;
+        public static float GetRendingMod(CreatureSkill skill, float multiplier = CustomDMDefaultRendingMultiplier)
         {
             var baseSkill = GetBaseSkillImbued(skill);
 
@@ -1078,7 +1108,17 @@ namespace ACE.Server.WorldObjects
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
             {
-                rendingMod = 1.75f; // Equivalent to level IV Elemental Vulnerability.
+                switch (GetImbuedSkillType(skill))
+                {
+                    case ImbuedSkillType.Melee:
+                        rendingMod = 1 + (baseSkill / 400f * multiplier);
+                        break;
+
+                    case ImbuedSkillType.Missile:
+                    case ImbuedSkillType.Magic:
+                        rendingMod = 1 + (baseSkill / 360f * multiplier);
+                        break;
+                }
             }
             else
             {
@@ -1109,7 +1149,7 @@ namespace ACE.Server.WorldObjects
             var armorRendingMod = 1.0f;
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
-                armorRendingMod -= 1.0f / 3.0f; // Equivalent to Imperil IV for 300 AL armor.
+                armorRendingMod = 0.5f; // Equivalent to -100 at 200 AL armor.
             else
             {
                 // % of armor ignored, min 0%, max 60%
@@ -1266,7 +1306,7 @@ namespace ACE.Server.WorldObjects
             set { if (!value.HasValue) RemoveProperty(PropertyFloat.IgnoreShield); else SetProperty(PropertyFloat.IgnoreShield, value.Value); }
         }
 
-        public float GetIgnoreShieldMod(Creature wielder, WorldObject weapon, bool isPvP)
+        public float GetIgnoreShieldMod(WorldObject wielder, WorldObject weapon, bool isPvP)
         {
             var creatureMod = IgnoreShield ?? 0.0f;
             double weaponMod;
@@ -1347,7 +1387,7 @@ namespace ACE.Server.WorldObjects
                     return ImbuedSkillType.Magic;
 
                 default:
-                    log.Debug($"WorldObject_Weapon.GetImbuedSkillType({skill?.Skill}): unexpected skill");
+                    log.DebugFormat("WorldObject_Weapon.GetImbuedSkillType({0}): unexpected skill", skill?.Skill);
                     return ImbuedSkillType.Undef;
             }
         }
@@ -1762,7 +1802,7 @@ namespace ACE.Server.WorldObjects
         // - 1/3 - 2/3 sec. Power-up Time = High Backhand
         // -       2/3 sec+ Power-up Time = High Slash
 
-        public static readonly float ThrustThreshold = 0.33f;
+        public const float ThrustThreshold = 0.33f;
 
         /// <summary>
         /// Returns TRUE if this is a thrust/slash weapon,
@@ -1992,6 +2032,23 @@ namespace ACE.Server.WorldObjects
                 }
             }
             return attackType;
+        }
+
+        public int GetWeaponMaxStrikes()
+        {
+            if (W_AttackType.IsMultiStrike())
+            {
+                if (WeaponSkill == Skill.Dagger)
+                    return 3;
+                else
+                    return 2;
+            }
+            else if (CleaveTargets > 0)
+                return (CleaveTargets + 1) * 2;
+            else if (DefaultCombatStyle == CombatStyle.TwoHanded)
+                return 2;
+
+            return 1;
         }
     }
 }

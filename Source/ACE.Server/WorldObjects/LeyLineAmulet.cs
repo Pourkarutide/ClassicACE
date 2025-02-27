@@ -182,8 +182,6 @@ namespace ACE.Server.WorldObjects
 
         public static readonly List<SpellId> PossibleAcquireSpells = new List<SpellId>()
         {
-            SpellId.ArmorSelf1,
-            SpellId.ArmorOther1,
             SpellId.ImperilOther1,
 
             SpellId.BladeVulnerabilityOther1,
@@ -337,7 +335,7 @@ namespace ACE.Server.WorldObjects
                 playerWielder.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your amulet is now aligned to this ley line!", ChatMessageType.Magic));
                 playerWielder.EnqueueBroadcast(new GameMessageScript(playerWielder.Guid, PlayScript.PortalStorm));
 
-                OnEquip(playerWielder, true);
+                playerWielder.TryActivateItemSpells(this);
             }
             else if(LeyLineSeed == seed && Structure < MaxLeyLineAmuletStructure)
             {
@@ -398,7 +396,7 @@ namespace ACE.Server.WorldObjects
             else
             {
                 if (isWielded)
-                    OnDequip(player, true);
+                    player.DeactivateItemSpells(this);
                 ResetAmulet();
 
                 if (player != null)
@@ -445,7 +443,7 @@ namespace ACE.Server.WorldObjects
             LongDesc = $"{basicDescription}\n\nCurrent Effect: Unaligned";
         }
 
-        public void OnEquip(Player player, bool forceAddSpellsToWielder = false)
+        public void OnActivate(Player player, bool forceAddSpellsToWielder = false)
         {
             if (player == null)
                 return;
@@ -479,7 +477,7 @@ namespace ACE.Server.WorldObjects
                 player.TryActivateSpells(this);
         }
 
-        public void OnDequip(Player player, bool forceRemoveSpellsFromWielder = false)
+        public void OnDeactivate(Player player, bool forceRemoveSpellsFromWielder = false)
         {
             if (player == null)
                 return;

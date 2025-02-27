@@ -1,5 +1,6 @@
 using System;
 using ACE.Entity.Enum;
+using ACE.Server.Entity;
 using ACE.Server.Network.Structure;
 
 namespace ACE.Server.Physics.Animation
@@ -42,12 +43,12 @@ namespace ACE.Server.Physics.Animation
         public HoldKey HoldKeyToApply;
         public int ActionStamp;
 
-        public static readonly float Default_DistanceToObject = 0.6f;
-        public static readonly float Default_FailDistance = float.MaxValue;
-        public static readonly float Default_MinDistance = 0.0f;
-        public static readonly float Default_Speed = 1.0f;
-        //public static readonly float Default_WalkRunThreshold = 15.0f;
-        public static readonly float Default_WalkRunThreshold = 1.0f;
+        public const float Default_DistanceToObject = 0.6f;
+        public const float Default_FailDistance = float.MaxValue;
+        public const float Default_MinDistance = 0.0f;
+        public const float Default_Speed = 1.0f;
+        //public const float Default_WalkRunThreshold = 15.0f;
+        public const float Default_WalkRunThreshold = 1.0f;
 
         public MovementParameters()
         {
@@ -213,14 +214,18 @@ namespace ACE.Server.Physics.Animation
                 command = 0;
         }
 
-        public MovementParameters(MoveToParameters mvp)
+        public MovementParameters(Motion motion)
         {
+            var mvp = motion.MoveToParameters;
             Flags = (MovementParamFlags)mvp.MovementParameters;
 
             DistanceToObject = mvp.DistanceToObject;
             MinDistance = mvp.MinDistance;
             DesiredHeading = mvp.DesiredHeading;
-            Speed = mvp.Speed;
+            if(motion.MovementType == MovementType.MoveToObject || motion.MovementType == MovementType.MoveToPosition)
+                Speed = motion.RunRate * mvp.Speed;
+            else
+                Speed = mvp.Speed;
             FailDistance = mvp.FailDistance;
             WalkRunThreshold = mvp.WalkRunThreshold;
         }

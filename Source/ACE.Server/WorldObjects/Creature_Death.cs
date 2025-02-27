@@ -38,8 +38,7 @@ namespace ACE.Server.WorldObjects
 
             onDeathEntered = true;
 
-            IsTurning = false;
-            IsMoving = false;
+            OnMovementStopped();
 
             //QuestManager.OnDeath(lastDamager?.TryGetAttacker());
 
@@ -62,7 +61,7 @@ namespace ACE.Server.WorldObjects
         {
             var lastDamager = lastDamagerInfo?.TryGetAttacker();
 
-            if (lastDamagerInfo == null || lastDamagerInfo.Guid == Guid || lastDamager is Hotspot)
+            if (lastDamagerInfo == null || lastDamagerInfo.Guid == Guid || lastDamager is Hotspot || lastDamager is Food)   // !(lastDamager is Creature)?
                 return Strings.General[1];
 
             var deathMessage = Strings.GetDeathMessage(damageType, criticalHit);
@@ -313,13 +312,13 @@ namespace ACE.Server.WorldObjects
                     baseXp *= 15;
                     break;
                 case 3:
-                    baseXp = (baseXp * level / 2) + 5000;
+                    baseXp = (baseXp * level / 2) + 500 + (500 * level);
                     break;
                 case 4:
-                    baseXp = (baseXp * level) + 10000;
+                    baseXp = (baseXp * level) + 1000 + (1000 * level);
                     break;
                 case 5:
-                    baseXp = (baseXp * level * 3) + 15000;
+                    baseXp = (baseXp * level * 3) + 3000 + (3000 * level);
                     break;
                 default:
                     break;
@@ -560,7 +559,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Create a corpse for both creatures and players currently
         /// </summary>
-        protected void CreateCorpse(DamageHistoryInfo killer, bool hadVitae = false)
+        protected void CreateCorpse(DamageHistoryInfo killer, bool hadVitae = false, int vitaeDelta = 0)
         {
             if (NoCorpse)
             {
@@ -640,6 +639,7 @@ namespace ACE.Server.WorldObjects
             corpse.GameplayMode = GameplayMode;
             corpse.GameplayModeExtraIdentifier = GameplayModeExtraIdentifier;
             corpse.GameplayModeIdentifierString = GameplayModeIdentifierString;
+            corpse.VitaeCpPool = vitaeDelta;
 
             // set 'killed by' for looting rights
             var killerName = "misadventure";
@@ -753,7 +753,7 @@ namespace ACE.Server.WorldObjects
                             player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your augmentation has reduced the number of items you can lose by {miserAug}!", ChatMessageType.Broadcast));
                     }
 
-                    if (dropped.Count == 0 && !isPKLdeath && !IsHardcore)
+                    if (dropped.Count == 0 && !isPKLdeath && !IsHardcore && (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM || corpse.VitaeCpPool == 0))
                         player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You have retained all your items. You do not need to recover your corpse!", ChatMessageType.Broadcast));
                 }
             }
@@ -798,12 +798,12 @@ namespace ACE.Server.WorldObjects
 
             corpse.EnterWorld();
 
-            if (player != null)
+            if (player != null && log.IsDebugEnabled)
             {
                 if (corpse.PhysicsObj == null || corpse.PhysicsObj.Position == null)
-                    log.Debug($"[CORPSE] {Name}'s corpse (0x{corpse.Guid}) failed to spawn! Tried at {player.Location.ToLOCString()}");
+                    log.DebugFormat("[CORPSE] {0}'s corpse (0x{1}) failed to spawn! Tried at {2}", Name, corpse.Guid, player.Location.ToLOCString());
                 else
-                    log.Debug($"[CORPSE] {Name}'s corpse (0x{corpse.Guid}) is located at {corpse.PhysicsObj.Position}");
+                    log.DebugFormat("[CORPSE] {0}'s corpse (0x{1}) is located at {2}", Name, corpse.Guid, corpse.PhysicsObj.Position);
             }
 
             if (saveCorpse)
@@ -840,6 +840,13 @@ namespace ACE.Server.WorldObjects
                         droppedItems.Add(wo);
 
                     DoCantripLogging(killer, wo);
+                }
+
+                if (IsMonster && 0.002 > ThreadSafeRandom.Next(0.0f, 1.0f))
+                {
+                    var map = TreasureMap.TryCreateTreasureMap(this);
+                    if (map != null)
+                        corpse.TryAddToInventory(map);
                 }
             }
 
@@ -985,10 +992,10 @@ namespace ACE.Server.WorldObjects
             var epicCantrips = wo.EpicCantrips;
             var legendaryCantrips = wo.LegendaryCantrips;
 
-            if (epicCantrips.Count > 0)
+            if (epicCantrips.Count > 0 && log.IsDebugEnabled)
                 log.Debug($"[LOOT][EPIC] {Name} ({Guid}) generated item with {epicCantrips.Count} epic{(epicCantrips.Count > 1 ? "s" : "")} - {wo.Name} ({wo.Guid}) - {GetSpellList(epicCantrips)} - killed by {killer?.Name} ({killer?.Guid})");
 
-            if (legendaryCantrips.Count > 0)
+            if (legendaryCantrips.Count > 0 && log.IsDebugEnabled)
                 log.Debug($"[LOOT][LEGENDARY] {Name} ({Guid}) generated item with {legendaryCantrips.Count} legendar{(legendaryCantrips.Count > 1 ? "ies" : "y")} - {wo.Name} ({wo.Guid}) - {GetSpellList(legendaryCantrips)} - killed by {killer?.Name} ({killer?.Guid})");
         }
 

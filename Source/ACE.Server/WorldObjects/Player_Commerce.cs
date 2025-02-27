@@ -47,7 +47,7 @@ namespace ACE.Server.WorldObjects
             SendUseDoneEvent();
         }
 
-        private static readonly uint coinStackWcid = (uint)ACE.Entity.Enum.WeenieClassName.W_COINSTACK_CLASS;
+        private const uint coinStackWcid = (uint)ACE.Entity.Enum.WeenieClassName.W_COINSTACK_CLASS;
 
         /// <summary>
         /// Vendor has validated the transactions and sent a list of items for processing.
@@ -417,6 +417,10 @@ namespace ACE.Server.WorldObjects
                 if (AllegianceRank != newRank)
                 {
                     AllegianceRank = newRank;
+
+                    if (HasAllegiance && Allegiance.Members.TryGetValue(Guid, out var ourNode))
+                        ourNode.Rank = (uint)newRank;
+
                     if (sendUpdateMessageIfChanged)
                     {
                         if (Session != null)

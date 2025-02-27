@@ -494,7 +494,7 @@ namespace ACE.Server.WorldObjects
             }
         }
 
-        private static readonly float closeInterval = 1.5f;
+        private const float closeInterval = 1.5f;
 
         /// <summary>
         /// After a player approaches a vendor, this is called every closeInterval seconds
@@ -556,7 +556,7 @@ namespace ACE.Server.WorldObjects
                 }
                 else
                 {
-                    MoveTo(Home, GetRunRate(), true, null, 1);
+                    MoveTo(Home);
                 }
             }
         }
@@ -1066,7 +1066,7 @@ namespace ACE.Server.WorldObjects
             if (!Tier.HasValue) // We're not in a town and no defined shop tier! See what's around us.
             {
                 float maxDistance;
-                if (CurrentLandblock.IsDungeon || (CurrentLandblock.HasDungeon && Location.Indoors))
+                if (InDungeon)
                     maxDistance = 50;
                 else
                     maxDistance = 500;
@@ -1347,13 +1347,7 @@ namespace ACE.Server.WorldObjects
         {
             bool allowSpecialMutations = PropertyManager.GetBool("vendor_allow_special_mutations").Item;
             var itemTier = RollTier(Tier ?? 1);
-            var item = LootGenerationFactory.CreateRandomLootObjects_New(
-                itemTier,
-                ShopQualityMod,
-                (DealMagicalItems ?? false) ? TreasureItemCategory.MagicItem : TreasureItemCategory.Item,
-                treasureItemType, armorType, weaponType, ShopHeritage,
-                allowSpecialMutations: allowSpecialMutations);
-
+            var item = LootGenerationFactory.CreateRandomLootObjects(itemTier, ShopQualityMod, (DealMagicalItems ?? false) ? TreasureItemCategory.MagicItem : TreasureItemCategory.Item, treasureItemType, armorType, weaponType, ShopHeritage, allowSpecialMutations: allowSpecialMutations);
             if (item == null)
                 return;
 
@@ -1437,7 +1431,7 @@ namespace ACE.Server.WorldObjects
             {
                 foreach (var itemToRemove in itemsToRemove)
                 {
-                    log.Debug($"[VENDOR] Vendor {Name} has discontinued sale of {itemToRemove.Name} and removed it from its UniqueItemsForSale list.");
+                    log.DebugFormat("[VENDOR] Vendor {0} has discontinued sale of {1} and removed it from its UniqueItemsForSale list.", Name, itemToRemove.Name);
                     UniqueItemsForSale.Remove(itemToRemove.Guid);
 
                     itemToRemove.Destroy();     // even though it has already been removed from the db at this point, we want to mark as freed in guid manager now

@@ -30,7 +30,7 @@ namespace ACE.Database
                 {
                     if (((RelationalDatabaseCreator)context.Database.GetService<IDatabaseCreator>()).Exists())
                     {
-                        log.Debug($"[DATABASE] Successfully connected to {config.Database} database on {config.Host}:{config.Port}.");
+                        log.DebugFormat("[DATABASE] Successfully connected to {0} database on {1}:{2}.", config.Database, config.Host, config.Port);
                         return true;
                     }
                 }
@@ -477,6 +477,16 @@ namespace ACE.Database
             }
         }
 
+        public void UpdateExplorationSite(ExplorationSite explorationSite)
+        {
+            using (var context = new WorldDbContext())
+            {
+                context.Entry(explorationSite).State = EntityState.Modified;
+
+                context.SaveChanges();
+            }
+        }
+
         // =====================================
         // LandblockDescription
         // =====================================
@@ -508,6 +518,18 @@ namespace ACE.Database
         // Encounter
         // =====================================
 
+        public List<Encounter> GetEncountersByWcid(uint wcid)
+        {
+            using (var context = new WorldDbContext())
+            {
+                var results = context.Encounter
+                    .AsNoTracking()
+                    .Where(r => r.WeenieClassId == wcid)
+                    .ToList();
+
+                return results;
+            }
+        }
 
         // =====================================
         // Event

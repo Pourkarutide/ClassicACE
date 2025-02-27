@@ -88,44 +88,32 @@ namespace ACE.Server.WorldObjects
 
                 if (rng < probability)
                 {
-                    CurrentSpell = new Spell(spell.Key);
+                    var spellToCast = new Spell(spell.Key);
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && !spellToCast.NotFound && (spellToCast.MetaSpellType == SpellType.Enchantment || spellToCast.MetaSpellType == SpellType.EnchantmentProjectile))
+                    {
+                        float durationLeft = 0;
+                        if (spellToCast.IsSelfTargeted)
+                            durationLeft = EnchantmentManager.GetEnchantmentDurationLeft(spellToCast.Id);
+                        else if (AttackTarget != null)
+                            durationLeft = AttackTarget.EnchantmentManager.GetEnchantmentDurationLeft(spellToCast.Id);
+
+                        if (durationLeft > spellToCast.Duration / 3)
+                            continue; // Do not reapply currently active enchantments unless they are almost expiring.
+                    }
+                    CurrentSpell = spellToCast;
                     return true;
                 }
             }
-            return false;
-        }
 
-        private bool TryRollSpellModified()
-        {
-            CurrentSpell = null;
-
-            //Console.WriteLine($"{Name}.TryRollSpell(), probability={GetProbabilityAny()}");
-
-            // monster spellbooks have probabilities with base 2.0
-            // ie. a 5% chance would be 2.05 instead of 0.05
-
-            // much less common, some monsters will have spells with just base 2.0 probability
-            // there were probably other criteria used to select these spells (emote responses, monster ai responses)
-            // for now, 2.0 base just becomes a 2% chance
-
-            if (Weenie.PropertiesSpellBook == null)
-                return false;
-
-            // We don't use thread safety here. Monster spell books aren't mutated cross-threads.
-            // This reduces memory consumption by not cloning the spell book every single TryRollSpell()
-            //foreach (var spell in Biota.CloneSpells(BiotaDatabaseLock)) // Thread-safe
-            foreach (var spell in Weenie.PropertiesSpellBook) // Not thread-safe
+            if (AiIncapableOfAnyMotion)
             {
-                var probability = spell.Value > 2.0f ? spell.Value - 2.0f : spell.Value / 100.0f;
+                // Since we do not have any animations we need this to throttle our spell rolls.
+                var powerupTime = (float)(PowerupTime ?? 1.0f);
+                var postDelay = ThreadSafeRandom.Next(powerupTime * 0.5f, powerupTime * 1.5f);
 
-                var rng = ThreadSafeRandom.Next(0.0f, 1.0f);
-
-                if (rng < probability)
-                {
-                    CurrentSpell = new Spell(spell.Key);
-                    return true;
-                }
+                NextSpellCastTime = Timers.RunningTime + postDelay;
             }
+
             return false;
         }
 
@@ -163,7 +151,7 @@ namespace ACE.Server.WorldObjects
 
         private bool IsSelfCast()
         {
-            if (CurrentAttack != CombatType.Magic)
+            if (CurrentAttackType != CombatType.Magic)
                 return false;
 
             return GetSpellMaxRange() == float.PositiveInfinity;
@@ -175,25 +163,23 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         private void MagicAttack()
         {
-            var target = AttackTarget as Creature;
-
-            if (target == null || !target.IsAlive)
-            {
-                FindNextTarget();
-                return;
-            }
+            var targetCreature = AttackTarget as Creature;
 
             var spell = CurrentSpell;
 
             // turn to?
-            if (AiUsesMana && !UseMana()) return;
+            if (AiUsesMana && !UseMana())
+            {
+                EndAttack();
+                return;
+            }
 
             // spell words
             if (AiUseHumanMagicAnimations)
             {
                 var spellWords = spell._spellBase.GetSpellWords(DatManager.PortalDat.SpellComponentsTable);
                 if (!string.IsNullOrWhiteSpace(spellWords))
-                    EnqueueBroadcast(new GameMessageHearSpeech(spellWords, Name, Guid.Full, ChatMessageType.Spellcasting), LocalBroadcastRange, ChatMessageType.Spellcasting);
+                    EnqueueBroadcast(new GameMessageHearSpeech(spellWords, Name, Guid.Full, ChatMessageType.Spellcasting), LocalBroadcastRange);
             }
 
             var preCastTime = PreCastMotion(AttackTarget);
@@ -202,17 +188,24 @@ namespace ACE.Server.WorldObjects
             actionChain.AddDelaySeconds(preCastTime);
             actionChain.AddAction(this, () =>
             {
-                if (IsDead || AttackTarget == null || target.IsDead)
+                if (AttackTarget == null || IsDead || targetCreature.IsDead)
+                {
+                    EndAttack();
                     return;
+                }
 
                 CastSpell(spell);
 
                 PostCastMotion();
             });
-            actionChain.EnqueueChain();
 
             var postCastTime = GetPostCastTime(spell);
             var animTime = preCastTime + postCastTime;
+
+            if (animTime == 0)
+                actionChain.AddAction(this, () => OnMotionDone((uint)CurrentAttackMotionCommand, true)); // In case we have no animations we still need to complete the attack sequence.
+
+            actionChain.EnqueueChain();
 
             //Console.WriteLine($"{Name}.MagicAttack(): preCastTime({preCastTime}), postCastTime({postCastTime})");
 
@@ -220,9 +213,11 @@ namespace ACE.Server.WorldObjects
             PrevAttackTime = Timers.RunningTime + preCastTime;
             var powerupTime = (float)(PowerupTime ?? 1.0f);
 
-            var postDelay = ThreadSafeRandom.Next(0.0f, powerupTime);
+            var postDelay = ThreadSafeRandom.Next(powerupTime * 0.5f, powerupTime * 1.5f);
 
             NextMoveTime = NextAttackTime = PrevAttackTime + postCastTime + postDelay;
+
+            NextSpellCastTime = NextAttackTime + (AiUseMagicDelay ?? 0.0f);
         }
 
         private bool UseMana()
@@ -239,9 +234,9 @@ namespace ACE.Server.WorldObjects
             return true;
         }
 
-        private static readonly float PreCastSpeed = 2.0f;
-        private static readonly float PostCastSpeed = 1.0f;
-        private static readonly float PostCastSpeed_Ranged = 1.66f;  // ??
+        private const float PreCastSpeed = 2.0f;
+        private const float PostCastSpeed = 1.0f;
+        private const float PostCastSpeed_Ranged = 1.66f;  // ??
 
         /// <summary>
         /// Perform the first part of monster spell casting animation - spreading arms out
@@ -257,7 +252,9 @@ namespace ACE.Server.WorldObjects
             //motion.TargetGuid = target.Guid;
             CurrentMotionState = motion;
 
-            EnqueueBroadcastMotion(motion);
+            CurrentAttackMotionCommand = MotionCommand.CastSpell;
+
+            EnqueueBroadcastMotion(motion, null, true);
 
             return MotionTable.GetAnimationLength(MotionTableId, CurrentMotionState.Stance, MotionCommand.CastSpell, PreCastSpeed);
         }
@@ -287,7 +284,7 @@ namespace ACE.Server.WorldObjects
                 motion.MotionState.TurnSpeed = 2.25f;
                 CurrentMotionState = motion;
 
-                EnqueueBroadcastMotion(motion);
+                EnqueueBroadcastMotion(motion, null, true);
 
                 animTime += MotionTable.GetAnimationLength(MotionTableId, CurrentMotionState.Stance, windupGesture, PreCastSpeed);
             }
@@ -296,7 +293,9 @@ namespace ACE.Server.WorldObjects
             castMotion.MotionState.TurnSpeed = 2.25f;
             CurrentMotionState = castMotion;
 
-            EnqueueBroadcastMotion(castMotion);
+            EnqueueBroadcastMotion(castMotion, null, true);
+
+            CurrentAttackMotionCommand = CurrentSpell.Formula.CastGesture;
 
             animTime += castAnimTime;
 
@@ -410,7 +409,7 @@ namespace ACE.Server.WorldObjects
             //motion.TargetGuid = target.Guid;
             CurrentMotionState = motion;
 
-            EnqueueBroadcastMotion(motion);
+            EnqueueBroadcastMotion(motion, null, true);
         }
 
         public float GetPostCastTime(Spell spell, bool fallback = false)

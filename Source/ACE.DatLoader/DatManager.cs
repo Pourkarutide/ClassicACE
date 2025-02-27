@@ -25,11 +25,11 @@ namespace ACE.DatLoader
         private static int INFILTRATION_ITERATION_HIRES = 497;
         private static int INFILTRATION_ITERATION_LANGUAGE = 10002;
 
-        public static string CUSTOMDM_CLIENT_VERSION_STRING = "c111";
-        private static int CUSTOMDM_ITERATION_CELL = 20007;
-        private static int CUSTOMDM_ITERATION_PORTAL = 20036;
+        public static string CUSTOMDM_CLIENT_VERSION_STRING = "c116";
+        private static int CUSTOMDM_ITERATION_CELL = 20011;
+        private static int CUSTOMDM_ITERATION_PORTAL = 20041;
         private static int CUSTOMDM_ITERATION_HIRES = 497;
-        private static int CUSTOMDM_ITERATION_LANGUAGE = 20008;
+        private static int CUSTOMDM_ITERATION_LANGUAGE = 20010;
         public static CellDatDatabase CellDat { get; private set; }
 
         public static PortalDatDatabase PortalDat { get; private set; }

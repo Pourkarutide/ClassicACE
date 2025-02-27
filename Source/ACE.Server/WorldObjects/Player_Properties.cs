@@ -80,7 +80,15 @@ namespace ACE.Server.WorldObjects
             get => IsPlussed && CloakStatus != CloakStatus.Player;
         }
 
+        /// <summary>
+        /// Flag indicates if player is an Olthoi Player
+        /// </summary>
         public bool IsOlthoiPlayer { get; set; }
+
+        /// <summary>
+        /// Flag indicates if player is a Gear Knight and Core Plating server option (gearknight_core_plating) is enforced
+        /// </summary>
+        public bool IsGearKnightPlayer { get; set; }
 
 
         public string GodState
@@ -1297,39 +1305,56 @@ namespace ACE.Server.WorldObjects
                     return HealthQueryTarget.Value;
                 else if (ManaQueryTarget.HasValue)
                     return ManaQueryTarget.Value;
-                else if (RequestedAppraisalTarget.HasValue)
+                else if (ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM && RequestedAppraisalTarget.HasValue) // The CustomDM client is modified to always update the server with it's current target either as a health or mana query target.
                     return RequestedAppraisalTarget.Value;
                 return 0;
             }
         }
 
-        public uint PreviousQueryTarget
-        {
-            get
-            {
-                if (PreviousHealthQueryTarget != 0)
-                    return PreviousHealthQueryTarget;
-                else if (PreviousManaQueryTarget != 0)
-                    return PreviousManaQueryTarget;
-                else if (PreviousRequestedAppraisalTarget != 0)
-                    return PreviousRequestedAppraisalTarget;
-                else
-                    return 0;
-            }
-        }
-
-        public uint PreviousHealthQueryTarget = 0;
+        public uint PreviousQueryTarget = 0;
         public uint? HealthQueryTarget
         {
             get => GetProperty(PropertyInstanceId.HealthQueryTarget);
-            set { PreviousHealthQueryTarget = GetProperty(PropertyInstanceId.HealthQueryTarget) ?? 0; if (!value.HasValue) RemoveProperty(PropertyInstanceId.HealthQueryTarget); else SetProperty(PropertyInstanceId.HealthQueryTarget, value.Value); }
+            set
+            {
+                var previousValue = GetProperty(PropertyInstanceId.HealthQueryTarget);
+                if (previousValue.HasValue)
+                    PreviousQueryTarget = previousValue.Value;
+
+                if (!value.HasValue)
+                    RemoveProperty(PropertyInstanceId.HealthQueryTarget);
+                else
+                    SetProperty(PropertyInstanceId.HealthQueryTarget, value.Value);
+            }
         }
 
-        public uint PreviousManaQueryTarget = 0;
         public uint? ManaQueryTarget
         {
             get => GetProperty(PropertyInstanceId.ManaQueryTarget);
-            set { PreviousManaQueryTarget = GetProperty(PropertyInstanceId.ManaQueryTarget) ?? 0; if (!value.HasValue) RemoveProperty(PropertyInstanceId.ManaQueryTarget); else SetProperty(PropertyInstanceId.ManaQueryTarget, value.Value); }
+            set
+            {
+                var previousValue = GetProperty(PropertyInstanceId.ManaQueryTarget);
+                if(previousValue.HasValue)
+                    PreviousQueryTarget = previousValue.Value;
+
+                if (!value.HasValue)
+                    RemoveProperty(PropertyInstanceId.ManaQueryTarget);
+                else
+                    SetProperty(PropertyInstanceId.ManaQueryTarget, value.Value);
+            }
+        }
+
+        public WorldObject GetQueryTarget(uint guidToBypass = 0)
+        {
+            var queryTarget = QueryTarget;
+
+            if (guidToBypass != 0 && queryTarget == guidToBypass)
+                queryTarget = PreviousQueryTarget;
+
+            if (queryTarget == 0 || queryTarget == guidToBypass)
+                return null;
+
+            return FindObject(queryTarget, SearchLocations.MyInventory | SearchLocations.MyEquippedItems | SearchLocations.Landblock | SearchLocations.WieldedByOther);
         }
 
         public uint PreviousRequestedAppraisalTarget = 0;
@@ -1590,6 +1615,12 @@ namespace ACE.Server.WorldObjects
         {
             get => GetProperty(PropertyInt.ChargenTitleId) ?? 0;
             set { if (value == 0) RemoveProperty(PropertyInt.ChargenTitleId); else SetProperty(PropertyInt.ChargenTitleId, value); }
+        }
+
+        public double? VitaeDecayTimestamp
+        {
+            get => GetProperty(PropertyFloat.VitaeDecayTimestamp);
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.VitaeDecayTimestamp); else SetProperty(PropertyFloat.VitaeDecayTimestamp, value.Value); }
         }
     }
 }

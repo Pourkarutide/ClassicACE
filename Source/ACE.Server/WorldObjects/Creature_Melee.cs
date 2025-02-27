@@ -100,11 +100,11 @@ namespace ACE.Server.WorldObjects
             return dist1.CompareTo(dist2);
         }
 
-        public static readonly float CleaveRange = 5.0f;
-        public static readonly float CleaveRangeSq = CleaveRange * CleaveRange;
-        public static readonly float CleaveAngle = 180.0f;
+        public const float CleaveRange = 5.0f;
+        public const float CleaveRangeSq = CleaveRange * CleaveRange;
+        public const float CleaveAngle = 180.0f;
 
-        public static readonly float CleaveCylRange = 2.0f;
+        public const float CleaveCylRange = 2.0f;
 
         /// <summary>
         /// Performs a cleaving attack for two-handed weapons
@@ -159,7 +159,7 @@ namespace ACE.Server.WorldObjects
             }
             return cleaveTargets;
         }
-        
+
         public static readonly float PierceRange = 5.0f;
         public static readonly float PierceRangeSq = PierceRange * PierceRange;
         public static readonly float PierceAngle = 180.0f;
@@ -169,7 +169,7 @@ namespace ACE.Server.WorldObjects
         /// Performs a piercing attack which follows-through the 1st primary target to the secondary second as long as the secondary target is 90 degrees, essentially in a straight-line.
         /// </summary>
         /// <returns>The list of pierce targets to hit with this attack</returns>
-        public List<Creature>GetPierceTarget(Creature target, WorldObject weapon)
+        public List<Creature> GetPierceTarget(Creature target, WorldObject weapon)
         {
             var player = this as Player;
 

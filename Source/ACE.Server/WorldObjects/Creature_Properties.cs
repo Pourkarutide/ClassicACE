@@ -141,8 +141,8 @@ namespace ACE.Server.WorldObjects
                 var addVuln = ModToRating(vulnMod);
 
                 // scale
-                addProt = IgnoreMagicResistScaled(addProt);
-                addVuln = IgnoreMagicResistScaled(addVuln);
+                addProt = attacker is Player ? IgnoreMagicResistScaled(addProt) : 0;
+                addVuln = attacker is Player ? IgnoreMagicResistScaled(addVuln) : 0;
 
                 protMod = GetNegativeRatingMod(addProt);
                 vulnMod = GetPositiveRatingMod(addVuln);
@@ -269,6 +269,19 @@ namespace ACE.Server.WorldObjects
             get => GetProperty(PropertyBool.AiImmobile) ?? false;
             set { if (!value) RemoveProperty(PropertyBool.AiImmobile); else SetProperty(PropertyBool.AiImmobile, value); }
         }
+
+        public bool AiOmnidirectional
+        {
+            get => GetProperty(PropertyBool.AiOmnidirectional) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.AiOmnidirectional); else SetProperty(PropertyBool.AiOmnidirectional, value); }
+        }
+
+        public bool AiIncapableOfAnyMotion
+        {
+            get => GetProperty(PropertyBool.AiIncapableOfAnyMotion) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.AiIncapableOfAnyMotion); else SetProperty(PropertyBool.AiIncapableOfAnyMotion, value); }
+        }
+
 
         public int? Overpower
         {

@@ -16,6 +16,8 @@ using ACE.Server.Managers;
 using ACE.Server.Network.Structure;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
+using ACE.Database.Models.Shard;
+using Biota = ACE.Entity.Models.Biota;
 
 namespace ACE.Server.WorldObjects
 {
@@ -79,6 +81,8 @@ namespace ACE.Server.WorldObjects
             BuildGuests();
 
             LinkedHouses = new List<House>();
+
+            Tier = null;
         }
 
         /// <summary>
@@ -98,6 +102,7 @@ namespace ACE.Server.WorldObjects
             }
             else
             {
+                DetermineTier();
                 houseData.SetBuyItems(SlumLord.GetBuyItems());
                 houseData.SetRentItems(SlumLord.GetRentItems());
             }
@@ -140,7 +145,14 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
-            var linkedHouses = WorldObjectFactory.CreateNewWorldObjects(instances, new List<ACE.Database.Models.Shard.Biota> { biota }, biota.WeenieClassId);
+            List<WorldObject> linkedHouses;
+
+            var houseType = (HouseType)biota.GetProperty(PropertyInt.HouseType);
+            var isCustomHouse = houseType == HouseType.CustomApartment || houseType == HouseType.CustomCottage || houseType == HouseType.CustomVilla || houseType == HouseType.CustomMansion;
+            if (isCustomHouse)
+                linkedHouses = WorldObjectFactory.CreateNewWorldObjects(instances, new List<ACE.Database.Models.Shard.Biota> { biota }, null, houseGuid);
+            else
+                linkedHouses = WorldObjectFactory.CreateNewWorldObjects(instances, new List<ACE.Database.Models.Shard.Biota> { biota }, biota.WeenieClassId);
 
             foreach (var linkedHouse in linkedHouses)
                 linkedHouse.ActivateLinks(instances, new List<ACE.Database.Models.Shard.Biota> { biota }, linkedHouses[0]);
@@ -167,6 +179,8 @@ namespace ACE.Server.WorldObjects
 
                 house.ChildLinks.Remove(house.SlumLord);
                 house.ChildLinks.Add(slumlord);
+
+                slumlord.ParentLink = house;
             }
             return house;
         }
@@ -212,11 +226,45 @@ namespace ACE.Server.WorldObjects
             return rentDue;
         }
 
+        public override Position Location
+        {
+            get => GetPosition(PositionType.Location);
+            set
+            {
+                var updateHouseId = Location != null && Location.Cell != value.Cell;
+
+                SetPosition(PositionType.Location, value);
+
+                if (updateHouseId)
+                    HouseManager.DoHandleHouseMovement(Guid.Full);
+            }
+        }
+
+        public override uint? HouseId
+        {
+            get
+            {
+                if(!IsCustomHouse)
+                    return GetProperty(PropertyDataId.HouseId);
+                return Location.Cell;
+            }
+            set
+            {
+                if (!IsCustomHouse)
+                {
+                    if (!value.HasValue)
+                        RemoveProperty(PropertyDataId.HouseId);
+                    else
+                        SetProperty(PropertyDataId.HouseId, value.Value);
+                }
+            }
+        }
+
         public override void SetLinkProperties(WorldObject wo)
         {
             // for house dungeons, link to outdoor house properties
             var house = this;
-            if (CurrentLandblock != null && CurrentLandblock.HasDungeon && HouseType != HouseType.Apartment)
+            if (CurrentLandblock != null && CurrentLandblock.HasDungeon && !IsApartment)
             {
                 var biota = DatabaseManager.Shard.BaseDatabase.GetBiotasByWcid(WeenieClassId).Where(bio => bio.BiotaPropertiesPosition.Count > 0).FirstOrDefault(b => b.BiotaPropertiesPosition.FirstOrDefault(p => p.PositionType == (ushort)PositionType.Location).ObjCellId >> 16 != Location.Landblock);
                 if (biota != null)
@@ -283,7 +331,9 @@ namespace ACE.Server.WorldObjects
             SetLinkProperties(wo);
         }
 
-        public bool IsApartment => HouseType == HouseType.Apartment;
+        public bool IsApartment => HouseType == HouseType.Apartment || HouseType == HouseType.CustomApartment;
+
+        public bool IsCustomHouse => HouseType == HouseType.CustomApartment || HouseType == HouseType.CustomCottage || HouseType == HouseType.CustomVilla || HouseType == HouseType.CustomMansion;
 
         /// <summary>
         /// Returns TRUE if this player has guest or storage access
@@ -532,12 +582,17 @@ namespace ACE.Server.WorldObjects
             {
                 if (_rootGuid == null)
                 {
-                    if (HouseCell.RootGuids.TryGetValue(Guid.Full, out var rootGuid))
-                        _rootGuid = new ObjectGuid(rootGuid);
+                    if (IsCustomHouse)
+                        _rootGuid = Guid;
                     else
                     {
-                        log.Error($"House.RootGuid - couldn't find root guid for house guid {Guid}");
-                        _rootGuid = Guid;
+                        if (HouseCell.RootGuids.TryGetValue(Guid.Full, out var rootGuid))
+                            _rootGuid = new ObjectGuid(rootGuid);
+                        else
+                        {
+                            log.Error($"House.RootGuid - couldn't find root guid for house guid {Guid}");
+                            _rootGuid = Guid;
+                        }
                     }
                 }
                 return _rootGuid.Value;
@@ -607,6 +662,12 @@ namespace ACE.Server.WorldObjects
 
         public int BootAll(Player booter, bool guests = true, bool allegianceHouse = false)
         {
+            if (IsCustomHouse)
+            {
+                booter.Session.Network.EnqueueSend(new GameMessageSystemChat("This house does not support the boot command.", ChatMessageType.Broadcast));
+                return 0;
+            }
+
             var players = PlayerManager.GetAllOnline();
 
             var booted = 0;
@@ -733,11 +794,210 @@ namespace ACE.Server.WorldObjects
                 { HookGroupType.WritableItems,                   0 },
                 { HookGroupType.SpellCastingItems,              -1 },
                 { HookGroupType.SpellTeachingItems,              0 } }
+            },
+            { HouseType.CustomCottage, new Dictionary<HookGroupType, int> {
+                { HookGroupType.Undef,                          -1 },
+                { HookGroupType.NoisemakingItems,               -1 },
+                { HookGroupType.TestItems,                      -1 },
+                { HookGroupType.PortalItems,                    -1 },
+                { HookGroupType.WritableItems,                   1 },
+                { HookGroupType.SpellCastingItems,               5 },
+                { HookGroupType.SpellTeachingItems,              0 } }
+            },
+            { HouseType.CustomVilla, new Dictionary<HookGroupType, int> {
+                { HookGroupType.Undef,                          -1 },
+                { HookGroupType.NoisemakingItems,               -1 },
+                { HookGroupType.TestItems,                      -1 },
+                { HookGroupType.PortalItems,                    -1 },
+                { HookGroupType.WritableItems,                   1 },
+                { HookGroupType.SpellCastingItems,              10 },
+                { HookGroupType.SpellTeachingItems,              0 } }
+            },
+            { HouseType.CustomMansion, new Dictionary<HookGroupType, int> {
+                { HookGroupType.Undef,                          -1 },
+                { HookGroupType.NoisemakingItems,               -1 },
+                { HookGroupType.TestItems,                      -1 },
+                { HookGroupType.PortalItems,                    -1 },
+                { HookGroupType.WritableItems,                   3 },
+                { HookGroupType.SpellCastingItems,              15 },
+                { HookGroupType.SpellTeachingItems,              1 } }
+            },
+            { HouseType.CustomApartment, new Dictionary<HookGroupType, int> {
+                { HookGroupType.Undef,                          -1 },
+                { HookGroupType.NoisemakingItems,               -1 },
+                { HookGroupType.TestItems,                      -1 },
+                { HookGroupType.PortalItems,                     0 },
+                { HookGroupType.WritableItems,                   0 },
+                { HookGroupType.SpellCastingItems,              -1 },
+                { HookGroupType.SpellTeachingItems,              0 } }
             }
         };
 
         public int GetHookGroupCurrentCount(HookGroupType hookGroupType) => Hooks.Count(h => h.HasItem && (h.Item?.HookGroup ?? HookGroupType.Undef) == hookGroupType);
 
         public int GetHookGroupMaxCount(HookGroupType hookGroupType) => HookGroupLimits[HouseType][hookGroupType];
+
+        public void SetHooksVisible(bool visible)
+        {
+            if (visible == (HouseHooksVisible ?? true)) return;
+
+            HouseHooksVisible = visible;
+
+            foreach (var hook in Hooks.Where(i => i.Inventory.Count == 0))
+            {
+                hook.UpdateHookVisibility();
+            }
+
+            // if house has dungeon, repeat this process
+            if (HasDungeon)
+            {
+                var dungeonHouse = GetDungeonHouse();
+                if (dungeonHouse == null) return;
+
+                dungeonHouse.HouseHooksVisible = visible;
+
+                foreach (var hook in dungeonHouse.Hooks.Where(i => i.Inventory.Count == 0))
+                {
+                    hook.UpdateHookVisibility();
+                }
+
+                if (dungeonHouse.CurrentLandblock == null)
+                    dungeonHouse.SaveBiotaToDatabase();
+            }
+
+            if (CurrentLandblock == null)
+                SaveBiotaToDatabase();
+        }
+
+        public float GetPriceMultiplier()
+        {
+            if (!IsCustomHouse)
+                return 1.0f;
+
+            if (!Tier.HasValue)
+                DetermineTier();
+
+            if(Tier.HasValue)
+                return 1 + (((float)Tier.Value - 1) * 0.2f);
+            return 1.0f;
+        }
+
+        public float GeteAdditionalLevelRequirement()
+        {
+            if (!IsCustomHouse)
+                return 1.0f;
+
+            if (!Tier.HasValue)
+                DetermineTier();
+
+            if (Tier.HasValue)
+                return (float)Math.Round((Tier.Value - 1) * 6);
+            return 1.0f;
+        }
+
+        public float GetAdditionalAllegianceLevelRequirement()
+        {
+            if (!IsCustomHouse)
+                return 1.0f;
+
+            if (!Tier.HasValue)
+                DetermineTier();
+
+            if (Tier.HasValue)
+                return (float)Math.Round(Tier.Value - 1);
+            return 1.0f;
+        }
+
+        public void DetermineTier()
+        {
+            if (!IsCustomHouse)
+                return;
+
+            if (!Tier.HasValue)
+            {
+                var landblockDescription = DatabaseManager.World.GetLandblockDescriptionsByLandblock(Location.LandblockId.Landblock).FirstOrDefault();
+
+                var startIndex = landblockDescription.Reference.LastIndexOf("in ");
+                if (startIndex == -1)
+                    startIndex = landblockDescription.Reference.LastIndexOf("of ");
+
+                if (startIndex != -1)
+                {
+                    startIndex += 3;
+                    var townName = landblockDescription.Reference.Substring(startIndex, landblockDescription.Reference.Length - startIndex);
+                    switch (townName)
+                    {
+                        case "Yaraq":
+                        case "Shoushi":
+                        case "Holtburg":
+                            Tier = 1;
+                            break;
+                        case "Al-Arqas":
+                        case "Bluespire":
+                        case "Greenspire":
+                        case "Lytelthorpe":
+                        case "Nanto":
+                        case "Redspire":
+                        case "Rithwic":
+                        case "Samsur":
+                        case "Tufa":
+                        case "Xarabydun":
+                        case "Yanshi":
+                            Tier = 2;
+                            break;
+                        case "Al-Jalima":
+                        case "Ahurenga":
+                        case "Arwic":
+                        case "Baishi":
+                        case "Cragstone":
+                        case "Eastham":
+                        case "Glenden Wood":
+                        case "Hebian-To":
+                        case "Khayyaban":
+                        case "Kryst":
+                        case "Lin":
+                        case "Mayoi":
+                        case "Oolutanga's Refuge":
+                        case "Sawato":
+                        case "Qalaba'r":
+                        case "Tou-Tou":
+                        case "Uziz":
+                        case "Zaikhal":
+                            Tier = 3;
+                            break;
+                        case "Dryreach":
+                        case "Danby's Outpost":
+                        case "MacNiall's Freehold":
+                            Tier = 4;
+                            break;
+                        case "Bandit Castle":
+                        case "Kara":
+                        case "Linvak Tukal":
+                        case "Neydisa Castle":
+                        case "Plateau Village":
+                        case "Stonehold":
+                        case "Timaru":
+                            Tier = 5;
+                            break;
+                        case "Candeth Keep":
+                        case "Fort Tethana":
+                        case "Ayan Baqur":
+                        case "Wai Jhou":
+                            Tier = 6;
+                            break;
+                    }
+                }
+            }
+
+            if (!Tier.HasValue)
+            {
+                float maxDistance;
+                if (InDungeon)
+                    maxDistance = 50;
+                else
+                    maxDistance = 500;
+                Tier = Math.Max(GetHighestTierAroundObject(maxDistance), 1); // Fallback to tier 1 if there's nothing around us.
+            }
+        }
     }
 }

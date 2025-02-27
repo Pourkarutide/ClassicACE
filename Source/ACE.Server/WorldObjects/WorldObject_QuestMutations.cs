@@ -13,7 +13,6 @@ using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects.Entity;
-using Org.BouncyCastle.Asn1.X509;
 
 namespace ACE.Server.WorldObjects
 {
@@ -63,7 +62,7 @@ namespace ACE.Server.WorldObjects
                 this.ItemType != ItemType.Jewelry) ||
                (this.Workmanship.HasValue &&
                 this.Workmanship.Value > 0) ||
-                this is Ammunition 
+                this is Ammunition
             )
             {
                 return "";
@@ -86,7 +85,7 @@ namespace ACE.Server.WorldObjects
             //TODO should make the chances configurable?
             roll = ThreadSafeRandom.Next(0f, 1f);
             int mutationCount = 0;
-            if(roll < 0.10)
+            if (roll < 0.10)
             {
                 mutationCount = 3;
             }
@@ -99,7 +98,7 @@ namespace ACE.Server.WorldObjects
                 mutationCount = 1;
             }
 
-            if(mutationCount < 1)
+            if (mutationCount < 1)
             {
                 //TODO - do we return any message?
                 return "";
@@ -113,7 +112,7 @@ namespace ACE.Server.WorldObjects
             //  Rend / Rating = 5
             List<int> mutationTypes = new List<int>();
 
-            for(int i = 0; i < mutationCount; i++)
+            for (int i = 0; i < mutationCount; i++)
             {
                 int mutationType = ThreadSafeRandom.Next(1, 5);
 
@@ -196,7 +195,7 @@ namespace ACE.Server.WorldObjects
             if (mutationTierOverride != null)
                 return mutationTierOverride.Value;
 
-            List<(WieldRequirement, int?)> reqs = new List<(WieldRequirement, int?)>() { (WieldRequirements, WieldDifficulty), (WieldRequirements2, WieldDifficulty2), (WieldRequirements3, WieldDifficulty3), (WieldRequirements4, WieldDifficulty4)}.Where(x => (uint)x.Item1 != 0).ToList();
+            List<(WieldRequirement, int?)> reqs = new List<(WieldRequirement, int?)>() { (WieldRequirements, WieldDifficulty), (WieldRequirements2, WieldDifficulty2), (WieldRequirements3, WieldDifficulty3), (WieldRequirements4, WieldDifficulty4) }.Where(x => (uint)x.Item1 != 0).ToList();
 
             var levelReq = reqs.Find(x => x.Item1 == WieldRequirement.Level);
             var attrReq = reqs.Find(x => x.Item1 == WieldRequirement.Attrib);
@@ -295,7 +294,7 @@ namespace ACE.Server.WorldObjects
             switch (selectSlayerType)
             {
                 case 1:
-                    this.SlayerCreatureType = ACE.Entity.Enum.CreatureType.Banderling;                    
+                    this.SlayerCreatureType = ACE.Entity.Enum.CreatureType.Banderling;
                     break;
 
                 case 2:
@@ -371,7 +370,7 @@ namespace ACE.Server.WorldObjects
                     break;
 
                 case 20:
-                    this.SlayerCreatureType = ACE.Entity.Enum.CreatureType.Zefir;                    
+                    this.SlayerCreatureType = ACE.Entity.Enum.CreatureType.Zefir;
                     break;
             }
 
@@ -740,7 +739,7 @@ namespace ACE.Server.WorldObjects
                         this.Biota.GetOrAddKnownSpell((int)SpellId.CANTRIPMISSILEWEAPONSAPTITUDE2, this.BiotaDatabaseLock, out _);
                         resultMsg = "Added Major Bow Aptitude to the quest item!";
                     }
-                    break;                
+                    break;
             }
 
             SetMagicItemCommonProperties(mutationTier);
@@ -1026,5 +1025,6 @@ namespace ACE.Server.WorldObjects
 
             return resultMsg;
         }
-    }      
+    }
 }
+

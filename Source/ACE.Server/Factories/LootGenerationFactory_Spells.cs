@@ -15,68 +15,34 @@ namespace ACE.Server.Factories
 {
     public partial class LootGenerationFactory
     {
-        private static bool AssignMagic_New(WorldObject wo, TreasureDeath profile, TreasureRoll roll, out int numSpells)
-        {
-            var spells = RollSpells(wo, profile, roll);
-
-            foreach (var spell in spells)
-            {
-                wo.Biota.GetOrAddKnownSpell((int)spell, wo.BiotaDatabaseLock, out _);
-            }
-            numSpells = spells.Count;
-
-            if ((roll.IsMeleeWeapon || roll.IsMissileWeapon) && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
-            {
-                var itemProc = RollItemProc(wo, profile, roll);
-
-                if(itemProc != SpellId.Undef)
-                {
-                    Server.Entity.Spell spell = new Server.Entity.Spell(itemProc);
-                    wo.ProcSpellRate = 0.15f;
-                    wo.ProcSpell = (uint)itemProc;
-                    wo.ProcSpellSelfTargeted = spell.IsSelfTargeted;
-
-                    numSpells++;
-                }
-            }
-
-            return true;
-        }
-
         private static List<SpellId> RollSpells(WorldObject wo, TreasureDeath profile, TreasureRoll roll)
         {
             var spells = new List<SpellId>();
+            roll.AllSpells = new List<SpellId>();
 
             // crowns, which are classified as TreasureItemType.Jewelry, should also be getting item spells
             if (roll.HasArmorLevel(wo) || roll.IsClothArmor || roll.IsWeapon)
             {
-                var itemSpells = RollItemSpells(wo, profile, roll);
+                roll.ItemEnchantments = RollItemEnchantments(wo, profile, roll);
 
-                if (itemSpells != null)
-                    spells.AddRange(itemSpells);
+                if (roll.ItemEnchantments != null)
+                    spells.AddRange(roll.ItemEnchantments);
             }
 
-            var enchantments = RollEnchantments(wo, profile, roll);
+            roll.LifeCreatureEnchantments = RollLifeCreatureEnchantments(wo, profile, roll);
 
-            if (enchantments != null)
-            {
-                spells.AddRange(enchantments);
-
-                roll.ItemDifficulty += RollEnchantmentDifficulty(enchantments);
-            }
+            if (roll.LifeCreatureEnchantments != null)
+                spells.AddRange(roll.LifeCreatureEnchantments);
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR || (!roll.IsJewelry && !roll.IsClothing))
             {
-                var cantrips = RollCantrips(wo, profile, roll);
+                roll.Cantrips = RollCantrips(wo, profile, roll);
 
-                if (cantrips != null)
-                {
-                    spells.AddRange(cantrips);
-
-                    roll.ItemDifficulty += RollCantripDifficulty(cantrips);
-                }
+                if (roll.Cantrips != null)
+                    spells.AddRange(roll.Cantrips);
             }
 
+            roll.AllSpells.AddRange(spells);
             return spells;
         }
 
@@ -90,7 +56,7 @@ namespace ACE.Server.Factories
             }
             else if (roll.IsMissileWeapon)
             {
-               procSpellId = MissileSpells.RollProc(profile);
+                procSpellId = MissileSpells.RollProc(profile);
             }
             else
             {
@@ -98,7 +64,7 @@ namespace ACE.Server.Factories
                 return SpellId.Undef;
             }
 
-            if(procSpellId != SpellId.Undef)
+            if (procSpellId != SpellId.Undef)
                 return RollProcLevel(wo, profile, procSpellId);
             return SpellId.Undef;
         }
@@ -115,10 +81,10 @@ namespace ACE.Server.Factories
                 return SpellId.Undef;
             }
 
-            return(spellLevels[spellLevel - 1]);
+            return (spellLevels[spellLevel - 1]);
         }
 
-        private static List<SpellId> RollItemSpells(WorldObject wo, TreasureDeath profile, TreasureRoll roll)
+        private static List<SpellId> RollItemEnchantments(WorldObject wo, TreasureDeath profile, TreasureRoll roll)
         {
             List<SpellId> spells = null;
 
@@ -129,8 +95,8 @@ namespace ACE.Server.Factories
             }
             else if (roll.HasArmorLevel(wo))
             {
-                if(roll.ArmorType != TreasureArmorType.Covenant || Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
-                    spells = ArmorSpells.Roll(profile);
+                if (roll.ArmorType != TreasureArmorType.Covenant || Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                    spells = ArmorSpells.Roll(profile, wo.IsShield);
             }
             else if (roll.IsMeleeWeapon)
             {
@@ -150,7 +116,7 @@ namespace ACE.Server.Factories
                 return null;
             }
 
-            if(spells != null)
+            if (spells != null)
                 return RollSpellLevels(wo, profile, spells);
             else
                 return null;
@@ -178,7 +144,7 @@ namespace ACE.Server.Factories
             return finalSpells;
         }
 
-        private static List<SpellId> RollEnchantments(WorldObject wo, TreasureDeath profile, TreasureRoll roll)
+        private static List<SpellId> RollLifeCreatureEnchantments(WorldObject wo, TreasureDeath profile, TreasureRoll roll)
         {
             /*if (wo.SpellSelectionCode == null)
             {
@@ -292,32 +258,216 @@ namespace ACE.Server.Factories
                 return 3;
         }
 
-        public static float RollEnchantmentDifficulty(List<SpellId> spellIds)
+        public static void CalculateSpellcraft(WorldObject wo, List<SpellId> allSpellIds, bool updateItem, out int minSpellcraft, out int maxSpellcraft, out int rolledSpellCraft)
         {
-            var spells = new List<Server.Entity.Spell>();
+            var maxSpellPower = 0;
 
-            foreach (var spellId in spellIds)
+            if (allSpellIds != null)
             {
-                var spell = new Server.Entity.Spell(spellId);
-                spells.Add(spell);
+                foreach (var spellId in allSpellIds)
+                {
+                    var spell = new Server.Entity.Spell(spellId);
+
+                    int spellPower = GetSpellPower(spell);
+                    if (spellPower > maxSpellPower)
+                        maxSpellPower = spellPower;
+                }
             }
 
-            spells = spells.OrderBy(i => i.Formula.Level).ToList();
+            (float min, float max) range = (1.0f, 1.0f);
 
-            var itemDifficulty = 0.0f;
-
-            // exclude highest spell
-            for (var i = 0; i < spells.Count - 1; i++)
+            switch (wo.ItemType)
             {
-                var spell = spells[i];
+                case ItemType.Armor:
+                case ItemType.Clothing:
+                case ItemType.Jewelry:
 
-                var rng = (float)ThreadSafeRandom.Next(0.5f, 1.5f);
-                // original   
-                // itemDifficulty += spell.Formula.Level * 5.0f * rng;
-                itemDifficulty += spell.Formula.Level * 1.0f * rng;
+                case ItemType.MeleeWeapon:
+                case ItemType.MissileWeapon:
+                case ItemType.Caster:
+
+                    range = (0.9f, 1.1f);
+                    break;
             }
 
-            return itemDifficulty;
+            minSpellcraft = Math.Min((int)Math.Ceiling(maxSpellPower * range.min), 370);
+            maxSpellcraft = Math.Min((int)Math.Ceiling(maxSpellPower * range.max), 370);
+
+            // Avoid lowering spellcraft.
+            var currentSpellcraft = Math.Max(wo.BaseSpellcraftOverride ?? 1, wo.ItemSpellcraft ?? 1);
+
+            minSpellcraft = Math.Max(currentSpellcraft, minSpellcraft);
+            maxSpellcraft = Math.Max(currentSpellcraft, maxSpellcraft);
+            rolledSpellCraft = ThreadSafeRandom.Next(minSpellcraft, maxSpellcraft);
+
+            if (updateItem)
+                wo.ItemSpellcraft = rolledSpellCraft;
+        }
+
+        public static void CalculateArcaneLore(WorldObject wo, List<SpellId> allSpellIds, List<SpellId> lifeCreatureEnchantmentsIds, List<SpellId> cantripIds, int minSpellcraft, int maxSpellcraft, int rolledSpellcraft, bool updateItem, out int minArcaneLore, out int maxArcaneLore, out int rolledArcaneLore)
+        {
+            var minArcaneRoll = 0.0f;
+            var maxArcaneRoll = 0.0f;
+
+            var spellIds = new List<SpellId>();
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                spellIds = allSpellIds;
+            else
+                spellIds = lifeCreatureEnchantmentsIds;
+
+            if (spellIds != null)
+            {
+                var spells = new List<Server.Entity.Spell>();
+
+                foreach (var spellId in spellIds)
+                {
+                    var spell = new Server.Entity.Spell(spellId);
+                    spells.Add(spell);
+                }
+
+                spells = spells.OrderBy(i => i.Formula.Level).ToList();
+
+                for (var i = 0; i < spells.Count; i++)
+                {
+                    if (i == spells.Count - 1 && Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                    {
+                        // exclude highest spell
+                        continue;
+                    }
+                    var spell = spells[i];
+
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                    {
+                        var arcaneRoll = 4 + spell.Formula.Level;
+                        if (wo.IsClothArmor)
+                            arcaneRoll /= 2;
+
+                        minArcaneRoll += arcaneRoll * 0.5f;
+                        maxArcaneRoll += arcaneRoll * 1.0f;
+                    }
+                    else
+                    {
+                        var arcaneRoll = spell.Formula.Level * 5.0f;
+
+                        minArcaneRoll += arcaneRoll * 0.5f;
+                        maxArcaneRoll += arcaneRoll * 1.5f;
+                    }
+                }
+            }
+
+            if (cantripIds != null)
+            {
+                foreach (var cantripId in cantripIds)
+                {
+                    var cantrip = new Server.Entity.Spell(cantripId);
+                    var cantripLevels = SpellLevelProgression.GetSpellLevels(cantripId);
+
+                    if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR)
+                    {
+                        if (cantripLevels == null || cantripLevels.Count != 4)
+                        {
+                            log.Error($"CalculateArcaneLore({cantripId}) - unknown cantrip");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (cantripLevels == null || (cantripLevels.Count != 3 && cantripLevels.Count != 4))
+                        {
+                            log.Error($"CalculateArcaneLore({cantripId}) - unknown cantrip");
+                            continue;
+                        }
+                    }
+
+                    var cantripLevel = cantripLevels.IndexOf(cantripId);
+
+                    if (cantripLevel == 0)
+                    {
+                        minArcaneRoll += 5;
+                        maxArcaneRoll += 10;
+                    }
+                    else
+                    {
+                        minArcaneRoll += 10;
+                        maxArcaneRoll += 20;
+                    }
+                }
+            }
+
+            var itemSkillLevelFactor = 0.0f;
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                if (wo.ItemSkillLevelLimit.HasValue && wo.ItemSkillLevelLimit > 0)
+                    itemSkillLevelFactor = wo.ItemSkillLevelLimit.Value / 10.0f;
+            }
+            else
+            {
+                if (wo.ItemSkillLevelLimit.HasValue && wo.ItemSkillLevelLimit > 0)
+                    itemSkillLevelFactor = wo.ItemSkillLevelLimit.Value / 2.0f;
+            }
+
+            var fArcaneMin = minSpellcraft - itemSkillLevelFactor;
+            var fArcaneMax = maxSpellcraft - itemSkillLevelFactor;
+            var fArcaneRolled = rolledSpellcraft - itemSkillLevelFactor;
+
+            if (wo.ItemAllegianceRankLimit > 0)
+            {
+                fArcaneMin -= (float)wo.ItemAllegianceRankLimit * 10.0f;
+                fArcaneMax -= (float)wo.ItemAllegianceRankLimit * 10.0f;
+                fArcaneRolled -= (float)wo.ItemAllegianceRankLimit * 10.0f;
+            }
+
+            if (wo.HeritageGroup != 0)
+            {
+                fArcaneMin -= fArcaneMin * 0.2f;
+                fArcaneMax -= fArcaneMax * 0.2f;
+                fArcaneRolled -= fArcaneRolled * 0.2f;
+            }
+
+            if (wo.TinkerLog != null)
+            {
+                var tinkers = wo.TinkerLog.Split(",");
+
+                var appliedCopperCount = tinkers.Count(s => s == "59");
+                for (int i = 0; i < appliedCopperCount; i++)
+                {
+                    fArcaneMin -= 5;
+                    fArcaneMax -= 5;
+                    fArcaneRolled -= 5;
+                }
+
+                var appliedSilverCount = tinkers.Count(s => s == "63");
+                for (int i = 0; i < appliedSilverCount; i++)
+                {
+                    fArcaneMin -= 10;
+                    fArcaneMax -= 10;
+                    fArcaneRolled -= 10;
+                }
+            }
+
+            if (fArcaneMin < 0)
+                fArcaneMin = 0;
+
+            if (fArcaneMax < 0)
+                fArcaneMax = 0;
+
+            if (fArcaneRolled < 0)
+                fArcaneRolled = 0;
+
+            minArcaneLore = (int)Math.Floor(fArcaneMin + minArcaneRoll);
+            maxArcaneLore = (int)Math.Floor(fArcaneMax + maxArcaneRoll);
+            rolledArcaneLore = (int)Math.Floor(fArcaneRolled + ThreadSafeRandom.Next(minArcaneRoll, maxArcaneRoll));
+
+            // Avoid lowering arcane lore.
+            var currentArcaneLore = Math.Max(wo.BaseItemDifficultyOverride ?? 0, wo.ItemDifficulty ?? 0); // If set, BaseItemDifficultyOverride and BaseSpellcraftOverride account for the item default spells difficulty/spellcraft and those will not be taken into account during these recalculations. This is done so spells can be added to quest items which start with many spells without skyrocketing their difficulty.
+            minArcaneLore = Math.Max(currentArcaneLore, minArcaneLore);
+            maxArcaneLore = Math.Max(currentArcaneLore, maxArcaneLore);
+            rolledArcaneLore = Math.Max(currentArcaneLore, rolledArcaneLore);
+
+            if (updateItem)
+                wo.ItemDifficulty = rolledArcaneLore;
         }
 
         private static List<SpellId> RollCantrips(WorldObject wo, TreasureDeath profile, TreasureRoll roll)
@@ -365,21 +515,21 @@ namespace ACE.Server.Factories
                         log.Error($"RollCantrips({wo.Name}, {profile.TreasureType}, {roll.ItemType}) - {cantrip} has {cantripLevels.Count} cantrip levels, expected 2.");
                         continue;
                     }
-                    
+
                     finalCantrips.Add(cantripLevels[cantripLevel - 1]);
                 }
                 else
                 {
-	                if (cantripLevels.Count != 4)
-	                {
-	                    log.Error($"RollCantrips({wo.Name}, {profile.TreasureType}, {roll.ItemType}) - {cantrip} has {cantripLevels.Count} cantrip levels, expected 4");
-	                    continue;
-	                }
-	
-	                finalCantrips.Add(cantripLevels[cantripLevel - 1]);
-	
-	                if (cantripLevel == 4)
-	                    hasLegendary = true;
+                    if (cantripLevels.Count != 4)
+                    {
+                        log.Error($"RollCantrips({wo.Name}, {profile.TreasureType}, {roll.ItemType}) - {cantrip} has {cantripLevels.Count} cantrip levels, expected 4");
+                        continue;
+                    }
+
+                    finalCantrips.Add(cantripLevels[cantripLevel - 1]);
+
+                    if (cantripLevel == 4)
+                        hasLegendary = true;
                 }
             }
 
@@ -410,7 +560,7 @@ namespace ACE.Server.Factories
             {
                 // armor / clothing cantrip
                 // this table also applies to crowns (treasureitemtype.jewelry w/ al)
-                return ArmorCantrips.Roll();
+                return ArmorCantrips.Roll(wo.IsShield);
             }
             else if (roll.IsMeleeWeapon)
             {
@@ -454,41 +604,6 @@ namespace ACE.Server.Factories
                 log.Error($"RollCantrip({wo.Name}, {profile.TreasureType}, {roll.ItemType}) - unknown item type");
                 return SpellId.Undef;
             }
-        }
-
-        public static float RollCantripDifficulty(List<SpellId> cantripIds)
-        {
-            var itemDifficulty = 0.0f;
-
-            foreach (var cantripId in cantripIds)
-            {
-                var cantripLevels = SpellLevelProgression.GetSpellLevels(cantripId);
-
-                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR)
-                {
-                    if (cantripLevels == null || cantripLevels.Count != 4)
-                    {
-                        log.Error($"RollCantripDifficulty({cantripId}) - unknown cantrip");
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (cantripLevels == null || (cantripLevels.Count != 3 && cantripLevels.Count != 4))
-                    {
-                        log.Error($"RollCantripDifficulty({cantripId}) - unknown cantrip");
-                        continue;
-                    }
-                }
-
-                var cantripLevel = cantripLevels.IndexOf(cantripId);
-
-                if (cantripLevel == 0)
-                    itemDifficulty += (float)ThreadSafeRandom.Next(5.0f, 10.0f);
-                else
-                    itemDifficulty += (float)ThreadSafeRandom.Next(10.0f, 20.0f);
-            }
-            return itemDifficulty;
         }
 
         private static SpellId AdjustForWeaponMastery(WorldObject wo)
@@ -700,3 +815,4 @@ namespace ACE.Server.Factories
         }
     }
 }
+

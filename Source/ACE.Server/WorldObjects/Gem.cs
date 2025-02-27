@@ -73,6 +73,29 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && player.CurrentLandblock.IsDungeon || (player.CurrentLandblock.HasDungeon && player.Location.Indoors))
+            {
+                switch((SpellId)SpellDID)
+                {
+                    case SpellId.SummonPortal1:
+                    case SpellId.SummonPortal2:
+                    case SpellId.SummonPortal3:
+                    case SpellId.SummonSecondPortal1:
+                    case SpellId.SummonSecondPortal2:
+                    case SpellId.SummonSecondPortal3:
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat("You may not summon portals from this location.", ChatMessageType.Broadcast));
+                        return;
+                    default:
+                        var spell = ((SpellId)SpellDID).ToString().ToLower();
+                        if (spell.Contains("recall"))
+                        {
+                            player.Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
+                            return;
+                        }
+                        break;
+                }
+            }
+
             // handle rare gems
             if (RareId != null && player.GetCharacterOption(CharacterOption.ConfirmUseOfRareGems) && !confirmed)
             {
@@ -146,6 +169,12 @@ namespace ACE.Server.WorldObjects
                 player.EnqueueBroadcast(new GameMessageSystemChat($"{player.Name} used the rare item {Name}", ChatMessageType.Broadcast));
             }
 
+            if(MaxStructure.HasValue && MaxStructure > 0 && Structure == 0)
+            {
+                player.Session.Network.EnqueueSend(new GameMessageSystemChat($"The {NameWithMaterial} has no uses left!", ChatMessageType.Craft));
+                return;
+            }
+
             bool usesMana = false;
             if (SpellDID.HasValue)
             {
@@ -174,48 +203,74 @@ namespace ACE.Server.WorldObjects
                     }
                 }
 
-                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && (spell.IsImpenBaneType || spell.IsOtherRedirectable))
+                if (spell.MetaSpellType == SpellType.PortalSummon || spell.MetaSpellType == SpellType.PortalRecall)
                 {
-                    // Temporary fix for unintended spells on gems.
-                    player.Session.Network.EnqueueSend(new GameMessageSystemChat($"The {NameWithMaterial} has an invalid spell, converting to a spell transfer scroll...", ChatMessageType.Craft));
-                    if (Workmanship.HasValue)
+                    if (LinkedPortalOneDID != null || LinkedPortalTwoDID != null)
+                        TryCastSpell(spell, player, this, tryResist: false); // if we're a summon portal gem with a predetermined destination summon that.
+                    else
                     {
-                        if (player.TryConsumeFromInventoryWithNetworking(this, 1)) // Consume the gem
+                        if (spell.Id == (uint)SpellId.LifestoneRecall1 && player.LinkedLifestone == null)
                         {
-                            var newScroll = WorldObjectFactory.CreateNewWorldObject(50130); // Spell Transfer Scroll
-                            newScroll.SpellDID = SpellDID;
-                            newScroll.Name += spell.Name;
-                            if (!player.TryCreateInInventoryWithNetworking(newScroll)) // Create the transfer scroll
-                                newScroll.Destroy(); // Clean up on creation failure
+                            player.Session.Network.EnqueueSend(new GameEventWeenieError(player.Session, WeenieError.YouMustLinkToLifestoneToRecall));
+                            return;
                         }
+                        else if ((spell.Id == (uint)SpellId.PortalTieRecall1 && player.LinkedPortalOneDID == null) ||
+                                 (spell.Id == (uint)SpellId.PortalTieRecall2 && player.LinkedPortalTwoDID == null))
+                        {
+                            player.Session.Network.EnqueueSend(new GameEventWeenieError(player.Session, WeenieError.YouMustLinkToPortalToRecall));
+                            return;
+                        }
+                        else if (((spell.Id == (uint)SpellId.SummonPortal1 || spell.Id == (uint)SpellId.SummonPortal2 || spell.Id == (uint)SpellId.SummonPortal3) && player.LinkedPortalOneDID == null) ||
+                                ((spell.Id == (uint)SpellId.SummonSecondPortal1 || spell.Id == (uint)SpellId.SummonSecondPortal2 || spell.Id == (uint)SpellId.SummonSecondPortal3) && player.LinkedPortalTwoDID == null))
+                        {
+                            player.Session.Network.EnqueueSend(new GameEventWeenieError(player.Session, WeenieError.YouMustLinkToPortalToSummonIt));
+                            return;
+                        }
+                        else
+                            player.TryCastSpell(spell, player, this, tryResist: false);
                     }
-                    return;
                 }
-
-                // should be 'You cast', instead of 'Item cast'
-                // omitting the item caster here, so player is also used for enchantment registry caster,
-                // which could prevent some scenarios with spamming enchantments from multiple gem sources to protect against dispels
-
-                if (spell.MetaSpellType == SpellType.PortalSummon && (LinkedPortalOneDID != null || LinkedPortalTwoDID != null)) // if we're a summon portal gem with a predetermined destination summon that.
-                    TryCastSpell(spell, player, this, tryResist: false);
-                else
+                else if (spell.MetaSpellType == SpellType.PortalLink)
                 {
-                    if ( (spell.Id == (uint)SpellId.LifestoneRecall1 && player.LinkedLifestone == null) ||
-                        ((spell.Id == (uint)SpellId.PortalTieRecall1 || spell.Id == (uint)SpellId.SummonPortal1 || spell.Id == (uint)SpellId.SummonPortal2 || spell.Id == (uint)SpellId.SummonPortal3) && player.LinkedPortalOneDID == null) ||
-                        ((spell.Id == (uint)SpellId.PortalTieRecall2 || spell.Id == (uint)SpellId.SummonSecondPortal1 || spell.Id == (uint)SpellId.SummonSecondPortal2 || spell.Id == (uint)SpellId.SummonSecondPortal3) && player.LinkedPortalTwoDID == null))
+                    if (target.WeenieType != WeenieType.Portal)
                     {
-                        //player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You must have a linked destination in order to use this gem!", ChatMessageType.Magic));
-                        player.SendTransientError("You must have a linked destination in order to use this gem!");
+                        player.SendChatMessage(this, "You cannot link that.", ChatMessageType.Magic);
                         return;
                     }
 
-                    if (spell.IsImpenBaneType || spell.IsItemRedirectableType)
-                        player.TryCastItemEnchantment_WithRedirects(spell, player, this);
-                    else if (target != null)
-                        player.TryCastSpell(spell, target, this, tryResist: false);
-                    else
-                        player.TryCastSpell(spell, player, this, tryResist: false);
+                    var targetPortal = target as Portal;
+
+                    var summoned = targetPortal.OriginalPortal != null;
+
+                    var targetDID = summoned ? targetPortal.OriginalPortal : targetPortal.WeenieClassId;
+
+                    var tiePortal = GetPortal(targetDID.Value);
+
+                    if (tiePortal == null)
+                    {
+                        player.Session.Network.EnqueueSend(new GameEventWeenieError(player.Session, WeenieError.YouCannotLinkToThatPortal));
+                        return;
+                    }
+
+                    var result = tiePortal.CheckUseRequirements(player);
+
+                    if (!result.Success && result.Message != null)
+                        player.Session.Network.EnqueueSend(result.Message);
+
+                    if (tiePortal.NoTie || !result.Success)
+                    {
+                        player.Session.Network.EnqueueSend(new GameEventWeenieError(player.Session, WeenieError.YouCannotLinkToThatPortal));
+                        return;
+                    }
+
+                    player.TryCastSpell(spell, target, this, tryResist: false); // This spell cast must come from the player otherwise the link property will be set on the gem instead.
                 }
+                else if (spell.IsImpenBaneType || spell.IsItemRedirectableType)
+                    TryCastItemEnchantment_WithRedirects(spell, player, this);
+                else if (target != null)
+                    TryCastSpell(spell, target, this, tryResist: false);
+                else
+                    TryCastSpell(spell, player, this, tryResist: false);
             }
 
             if (UseCreateContractId > 0)
@@ -261,8 +316,23 @@ namespace ACE.Server.WorldObjects
             if (UseSound > 0)
                 player.Session.Network.EnqueueSend(new GameMessageSound(player.Guid, UseSound));
 
-            if (!usesMana && (GetProperty(PropertyBool.UnlimitedUse) ?? false) == false)
-                player.TryConsumeFromInventoryWithNetworking(this, 1);
+            var unlimitedUses = GetProperty(PropertyBool.UnlimitedUse) ?? false;
+            if (!unlimitedUses)
+            {
+                if (Structure.HasValue)
+                {
+                    if (Structure > 0)
+                        Structure--;
+                    else
+                        Structure = 0;
+
+                    player.Session.Network.EnqueueSend(new GameMessagePublicUpdatePropertyInt(this, PropertyInt.Structure, (int)Structure));
+                }
+                else if (!usesMana)
+                    player.TryConsumeFromInventoryWithNetworking(this, 1);
+            }
+
+            player.EnchantmentManager.StartCooldown(this);
         }
 
         public bool HandleUseCreateItem(Player player)
@@ -389,14 +459,12 @@ namespace ACE.Server.WorldObjects
                     if (player.IsBusy || player.Teleporting || player.suicideInProgress)
                     {
                         player.Session.Network.EnqueueSend(new GameEventWeenieError(player.Session, WeenieError.YoureTooBusy));
-                        player.EnchantmentManager.StartCooldown(this);
                         return;
                     }
 
                     if (player.IsDead)
                     {
                         player.Session.Network.EnqueueSend(new GameEventWeenieError(player.Session, WeenieError.Dead));
-                        player.EnchantmentManager.StartCooldown(this);
                         return;
                     }
                 }

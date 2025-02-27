@@ -14,6 +14,7 @@ using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Network.Structure;
 using ACE.Server.Physics.Animation;
+using ACE.Server.WorldObjects.Entity;
 
 namespace ACE.Server.WorldObjects
 {
@@ -96,7 +97,7 @@ namespace ACE.Server.WorldObjects
                     animLength = HandleSwitchToMissileCombatMode();
                     break;
                 default:
-                    log.InfoFormat($"Unknown combat mode {CombatMode} for {Name}");
+                    log.InfoFormat("Unknown combat mode {0} for {1}", CombatMode, Name);
                     break;
             }
 
@@ -470,7 +471,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public virtual CombatType GetCombatType()
         {
-            return CurrentAttack ?? CombatType.Melee;
+            return CurrentAttackType ?? CombatType.Melee;
         }
 
         /// <summary>
@@ -607,7 +608,7 @@ namespace ACE.Server.WorldObjects
         /// Returns the effective defense skill for a player or creature,
         /// ie. with Defender bonus and imbues
         /// </summary>
-        public uint GetEffectiveDefenseSkill(CombatType combatType, bool isPvP)
+        public uint GetEffectiveDefenseSkill(CombatType combatType)
         {
             var defenseSkill = combatType == CombatType.Missile ? Skill.MissileDefense : Skill.MeleeDefense;
             var defenseMod = defenseSkill == Skill.MissileDefense ? GetWeaponMissileDefenseModifier(this) : GetWeaponMeleeDefenseModifier(this);
@@ -628,17 +629,73 @@ namespace ACE.Server.WorldObjects
             //if (this is Player)
             //Console.WriteLine($"StanceMod: {stanceMod}");
 
-            uint effectiveDefense;
-            if (!isPvP && ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && this is Player)
-                effectiveDefense = (uint)Math.Round(GetCreatureSkill(defenseSkill).Current * 1.25f * defenseMod * burdenMod * stanceMod + defenseImbues);
-            else
-                effectiveDefense = (uint)Math.Round(GetCreatureSkill(defenseSkill).Current * defenseMod * burdenMod * stanceMod + defenseImbues);
+            var effectiveDefense = (uint)Math.Round(GetCreatureSkill(defenseSkill).Current * defenseMod * burdenMod * stanceMod + defenseImbues);
 
             if (IsExhausted) effectiveDefense = 0;
 
             return effectiveDefense;
         }
 
+        public CreatureSkill GetShieldSkill()
+        {
+            var shieldSkill = GetCreatureSkill(Skill.Shield);
+
+            if (!(this is Player) && shieldSkill.InitLevel == 0)
+                shieldSkill = GetCreatureSkill(Skill.MeleeDefense); // Use the melee defense skill as a surrogate for creatures that have no shield skill defined.
+
+            return shieldSkill;
+        }
+
+        public uint GetEffectiveShieldSkill(CombatType combatType)
+        {
+            var shield = GetEquippedShield();
+
+            if (shield == null)
+                return 0;
+
+            var shieldSkill = GetShieldSkill();
+
+            uint effectiveBlockSkill = 0;
+            if (shieldSkill.AdvancementClass > SkillAdvancementClass.Untrained)
+                effectiveBlockSkill = shieldSkill.Current;
+
+            var combatTypeMod = 1.0f;
+            switch (combatType)
+            {
+                case CombatType.Melee:
+                    combatTypeMod = 1.333f;
+                    break;
+                case CombatType.Magic:
+                case CombatType.Missile:
+                    combatTypeMod = 1.0f;
+                    break;
+            }
+
+            effectiveBlockSkill = (uint)(effectiveBlockSkill * combatTypeMod);
+
+            return effectiveBlockSkill;
+        }
+
+        public static float GetBlockChance(WorldObject shield, Creature wielder, uint effectiveAttackSkill, uint effectiveBlockSkill, bool isPvP)
+        {
+            if (wielder == null || wielder.IsExhausted)
+                return 0.0f;
+
+            var shieldBlockMod = (float)(shield.BlockMod ?? 0) + shield.EnchantmentManager.GetBlockMod();
+            if (shield.IsEnchantable)
+                shieldBlockMod += wielder.EnchantmentManager.GetBlockMod();
+
+            var blockChance = 1.0f - SkillCheck.GetSkillChance(effectiveAttackSkill, effectiveBlockSkill);
+            blockChance += shieldBlockMod;
+
+            if (isPvP)
+            {
+                blockChance *= (float)PropertyManager.GetInterpolatedDouble(wielder.Level ?? 1, "pvp_dmg_mod_low_shield_block_chance", "pvp_dmg_mod_high_shield_block_chance", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
+                blockChance = Math.Max(blockChance, 0.2f);
+            }
+
+            return (float)blockChance;
+        }
 
         private static double MinAttackSpeed = 0.5;
         private static double MaxAttackSpeed = 2.0;
@@ -844,7 +901,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Return the scalar damage absorbed by a shield
         /// </summary>
-        public float GetShieldMod(Creature attacker, DamageType damageType, WorldObject weapon, bool isPvP, float shieldArmorLevelMod = 1.0f)
+        public float GetShieldMod(WorldObject attacker, DamageType damageType, WorldObject weapon, bool isPvP, float shieldArmorLevelMod = 1.0f)
         {
             // ensure combat stance
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR && CombatMode == CombatMode.NonCombat)
@@ -852,7 +909,7 @@ namespace ACE.Server.WorldObjects
 
             // does the player have a shield equipped?
             var shield = GetEquippedShield();
-            if (shield == null)
+            if (shield == null || attacker == null)
                 return 1.0f;
 
             var player = this as Player;
@@ -1275,7 +1332,9 @@ namespace ACE.Server.WorldObjects
                 playerTarget.SendMessage(msg, ChatMessageType.Combat, this);
         }
 
-        private double NextAssessDebuffActivationTime = 0;
+        private double NextAssessDebuffMeleeActivationTime = 0;
+        private double NextAssessDebuffMissileActivationTime = 0;
+        private double NextAssessDebuffMagicActivationTime = 0;
         private static double AssessDebuffActivationInterval = 10;
         public void TryCastAssessDebuff(Creature target, CombatType combatType)
         {
@@ -1289,9 +1348,21 @@ namespace ACE.Server.WorldObjects
                 return; // Target is already dead, abort!
 
             var currentTime = Time.GetUnixTime();
-
-            if (NextAssessDebuffActivationTime > currentTime)
-                return;
+            switch (combatType)
+            {
+                case CombatType.Melee:
+                    if (target.NextAssessDebuffMeleeActivationTime > currentTime)
+                        return;
+                    break;
+                case CombatType.Missile:
+                    if (target.NextAssessDebuffMissileActivationTime > currentTime)
+                        return;
+                    break;
+                case CombatType.Magic:
+                    if (target.NextAssessDebuffMagicActivationTime > currentTime)
+                        return;
+                    break;
+            }
 
             var skill = GetCreatureSkill(Skill.AssessCreature);
             if (skill.AdvancementClass == SkillAdvancementClass.Untrained || skill.AdvancementClass == SkillAdvancementClass.Inactive)
@@ -1307,7 +1378,18 @@ namespace ACE.Server.WorldObjects
             if (activationChance < ThreadSafeRandom.Next(0.0f, 1.0f))
                 return;
 
-            NextAssessDebuffActivationTime = currentTime + AssessDebuffActivationInterval;
+            switch (combatType)
+            {
+                case CombatType.Melee:
+                    target.NextAssessDebuffMeleeActivationTime = currentTime + AssessDebuffActivationInterval;
+                    break;
+                case CombatType.Missile:
+                    target.NextAssessDebuffMissileActivationTime = currentTime + AssessDebuffActivationInterval;
+                    break;
+                case CombatType.Magic:
+                    target.NextAssessDebuffMagicActivationTime = currentTime + AssessDebuffActivationInterval;
+                    break;
+            }
 
             var defenseSkill = target.GetCreatureSkill(Skill.Deception);
             var effectiveDefenseSkill = defenseSkill.Current;
@@ -1333,46 +1415,22 @@ namespace ACE.Server.WorldObjects
                 Proficiency.OnSuccessUse(sourceAsPlayer, skill, defenseSkill.Current);
 
             string spellType;
-            // 1/5 chance of the vulnerability being explicity of the type of attack that was used, otherwise random 1/3 for each type
             SpellId spellId;
-            if (ThreadSafeRandom.Next(1, 5) != 5)
+            switch (combatType)
             {
-                switch (combatType)
-                {
-                    default:
-                    case CombatType.Melee:
-                        spellId = SpellId.VulnerabilityOther1;
-                        spellType = "melee";
-                        break;
-                    case CombatType.Missile:
-                        spellId = SpellId.DefenselessnessOther1;
-                        spellType = "missile";
-                        break;
-                    case CombatType.Magic:
-                        spellId = SpellId.MagicYieldOther1;
-                        spellType = "magic";
-                        break;
-                }
-            }
-            else
-            {
-                var spellRNG = ThreadSafeRandom.Next(1, 3);
-                switch (spellRNG)
-                {
-                    default:
-                    case 1:
-                        spellId = SpellId.VulnerabilityOther1;
-                        spellType = "melee";
-                        break;
-                    case 2:
-                        spellId = SpellId.DefenselessnessOther1;
-                        spellType = "missile";
-                        break;
-                    case 3:
-                        spellId = SpellId.MagicYieldOther1;
-                        spellType = "magic";
-                        break;
-                }
+                default:
+                case CombatType.Melee:
+                    spellId = SpellId.VulnerabilityOther1;
+                    spellType = "melee";
+                    break;
+                case CombatType.Missile:
+                    spellId = SpellId.DefenselessnessOther1;
+                    spellType = "missile";
+                    break;
+                case CombatType.Magic:
+                    spellId = SpellId.MagicYieldOther1;
+                    spellType = "magic";
+                    break;
             }
 
             var spellLevels = SpellLevelProgression.GetSpellLevels(spellId);
@@ -1879,57 +1937,18 @@ namespace ACE.Server.WorldObjects
                 {
                     // Marketplace
                     0x016C,
-                    // Apartments
-                    0x7200,
-                    0x7300,
-                    0x7400,
-                    0x7500,
-                    0x7600,
-                    0x7700,
-                    0x7800,
-                    0x7900,
-                    0x7A00,
-                    0x7B00,
-                    0x7C00,
-                    0x7D00,
-                    0x7E00,
-                    0x7F00,
-                    0x8000,
-                    0x8100,
-                    0x8200,
-                    0x8300,
-                    0x8400,
-                    0x8500,
-                    0x8600,
-                    0x8700,
-                    0x8800,
-                    0x8900,
-                    0x8A00,
-                    0x8B00,
-                    0x8C00,
-                    0x8D00,
-                    0x8E00,
-                    0x8F00,
-                    0x9000,
-                    0x9100,
-                    0x9200,
-                    0x9300,
-                    0x9400,
-                    0x9500,
-                    0x9600,
-                    0x9700,
-                    0x9800,
-                    0x9900,
-                    0x5360,
-                    0x5361,
-                    0x5362,
-                    0x5363,
-                    0x5364,
-                    0x5365,
-                    0x5366,
-                    0x5367,
-                    0x5368,
-                    0x5369
+                    // Residential Halls
+                    0x5465,
+                    0x5656,
+                    0x5650,
+                    0x565E,
+                    0x5661,
+                    // Meeting Halls
+                    0x011D,
+                    0x011E,
+                    0x011F,
+                    0x0120,
+                    0x0121,
                 };
             }
         }

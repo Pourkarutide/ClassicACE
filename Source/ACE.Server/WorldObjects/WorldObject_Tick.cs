@@ -19,7 +19,7 @@ namespace ACE.Server.WorldObjects
         // Used for cumulative ServerPerformanceMonitor event recording
         protected readonly Stopwatch stopwatch = new Stopwatch();
 
-        private const int heartbeatSpreadInterval = 5;
+        private const int heartbeatSpreadInterval = 20;
 
         protected double CachedHeartbeatInterval;
         /// <summary>
@@ -253,12 +253,10 @@ namespace ACE.Server.WorldObjects
 
                 LastPhysicsUpdate = PhysicsTimer.CurrentTime;
 
-                // monsters have separate physics updates,
-                // except during the first frame of spawning, idle emotes, and dying
                 isDying = creature.IsDead;
 
                 // determine if updates should be run for object
-                var runUpdate = PhysicsObj.IsAnimating && (!creature.IsMonster || !creature.IsAwake) || isDying || PhysicsObj.InitialUpdates <= 1;
+                var runUpdate = PhysicsObj.IsAnimating || isDying || PhysicsObj.InitialUpdates <= 1 || PhysicsObj.MovementManager.MoveToManager.PendingActions.Count > 0 || PhysicsObj.IsSticky;
 
                 if (!runUpdate)
                     return false;
@@ -404,7 +402,7 @@ namespace ACE.Server.WorldObjects
                         log.Warn($"[PERFORMANCE][PHYSICS] {Guid}:{Name} took {(elapsedSeconds * 1000):N1} ms to process UpdateObjectPhysics() at loc: {Location}. SpellProjectile destroyed.");
                     }
                     else
-                        log.Debug($"[PERFORMANCE][PHYSICS] {Guid}:{Name} took {(elapsedSeconds * 1000):N1} ms to process UpdateObjectPhysics() at loc: {Location}");
+                        log.DebugFormat("[PERFORMANCE][PHYSICS] {0}:{1} took {2:N1} ms to process UpdateObjectPhysics() at loc: {3}", Guid, Name, (elapsedSeconds * 1000), Location);
                 }
             }
         }

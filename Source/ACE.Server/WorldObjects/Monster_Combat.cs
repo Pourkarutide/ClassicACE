@@ -1,17 +1,16 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-
 using ACE.Common;
 using ACE.Database;
 using ACE.DatLoader;
 using ACE.DatLoader.FileTypes;
 using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
-using ACE.Server.Entity;
 using ACE.Entity.Models;
+using ACE.Server.Entity;
 using ACE.Server.Managers;
-using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 
 namespace ACE.Server.WorldObjects
@@ -47,7 +46,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// The next type of attack (melee/range/magic)
         /// </summary>
-        public CombatType? CurrentAttack;
+        public CombatType? CurrentAttackType;
 
         /// <summary>
         /// The maximum distance for the next attack
@@ -67,16 +66,7 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// The time when monster can perform its next magic attack
         /// </summary>
-        public double NextMagicAttackTime
-        {
-            get
-            {
-                // defaults to most common value found in py16 db
-                var magicDelay = AiUseMagicDelay ?? 3.0f;
-
-                return PrevAttackTime + magicDelay;
-            }
-        }
+        public double NextSpellCastTime { get; set; }
 
         /// <summary>
         /// Returns true if monster is dead
@@ -116,20 +106,10 @@ namespace ACE.Server.WorldObjects
             if (CombatTable == null)
                 GetCombatTable();
 
-            if (!IsModified)
-            {
-                // if caster, roll for spellcasting chance
-                if (HasKnownSpells && TryRollSpell())
-                    return CombatType.Magic;
-            }
-            else
-            {
-                // If we're modified(our level has been altered) get our custom spellbook instead of the generic one.
-                if (HasKnownSpellsModified && TryRollSpellModified())
-                    return CombatType.Magic;
-            }
-
-            if (IsRanged)
+            // if caster, roll for spellcasting chance
+            if (HasKnownSpells && SpellCastReady() && TryRollSpell())
+                return CombatType.Magic;
+            else if (IsRanged)
                 return CombatType.Missile;
             else
                 return CombatType.Melee;
@@ -178,7 +158,7 @@ namespace ACE.Server.WorldObjects
             }
 
             if (DebugMove)
-                Console.WriteLine($"[{Timers.RunningTime}] - {Name} ({Guid}) - DoAttackStance - stanceTime: {stanceTime}, isAnimating: {IsAnimating}");
+                Console.WriteLine($"{Name} ({Guid}).DoAttackStance() - stanceTime: {stanceTime}, isAnimating: {IsAnimating}");
 
             PhysicsObj.StartTimer();
         }
@@ -189,7 +169,7 @@ namespace ACE.Server.WorldObjects
             var it = 0;
             bool? isVisible = null;
 
-            while (CurrentAttack == CombatType.Magic)
+            while (CurrentAttackType == CombatType.Magic)
             {
                 // select a magic spell
                 //CurrentSpell = GetRandomSpell();
@@ -202,17 +182,17 @@ namespace ACE.Server.WorldObjects
                     if (!isVisible.Value)
                     {
                         // reroll attack type
-                        CurrentAttack = GetNextAttackType();
+                        CurrentAttackType = GetNextAttackType();
                         it++;
 
                         // max iterations to melee?
                         if (it >= 10)
                         {
                             //log.Warn($"{Name} ({Guid}) reached max iterations");
-                            CurrentAttack = CombatType.Melee;
+                            CurrentAttackType = CombatType.Melee;
 
                             var powerupTime = (float)(PowerupTime ?? 1.0f);
-                            var failDelay = ThreadSafeRandom.Next(0.0f, powerupTime);
+                            var failDelay = ThreadSafeRandom.Next(powerupTime * 0.5f, powerupTime * 1.5f);
 
                             NextMoveTime = Timers.RunningTime + failDelay;
                         }
@@ -222,7 +202,7 @@ namespace ACE.Server.WorldObjects
                 return GetSpellMaxRange();
             }
 
-            if (CurrentAttack == CombatType.Missile)
+            if (CurrentAttackType == CombatType.Missile)
             {
                 /*var weapon = GetEquippedWeapon();
                 if (weapon == null) return MaxMissileRange;
@@ -240,10 +220,7 @@ namespace ACE.Server.WorldObjects
             if (Timers.RunningTime < NextMoveTime)
                 return false;
 
-            PhysicsObj.update_object();
-            UpdatePosition_SyncLocation();
-
-            return !PhysicsObj.IsAnimating;
+            return !PhysicsObj.IsAnimating && !HasPendingMovement;
         }
 
         /// <summary>
@@ -252,26 +229,64 @@ namespace ACE.Server.WorldObjects
         /// <returns></returns>
         public bool AttackReady()
         {
-            var nextAttackTime = CurrentAttack == CombatType.Magic ? NextMagicAttackTime : NextAttackTime;
-
-            if (Timers.RunningTime < nextAttackTime || !IsAttackRange())
+            if (Timers.RunningTime < NextAttackTime)
                 return false;
 
-            PhysicsObj.update_object();
-            UpdatePosition_SyncLocation();
-
-            return !PhysicsObj.IsAnimating;
+            return !PhysicsObj.IsAnimating || !HasPendingMovement;
         }
+
+        /// <summary>
+        /// Returns TRUE if creature can cast its next spell
+        /// </summary>
+        /// <returns></returns>
+        public bool SpellCastReady()
+        {
+            return Timers.RunningTime > NextSpellCastTime;
+        }
+
+        private bool IsAttacking = false;
+        private bool PendingEndAttack = false;
 
         /// <summary>
         /// Performs the current attack on the target
         /// </summary>
-        public void Attack()
+        private void Attack()
         {
-            if (DebugMove)
-                Console.WriteLine($"[{Timers.RunningTime}] - {Name} ({Guid}) - Attack");
+            if (!MoveReady() || !AttackReady())
+                return;
 
-            switch (CurrentAttack)
+            if (DebugMove)
+                Console.WriteLine($"{Name} ({Guid}).Attack()");
+
+            if (IsAttacking)
+                return;
+
+            if (HasPendingMovement)
+                CancelMoveTo(WeenieError.ObjectGone);
+
+            IsAttacking = true;
+
+            var targetCreature = AttackTarget as Creature;
+            if (!IsAttackRange() || CurrentAttackType == null || targetCreature == null || IsDead || targetCreature.IsDead)
+            {
+                EndAttack();
+                return;
+            }
+
+            if (AiImmobile && CurrentAttackType == CombatType.Melee)
+            {
+                var targetDist = GetDistanceToTarget();
+                if (targetDist > MaxRange)
+                {
+                    EndAttack();
+                    return;
+                }
+            }
+
+            FailedMovementCount = 0;
+            FailedSightCount = 0;
+
+            switch (CurrentAttackType)
             {
                 case CombatType.Melee:
                     MeleeAttack();
@@ -282,28 +297,32 @@ namespace ACE.Server.WorldObjects
                 case CombatType.Magic:
                     MagicAttack();
                     break;
+                default:
+                    EndAttack();
+                    return;
             }
 
             EmoteManager.OnAttack(AttackTarget);
 
-            ResetAttack();
-
             AttacksReceivedWithoutBeingAbleToCounter = 0;
         }
 
-        /// <summary>
-        /// Called after attack has completed
-        /// </summary>
-        public void ResetAttack()
+        private void EndAttack(bool forced = true)
         {
-            // wait for missile to strike
-            //if (CurrentAttack == CombatType.Missile)
-                //return;
+            if (!forced && !MoveReady())
+                return;
 
-            IsTurning = false;
-            IsMoving = false;
+            if (DebugMove)
+                Console.WriteLine($"{Name} ({Guid}).EndAttack()");
 
-            CurrentAttack = null;
+            PendingEndAttack = false;
+
+            if (HasPendingMovement)
+                CancelMoveTo(WeenieError.ObjectGone);
+
+            IsAttacking = false;
+
+            CurrentAttackType = null;
             MaxRange = 0.0f;
         }
 
@@ -445,10 +464,12 @@ namespace ACE.Server.WorldObjects
             set { if (value == 0) RemoveProperty(PropertyInt.AiAllowedCombatStyle); else SetProperty(PropertyInt.AiAllowedCombatStyle, (int)value); }
         }
 
-        private static readonly Dictionary<uint, BodyPartTable> BPTableCache = new Dictionary<uint, BodyPartTable>();
+        private static readonly ConcurrentDictionary<uint, BodyPartTable> BPTableCache = new ConcurrentDictionary<uint, BodyPartTable>();
+
 
         public static BodyPartTable GetBodyParts(uint wcid)
         {
+            // get cached body parts table
             if (!BPTableCache.TryGetValue(wcid, out var bpTable))
             {
                 var weenie = DatabaseManager.World.GetCachedWeenie(wcid);
@@ -459,9 +480,21 @@ namespace ACE.Server.WorldObjects
             return bpTable;
         }
 
-        public static BodyPartTable GetBodyParts(Creature creature)
+        private BodyPartTable ModifiedBodyPartTable = null;
+        public BodyPartTable GetBodyParts()
         {
-            return new BodyPartTable(creature.Weenie);
+           if (IsModified) // If we're modified(our level has been altered) get our custom body parts instead of the generic ones.
+            {
+                if (ModifiedBodyPartTable == null)
+                    ModifiedBodyPartTable = new BodyPartTable(Biota);
+                return ModifiedBodyPartTable;
+            }
+            else
+                return GetBodyParts(WeenieClassId);
+        }
+        public void ClearModifiedBodyPartTable()
+        {
+            ModifiedBodyPartTable = null;
         }
 
         /// <summary>
@@ -479,7 +512,7 @@ namespace ACE.Server.WorldObjects
 
         public void StunFor(double seconds, Player sourcePlayer = null)
         {
-            StunnedUntilTimestamp = Time.GetFutureUnixTime(5);
+            StunnedUntilTimestamp = Time.GetFutureUnixTime(seconds);
             NextStunEffectTimestamp = 0;
 
             if (sourcePlayer != null && sourcePlayer.Session != null)

@@ -134,7 +134,7 @@ namespace ACE.Database
             return base.GetBiota(id, doNotAddToCache);
         }
 
-        public override bool SaveBiota(ACE.Entity.Models.Biota biota, ReaderWriterLockSlim rwLock)
+        public override bool SaveBiota(ACE.Entity.Models.Biota biota, ReaderWriterLockSlim rwLock, bool doNotAddToCache = false)
         {
             ProcessPartialSave(ref biota);
 
@@ -164,7 +164,7 @@ namespace ACE.Database
 
             var context = new ShardDbContext();
 
-            var existingBiota = base.GetBiota(context, biota.Id);
+            var existingBiota = base.GetBiota(context, biota.Id, doNotAddToCache);
 
             rwLock.EnterReadLock();
             try
@@ -187,7 +187,8 @@ namespace ACE.Database
 
             if (DoSaveBiota(context, existingBiota))
             {
-                TryAddToCache(context, existingBiota);
+                if (!doNotAddToCache)
+                    TryAddToCache(context, existingBiota);
 
                 return true;
             }
@@ -201,6 +202,24 @@ namespace ACE.Database
                 biotaCache.Remove(id);
 
             return base.RemoveBiota(id);
+        }
+
+        private Dictionary<TimeSpan, (int Count, DateTime CachedTime)> UniqueIPsCountCache = new Dictionary<TimeSpan, (int Count, DateTime CachedTime)>();
+        public override int GetUniqueIPsInTheLast(TimeSpan timeSpan)
+        {
+            if (UniqueIPsCountCache.TryGetValue(timeSpan, out var value))
+            {
+                if (value.CachedTime + TimeSpan.FromMinutes(1) > DateTime.Now)
+                    return value.Count;
+                else
+                    UniqueIPsCountCache.Remove(timeSpan);
+            }
+
+            var count = base.GetUniqueIPsInTheLast(timeSpan);
+
+            UniqueIPsCountCache.Add(timeSpan, (count, DateTime.Now));
+
+            return count;
         }
     }
 }

@@ -325,6 +325,7 @@ namespace ACE.Server.Managers
             }
 
         }
+
         public void GetCurrentCampBonus(CreatureType creatureType, out float typeCampBonus, out float areaCampBonus, out float restCampBonus, out TimeSpan typeRecovery, out TimeSpan areaRecovery, out TimeSpan restRecovery)
         {
             typeCampBonus = 0;
@@ -399,6 +400,11 @@ namespace ACE.Server.Managers
             return typeCampBonus;
         }
 
+        public void GetCurrentCampBonus(uint typeCampId, Landblock landblock, out float typeCampBonus, out float areaCampBonus, out float restCampBonus)
+        {
+            HandleCampInteraction(typeCampId, landblock, 0, out typeCampBonus, out areaCampBonus, out restCampBonus);
+        }
+
         public void HandleCampInteraction(uint typeCampId, Landblock landblock, uint incrementAmount, out float typeCampBonus, out float areaCampBonus, out float restCampBonus)
         {
             typeCampBonus = 1.0f;
@@ -412,7 +418,8 @@ namespace ACE.Server.Managers
                 {
                     CheckDecay(typeCamp, true);
                     typeCampBonus = 1.0f - ((float)typeCamp.NumInteractions / GetMaxInteractions(typeCamp.CampId));
-                    Increment(typeCamp, incrementAmount);
+                    if(incrementAmount > 0)
+                        Increment(typeCamp, incrementAmount);
                 }
             }
 
@@ -437,7 +444,8 @@ namespace ACE.Server.Managers
                     {
                         CheckDecay(areaCamp, true);
                         areaCampBonus = 1.0f - ((float)areaCamp.NumInteractions / GetMaxInteractions(areaCamp.CampId));
-                        Increment(areaCamp, incrementAmount);
+                        if (incrementAmount > 0)
+                            Increment(areaCamp, incrementAmount);
                     }
                 }
             }
@@ -447,7 +455,8 @@ namespace ACE.Server.Managers
             {
                 CheckDecay(restCamp, true);
                 restCampBonus = 1.0f - ((float)restCamp.NumInteractions / GetMaxInteractions(restCamp.CampId));
-                Increment(restCamp, incrementAmount);
+                if (incrementAmount > 0)
+                    Increment(restCamp, incrementAmount);
             }
         }
     }

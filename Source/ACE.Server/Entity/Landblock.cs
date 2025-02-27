@@ -1,4 +1,5 @@
 using ACE.Common;
+using ACE.Common.Extensions;
 using ACE.Common.Performance;
 using ACE.Database;
 using ACE.Database.Models.World;
@@ -12,6 +13,7 @@ using ACE.Server.Entity.Actions;
 using ACE.Server.Factories;
 using ACE.Server.Managers;
 using ACE.Server.Network.GameMessages;
+using ACE.Server.Pathfinding;
 using ACE.Server.Physics.Common;
 using ACE.Server.WorldObjects;
 using log4net;
@@ -165,7 +167,7 @@ namespace ACE.Server.Entity
 
         public Landblock(LandblockId id)
         {
-            //log.Debug($"Landblock({(id.Raw | 0xFFFF):X8})");
+            //log.DebugFormat("Landblock({0:X8})", (id.Raw | 0xFFFF));
 
             Id = id;
 
@@ -182,6 +184,8 @@ namespace ACE.Server.Entity
         {
             if (!reload)
                 PhysicsLandblock.PostInit();
+            else
+                Houses.Clear();
 
             Task.Run(() =>
             {
@@ -193,7 +197,7 @@ namespace ACE.Server.Entity
 
                 var actionChain = new ActionChain();
                 actionChain.AddDelaySeconds(5);
-                actionChain.AddAction(this, () => InitializeExplorationMarkers());
+                actionChain.AddAction(this, InitializeExplorationMarkers);
                 actionChain.EnqueueChain();
             });
 
@@ -201,109 +205,137 @@ namespace ACE.Server.Entity
         }
 
 
-        private double NextExplorationMarkerRefresh;
+        public double NextExplorationMarkerRefresh;
         private double ExplorationMarkerRefreshInterval = 300;
         private List<Position> PositionsForExplorationMarkers = new List<Position>();
         private int ExplorationMarkerCount;
+        private int ExplorationMarkerCurrentIndex;
         public void InitializeExplorationMarkers()
         {
             if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                 return;
 
-            var explorationSites = DatabaseManager.World.GetExplorationSitesByLandblock(Id.Landblock);
+            PositionsForExplorationMarkers = new List<Position>();
+            ExplorationMarkerCount = 0;
+            ExplorationMarkerCurrentIndex = 0;
 
+            var explorationSites = DatabaseManager.World.GetExplorationSitesByLandblock(Id.Landblock);
             if (explorationSites.Count == 0)
-            {
-                PositionsForExplorationMarkers = new List<Position>();
-                ExplorationMarkerCount = 0;
                 return;
-            }
 
             foreach (var obj in worldObjects)
             {
-                if(obj.Value is Creature creature)
-                {
-                    if (!(creature is Player) && creature.PlayerKillerStatus != PlayerKillerStatus.RubberGlue && creature.PlayerKillerStatus != PlayerKillerStatus.Protected)
-                        PositionsForExplorationMarkers.Add(creature.Location);
-                }
+                if(obj.Value is Creature creature && creature.IsMonster)
+                    PositionsForExplorationMarkers.Add(creature.Location);
             }
 
+            PositionsForExplorationMarkers.Shuffle();
             ExplorationMarkerCount = Math.Clamp(1 + PositionsForExplorationMarkers.Count / 50, 1, 5);
 
-            for(int i = 0; i < ExplorationMarkerCount; i++)
-                SpawnExplorationMarker();
+            var actionChain = new ActionChain();
+            for (int i = 0; i < ExplorationMarkerCount; i++)
+            {
+                if (i > 0)
+                    actionChain.AddDelaySeconds(5);
+                actionChain.AddAction(this, () => SpawnExplorationMarker());
+            }
+            actionChain.EnqueueChain();
 
             NextExplorationMarkerRefresh = Time.GetFutureUnixTime(ExplorationMarkerRefreshInterval);
         }
 
-        public void RefreshExplorationMarkers()
+        public void RefreshExplorationMarkers(bool forceRefresh = false)
         {
             if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                 return;
 
             var currentMarkerCount = 0;
-            foreach (var obj in worldObjects)
+            foreach (var obj in worldObjects.Where(i => i.Value.WeenieClassId == (uint)Factories.Enum.WeenieClassName.explorationMarker).ToList())
             {
-                if (obj.Value.WeenieClassId == (uint)Factories.Enum.WeenieClassName.explorationMarker)
+                var marker = obj.Value;
+                bool isInRange = false;
+                if (!forceRefresh)
                 {
-                    var marker = obj.Value;
-                    bool isVisible = false;
-                    foreach(var player in players)
+                    foreach (var player in players)
                     {
                         if (player.IsOvertlyPlussed)
                             continue;
 
-                        var distSq = marker.PhysicsObj.get_distance_sq_to_object(player.PhysicsObj, true);
-
-                        if (distSq < 2000)
+                        if (marker.Location.DistanceTo(player.Location) < 50)
                         {
-                            isVisible = true;
+                            isInRange = true;
                             break;
                         }
                     }
-
-                    if (!isVisible) // Only refresh exploration markers that are not visible for any players at the moment.
-                    {
-                        marker.Destroy();
-
-                        if (currentMarkerCount < ExplorationMarkerCount)
-                            SpawnExplorationMarker();
-                    }
-                    currentMarkerCount++;
                 }
+
+                if (!isInRange) // Only refresh exploration markers that are not in range of any players at the moment.
+                    marker.Destroy();
+                else
+                    currentMarkerCount++;
             }
 
+            var spawnedCount = 0;
             if (currentMarkerCount < ExplorationMarkerCount)
             {
+                var actionChain = new ActionChain();
                 for (int i = currentMarkerCount; i < ExplorationMarkerCount; i++)
-                    SpawnExplorationMarker();
+                {
+                    spawnedCount++;
+                    if (i > currentMarkerCount)
+                        actionChain.AddDelaySeconds(5);
+                    actionChain.AddAction(this, () => SpawnExplorationMarker());
+                }
+                actionChain.EnqueueChain();
             }
 
             NextExplorationMarkerRefresh = Time.GetFutureUnixTime(ExplorationMarkerRefreshInterval);
         }
 
-        public void SpawnExplorationMarker()
+        public void SpawnExplorationMarker(int attempts = 0)
         {
             if (PositionsForExplorationMarkers.Count > 0)
             {
-                var attempts = 0;
-                var entry = PositionsForExplorationMarkers[ThreadSafeRandom.Next(0, PositionsForExplorationMarkers.Count - 1)];
+                var entryPos = new Position(PositionsForExplorationMarkers[ExplorationMarkerCurrentIndex]);
+
+                ExplorationMarkerCurrentIndex++;
+                if (ExplorationMarkerCurrentIndex >= PositionsForExplorationMarkers.Count)
+                    ExplorationMarkerCurrentIndex = 0;
+
+                if (Pathfinder.PathfindingEnabled && entryPos.Indoors)
+                {
+                    var randomPos = Pathfinder.GetRandomPointWithinCircle(entryPos, 15, AgentWidth.Wide);
+                    if (randomPos != null)
+                        entryPos = randomPos;
+                }
+
+                foreach (var obj in worldObjects.Where(i => i.Value.WeenieClassId == (uint)Factories.Enum.WeenieClassName.explorationMarker).ToList())
+                {
+                    var marker = obj.Value;
+
+                    if (entryPos.DistanceTo(marker.Location) < 25)
+                    {
+                        attempts++;
+                        if (attempts < 10)
+                            SpawnExplorationMarker(attempts);
+                        else
+                            log.Warn($"Landblock 0x{Id} failed to find position to spawn exploration marker that was not too close to another exploration marker.");
+                        return;
+                    }
+                }
 
                 var explorationMarker = WorldObjectFactory.CreateNewWorldObject((uint)Factories.Enum.WeenieClassName.explorationMarker);
-                explorationMarker.Location = entry;
+                explorationMarker.Location = entryPos;
                 explorationMarker.Location.LandblockId = new LandblockId(explorationMarker.Location.GetCell());
-                if (explorationMarker.EnterWorld())
-                {
-                    AddWorldObject(explorationMarker);
-                }
-                else if (explorationMarker != null)
+                if (!explorationMarker.EnterWorld() && explorationMarker != null)
                 {
                     attempts++;
                     explorationMarker.Destroy();
                     if(attempts < 10)
-                        SpawnExplorationMarker();
+                        SpawnExplorationMarker(attempts);
                     else
-                        log.Error($"Landblock 0x{Id} failed to spawn exploration marker");
+                        log.Warn($"Landblock 0x{Id} failed to spawn exploration marker.");
+                    return;
                 }
             }
         }
@@ -342,6 +374,9 @@ namespace ACE.Server.Entity
                                 parent = houses[0];
                             }
                         }
+
+                        if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                            house.SetHooksVisible(false);
                     }
 
                     AddWorldObject(fo);
@@ -1071,6 +1106,19 @@ namespace ACE.Server.Entity
             {
                 if (CurrentLandblockGroup != null && CurrentLandblockGroup != LandblockManager.CurrentMultiThreadedTickingLandblockGroup.Value)
                 {
+                    // Prevent possible multi-threaded crash
+                    // The following scenario can happen rarely in ACE, all in the same call stack with no ActionQueue usage:
+                    // Moster successfully lands an attack on a player that procs a cloak spell
+                    // The code goes through and does the LaunchSpellProjectiles() which adds the spell projectiles to (presumably) the players landblock
+                    // For some unknown reason, the LandblockGroup/Thread where the monster exists seems to be a different LandblockGroup/Thread where the spells are added to.
+                    // Maybe there's a player death race condition? Maybe it's a teleport race condition? I dunno.
+                    // Because this happens so rarely, and, it only seems to affect cloak projectiles, and, cloak projectiles are pretty benign, we simply don't add the object, and only log it as a warning.
+                    if (wo.WeenieType == WeenieType.ProjectileSpell)
+                    {
+                        log.Warn($"Landblock 0x{Id} entered AddWorldObjectInternal in a cross-thread operation for a ProjectileSpell. This is normally not an issue unless it's happening more than once an hour.");
+                        return false;
+                    }
+
                     log.Error($"Landblock 0x{Id} entered AddWorldObjectInternal in a cross-thread operation.");
                     log.Error($"Landblock 0x{Id} CurrentLandblockGroup: {CurrentLandblockGroup}");
                     log.Error($"LandblockManager.CurrentMultiThreadedTickingLandblockGroup.Value: {LandblockManager.CurrentMultiThreadedTickingLandblockGroup.Value}");
@@ -1089,10 +1137,6 @@ namespace ACE.Server.Entity
                     log.Error(System.Environment.StackTrace);
 
                     log.Error("PLEASE REPORT THIS TO THE ACE DEV TEAM !!!");
-
-                    // Prevent possible multi-threaded crash
-                    if (wo.WeenieType == WeenieType.ProjectileSpell)
-                        return false;
 
                     // This may still crash...
                 }
@@ -1114,11 +1158,15 @@ namespace ACE.Server.Entity
 
                     if (wo.Generator != null)
                     {
-                        log.Debug($"AddWorldObjectInternal: couldn't spawn 0x{wo.Guid}:{wo.Name} [{wo.WeenieClassId} - {wo.WeenieType}] at {wo.Location.ToLOCString()} from generator {wo.Generator.WeenieClassId} - 0x{wo.Generator.Guid}:{wo.Generator.Name}");
+                        if (log.IsDebugEnabled)
+                            log.Debug($"AddWorldObjectInternal: couldn't spawn 0x{wo.Guid}:{wo.Name} [{wo.WeenieClassId} - {wo.WeenieType}] at {wo.Location.ToLOCString()} from generator {wo.Generator.WeenieClassId} - 0x{wo.Generator.Guid}:{wo.Generator.Name}");
                         wo.NotifyOfEvent(RegenerationType.PickUp); // Notify generator the generated object is effectively destroyed, use Pickup to catch both cases.
                     }
                     else if (wo.IsGenerator) // Some generators will fail random spawns if they're circumference spans over water or cliff edges
-                        log.Debug($"AddWorldObjectInternal: couldn't spawn generator 0x{wo.Guid}:{wo.Name} [{wo.WeenieClassId} - {wo.WeenieType}] at {wo.Location.ToLOCString()}");
+                    {
+                        if (log.IsDebugEnabled)
+                            log.Debug($"AddWorldObjectInternal: couldn't spawn generator 0x{wo.Guid}:{wo.Name} [{wo.WeenieClassId} - {wo.WeenieType}] at {wo.Location.ToLOCString()}");
+                    }
                     else if (wo.ProjectileTarget == null && !(wo is SpellProjectile))
                         log.Warn($"AddWorldObjectInternal: couldn't spawn 0x{wo.Guid}:{wo.Name} [{wo.WeenieClassId} - {wo.WeenieType}] at {wo.Location.ToLOCString()}");
 
@@ -1366,7 +1414,7 @@ namespace ACE.Server.Entity
         {
             var landblockID = Id.Raw | 0xFFFF;
 
-            //log.Debug($"Landblock.Unload({landblockID:X8})");
+            //log.DebugFormat("Landblock.Unload({0:X8})", landblockID);
 
             ProcessPendingWorldObjectAdditionsAndRemovals();
 
@@ -1389,6 +1437,8 @@ namespace ACE.Server.Entity
             LScape.unload_landblock(landblockID);
 
             PhysicsLandblock.release_shadow_objs();
+
+            Pathfinder.TryUnloadMesh(this);
         }
 
         public void DestroyAllNonPlayerObjects()
@@ -1401,7 +1451,7 @@ namespace ACE.Server.Entity
             foreach (var wo in worldObjects.Where(i => !(i.Value is Player)).ToList())
             {
                 if (!wo.Value.BiotaOriginatedFromOrHasBeenSavedToDatabase())
-                    wo.Value.Destroy(false);
+                    wo.Value.Destroy(false, true);
                 else
                     RemoveWorldObjectInternal(wo.Key);
             }
@@ -1421,7 +1471,7 @@ namespace ACE.Server.Entity
                     AddWorldObjectToBiotasSaveCollection(wo, biotas);
             }
 
-            DatabaseManager.Shard.SaveBiotasInParallel(biotas, result => { });
+            DatabaseManager.Shard.SaveBiotasInParallel(biotas, null);
         }
 
         private void AddWorldObjectToBiotasSaveCollection(WorldObject wo, Collection<(Biota biota, ReaderWriterLockSlim rwLock)> biotas)

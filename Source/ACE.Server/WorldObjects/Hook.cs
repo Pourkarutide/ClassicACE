@@ -51,7 +51,7 @@ namespace ACE.Server.WorldObjects
             IsOpen = false;
         }
 
-        public override ActivationResult CheckUseRequirements(WorldObject activator)
+        public override ActivationResult CheckUseRequirements(WorldObject activator, bool silent = false)
         {
             if (!(activator is Player player))
                 return new ActivationResult(false);
@@ -75,23 +75,23 @@ namespace ACE.Server.WorldObjects
                 if (Item is Hooker || Item is Book)
                 {
                     // redirect to item.CheckUseRequirements
-                    return Item.CheckUseRequirements(activator);
+                    return Item.CheckUseRequirements(activator, silent);
                 }
 
                 if (houseOwner != null && (player.Guid.Full == houseOwner || player.House?.HouseOwner == houseOwner))
-                    return new ActivationResult(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.ItemUnusableOnHook_CanOpen, Name));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.ItemUnusableOnHook_CanOpen, Name));
                 else
-                    return new ActivationResult(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.ItemUnusableOnHook_CannotOpen, Name));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.ItemUnusableOnHook_CannotOpen, Name));
             }
 
             if (player.House == null || houseOwner == null || (player.Guid.Full != houseOwner && player.House?.HouseOwner != houseOwner))
             {
                 if (Item == null)
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.HookItemNotUsable_CannotOpen));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.HookItemNotUsable_CannotOpen));
                 else if (Item is Hooker)
-                    return new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouAreNotPermittedToUseThatHook));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieError(player.Session, WeenieError.YouAreNotPermittedToUseThatHook));
                 else
-                    return new ActivationResult(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.ItemUnusableOnHook_CannotOpen, Name));
+                    return silent ? new ActivationResult(false) : new ActivationResult(new GameEventWeenieErrorWithString(player.Session, WeenieErrorWithString.ItemUnusableOnHook_CannotOpen, Name));
             }
 
             return new ActivationResult(true);
@@ -168,9 +168,10 @@ namespace ACE.Server.WorldObjects
 
             House.HouseCurrentHooksUsable--;
 
-            // Here we explicitly save the hook to the database to prevent item loss.
+            // Here we explicitly save the hook and item to the database to prevent item loss.
             // If the player adds an item to the hook, and the server crashes before the hook has been saved, the item will be lost.
             SaveBiotaToDatabase();
+            item.SaveBiotaToDatabase();
 
             EnqueueBroadcast(new GameMessageUpdateObject(this));
         }
@@ -213,8 +214,9 @@ namespace ACE.Server.WorldObjects
 
             EnqueueBroadcast(new GameMessageUpdateObject(this));
 
-            // Here we explicitly save the storage to the database to prevent property desync.
+            // Here we explicitly save the hook and item to the database to prevent property desync.
             SaveBiotaToDatabase();
+            removedItem.SaveBiotaToDatabase();
         }
 
         public override MotionCommand MotionPickup

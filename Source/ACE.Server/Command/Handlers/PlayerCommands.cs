@@ -34,21 +34,53 @@ namespace ACE.Server.Command.Handlers
             "")]
         public static void HandlePop(Session session, params string[] parameters)
         {
-            if (!PropertyManager.GetBool("cmd_pop_enabled").Item)
-                return;
-
-            CommandHandlerHelper.WriteOutputInfo(session, GetPopString(), ChatMessageType.Broadcast);
+            ShowPop(session);
         }
 
-        public static string GetPopString()
+        public static void ShowPop(Session session, ulong discordChannel = 0)
         {
-            if (!PropertyManager.GetBool("cmd_pop_enabled").Item)
-                return "This command has been disabled.";
+            var showCurrent = PropertyManager.GetBool("cmd_pop_show_current").Item;
+            var showUnique24Hours = PropertyManager.GetBool("cmd_pop_show_24_hours").Item;
+            var showUnique7Days = PropertyManager.GetBool("cmd_pop_show_7_days").Item;
+            var showUnique30Days = PropertyManager.GetBool("cmd_pop_show_30_days").Item;
 
-            if (PropertyManager.GetBool("cmd_pop_last_24_hours").Item)
-                return $"Unique IPs connected in the last 24 hours: {PlayerManager.GetLast24HourUniqueLogins():N0}";
-            else
-                return $"Current world population: {PlayerManager.GetOnlineCount():N0}";
+            if (!showCurrent && !showUnique24Hours && !showUnique7Days && !showUnique30Days)
+            {
+                CommandHandlerHelper.WriteOutputInfo(session, "This command has been disabled.", ChatMessageType.Broadcast);
+                return;
+            }
+
+            if (showCurrent)
+            {
+                if(discordChannel == 0)
+                    CommandHandlerHelper.WriteOutputInfo(session, $"Current world population: {PlayerManager.GetOnlineCount():N0}", ChatMessageType.Broadcast);
+                else
+                    DiscordChatBridge.SendMessage(discordChannel, $"Current world population: {PlayerManager.GetOnlineCount():N0}");
+            }
+
+            if (showUnique24Hours)
+            {
+                if (discordChannel == 0)
+                    DatabaseManager.Shard.GetUniqueIPsInTheLast(TimeSpan.FromHours(24), result => CommandHandlerHelper.WriteOutputInfo(session, $"Unique IPs connected in the last 24 hours: {result:N0}", ChatMessageType.Broadcast));
+                else
+                    DatabaseManager.Shard.GetUniqueIPsInTheLast(TimeSpan.FromHours(24), result => DiscordChatBridge.SendMessage(discordChannel, $"Unique IPs connected in the last 24 hours: {result:N0}"));
+            }
+
+            if (showUnique7Days)
+            {
+                if (discordChannel == 0)
+                    DatabaseManager.Shard.GetUniqueIPsInTheLast(TimeSpan.FromDays(7), result => CommandHandlerHelper.WriteOutputInfo(session, $"Unique IPs connected in the last 7 days: {result:N0}", ChatMessageType.Broadcast));
+                else
+                    DatabaseManager.Shard.GetUniqueIPsInTheLast(TimeSpan.FromDays(7), result => DiscordChatBridge.SendMessage(discordChannel, $"Unique IPs connected in the last 7 days: {result:N0}"));
+            }
+
+            if (showUnique30Days)
+            {
+                if (discordChannel == 0)
+                    DatabaseManager.Shard.GetUniqueIPsInTheLast(TimeSpan.FromDays(30), result => CommandHandlerHelper.WriteOutputInfo(session, $"Unique IPs connected in the last 30 days: {result:N0}", ChatMessageType.Broadcast));
+                else
+                    DatabaseManager.Shard.GetUniqueIPsInTheLast(TimeSpan.FromDays(30), result => DiscordChatBridge.SendMessage(discordChannel, $"Unique IPs connected in the last 30 days: {result:N0}"));
+            }
         }
 
         // quest info (uses GDLe formatting to match plugin expectations)
@@ -656,8 +688,8 @@ namespace ACE.Server.Command.Handlers
             }
 
             var level = session.Player?.Level ?? 1;
-            var minLevel = Math.Max(level - (int)(level * 0.1f), 1);
-            var maxLevel = level + (int)(level * 0.2f);
+            var minLevel = Math.Max(level - (int)Math.Ceiling(level * 0.1f), 1);
+            var maxLevel = level + (int)Math.Ceiling(level * 0.2f);
             if (level > 100)
                 maxLevel = int.MaxValue;
             var explorationList = DatabaseManager.World.GetExplorationSitesByLevelRange(minLevel, maxLevel, level);
@@ -728,8 +760,8 @@ namespace ACE.Server.Command.Handlers
             var validRecommendations = BuildRecommendationList(session.Player);
 
             var level = session.Player?.Level ?? 1;
-            var minLevel = Math.Max(level - (int)(level * 0.1f), 1);
-            var maxLevel = level + (int)(level * 0.2f);
+            var minLevel = Math.Max(level - (int)Math.Ceiling(level * 0.1f), 1);
+            var maxLevel = level + (int)Math.Ceiling(level * 0.2f);
             if (level > 100)
                 maxLevel = int.MaxValue;
             var explorationList = DatabaseManager.World.GetExplorationSitesByLevelRange(minLevel, maxLevel, level);

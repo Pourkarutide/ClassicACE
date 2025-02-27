@@ -297,28 +297,29 @@ namespace ACE.Server.WorldObjects
             // check wield requirements?
             if (!TryEquipObject(worldObject, wieldedLocation))
                 return false;
-
-            // enqueue to ensure parent object has spawned,
-            // and spell fx are visible
-            var actionChain = new ActionChain();
-            actionChain.AddDelaySeconds(0.1);
-            actionChain.AddAction(this, () => TryActivateItemSpells(worldObject));
-            actionChain.EnqueueChain();
-
             return true;
         }
 
         /// <summary>
-        /// Tries to activate item spells for a non-player creature
+        /// Check if non-player creature can activate item spells.
         /// </summary>
-        private void TryActivateItemSpells(WorldObject item)
+        public virtual bool CanActivateItemSpells(WorldObject item, bool silent = false)
         {
             if (!Attackable)
-                return;
+                return false;
 
-            // check activation requirements?
-            foreach (var spell in item.Biota.GetKnownSpellsIds(BiotaDatabaseLock))
-                CreateItemSpell(item, (uint)spell);
+            if (ItemCurMana == 0)
+                return false;
+
+            // check other activation requirements?
+            return true;
+        }
+
+        public virtual bool TryActivateItemSpells(WorldObject item)
+        {
+            if(CanActivateItemSpells(item))
+                return ActivateItemSpells(item);
+            return false;
         }
 
         /// <summary>
@@ -349,7 +350,22 @@ namespace ACE.Server.WorldObjects
 
             ExtraItemChecks(worldObject);
 
-            worldObject.OnWield(this);
+            // enqueue to ensure parent object has spawned,
+            // and spell fx are visible
+            var actionChain = new ActionChain();
+            actionChain.AddDelaySeconds(0.1);
+            actionChain.AddAction(this, () =>
+            {
+                // handle item spells
+                TryActivateItemSpells(worldObject);
+
+                // handle equipment sets
+                if (worldObject.HasItemSet)
+                    EquipItemFromSet(worldObject);
+
+                worldObject.OnWield(this);
+            });
+            actionChain.EnqueueChain();
 
             return true;
         }
@@ -359,9 +375,6 @@ namespace ACE.Server.WorldObjects
             // check wield requirements?
             if (!TryEquipObjectWithBroadcasting(worldObject, wieldedLocation))
                 return false;
-
-            TryActivateItemSpells(worldObject);
-
             return true;
         }
 
@@ -409,7 +422,12 @@ namespace ACE.Server.WorldObjects
             worldObject.RemoveProperty(PropertyInstanceId.Wielder);
             worldObject.Wielder = null;
 
-            worldObject.OnSpellsDeactivated();
+            // handle equipment sets
+            if (worldObject.HasItemSet)
+                DequipItemFromSet(worldObject);
+
+            // If item has any spells, remove them from the registry on unequip
+            DeactivateItemSpells(worldObject, true);
 
             if ((worldObject.WeenieType == WeenieType.Ammunition || worldObject.WeenieType == WeenieType.Missile) && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
                 EncumbranceVal -= (int)Math.Ceiling((worldObject.EncumbranceVal ?? 0) / 2.0f);
@@ -457,25 +475,6 @@ namespace ACE.Server.WorldObjects
                 EnqueueBroadcast(false, new GameMessageSound(Guid, Sound.UnwieldObject));
 
             EnqueueBroadcast(new GameMessageObjDescEvent(this));
-
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
-            {
-                var leyLineAmulet = worldObject as LeyLineAmulet;
-                if (leyLineAmulet != null)
-                    leyLineAmulet.OnDequip(this as Player);
-            }
-
-            // If item has any spells, remove them from the registry on unequip
-            if (worldObject.Biota.PropertiesSpellBook != null)
-            {
-                foreach (var spell in worldObject.Biota.PropertiesSpellBook)
-                {
-                    if (worldObject.HasProcSpell((uint)spell.Key))
-                        continue;
-
-                    RemoveItemSpell(worldObject, (uint)spell.Key, true);
-                }
-            }
 
             if (!droppingToLandscapeOrCorpse) // If this is sent when adding to corpse the item will be invisible in the loot window for a bit.
             {
@@ -838,8 +837,13 @@ namespace ACE.Server.WorldObjects
         public double CachedMissileDefenseCapBonus = 0.0f;
         public double CachedMagicDefenseCapBonus = 0.0f;
         public double CachedComponentBurnRateMod = 0.0f;
-        public void UpdateDefenseCapBonus()
+        public void UpdateDefenseCapBonus(bool silent = true)
         {
+            var previousCachedMeleeDefenseCapBonus = CachedMeleeDefenseCapBonus;
+            var previousCachedMissileDefenseCapBonus = CachedMissileDefenseCapBonus;
+            var previousCachedMagicDefenseCapBonus = CachedMagicDefenseCapBonus;
+            var previousCachedComponentBurnRateMod = CachedComponentBurnRateMod;
+
             CachedMeleeDefenseCapBonus = 0;
             CachedMissileDefenseCapBonus = 0;
             CachedMagicDefenseCapBonus = 0;
@@ -854,6 +858,26 @@ namespace ACE.Server.WorldObjects
             }
 
             CachedComponentBurnRateMod = Math.Clamp(CachedComponentBurnRateMod, -1, 1);
+
+            if(!silent && this is Player player)
+            {
+                if (CachedMeleeDefenseCapBonus == CachedMissileDefenseCapBonus)
+                {
+                    if (previousCachedMeleeDefenseCapBonus != CachedMeleeDefenseCapBonus || previousCachedMissileDefenseCapBonus != CachedMissileDefenseCapBonus)
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your max evasion chance is now {(0.90f + (CachedMeleeDefenseCapBonus * 0.01)) * 100:0.0}%.", ChatMessageType.Broadcast));
+                }
+                else
+                {
+                    if (previousCachedMeleeDefenseCapBonus != CachedMeleeDefenseCapBonus)
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your max melee evasion chance is now {(0.90f + (CachedMeleeDefenseCapBonus * 0.01)) * 100:0.0}%.", ChatMessageType.Broadcast));
+
+                    if (previousCachedMissileDefenseCapBonus != CachedMissileDefenseCapBonus)
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your max missile evasion chance is now {(0.90f + (CachedMissileDefenseCapBonus * 0.01)) * 100:0.0}%.", ChatMessageType.Broadcast));
+                }
+
+                if (previousCachedMagicDefenseCapBonus != CachedMagicDefenseCapBonus)
+                    player.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your max magic resist chance is now {(0.90f + (CachedMagicDefenseCapBonus * 0.01)) * 100:0.0}%.", ChatMessageType.Broadcast));
+            }
         }
     }
 }

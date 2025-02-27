@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-
+using ACE.Common;
 using ACE.DatLoader.Entity.AnimationHooks;
 using ACE.Entity.Enum;
 using ACE.Server.Entity;
@@ -45,6 +45,8 @@ namespace ACE.Server.WorldObjects
         }
 
         public AttackQueue AttackQueue;
+
+        private double NextDualWieldAlternateReset;
 
         /// <summary>
         /// Called when a player first initiates a melee attack
@@ -105,7 +107,7 @@ namespace ACE.Server.WorldObjects
 
             if (target == null)
             {
-                //log.Debug($"{Name}.HandleActionTargetedMeleeAttack({targetGuid:X8}, {AttackHeight}, {powerLevel}) - couldn't find target guid");
+                //log.DebugFormat("{0}.HandleActionTargetedMeleeAttack({1:X8}, {2}, {3}) - couldn't find target guid", Name, targetGuid, AttackHeight, powerLevel);
                 OnAttackDone();
                 return;
             }
@@ -139,7 +141,8 @@ namespace ACE.Server.WorldObjects
 
             // reset PrevMotionCommand / DualWieldAlternate each time button is clicked
             PrevMotionCommand = MotionCommand.Invalid;
-            DualWieldAlternate = false;
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM || NextDualWieldAlternateReset < Time.GetUnixTime())
+                DualWieldAlternate = false;
 
             var attackSequence = ++AttackSequence;
 
@@ -165,9 +168,9 @@ namespace ACE.Server.WorldObjects
                 HandleActionTargetedMeleeAttack_Inner(target, attackSequence);
         }
 
-        public static readonly float MeleeDistance  = 0.6f;
-        public static readonly float StickyDistance = 4.0f;
-        public static readonly float RepeatDistance = 16.0f;
+        public const float MeleeDistance = 0.6f;
+        public const float StickyDistance = 4.0f;
+        public const float RepeatDistance = 16.0f;
 
         public void HandleActionTargetedMeleeAttack_Inner(WorldObject target, int attackSequence)
         {
@@ -197,7 +200,7 @@ namespace ACE.Server.WorldObjects
                     //log.Info($"{Name}.MoveTo({target.Name})");
 
                     // charge attack
-                    MoveTo(target);
+                    ChargeTo(target);
                 }
                 else
                 {
@@ -293,6 +296,13 @@ namespace ACE.Server.WorldObjects
 
             HasPerformedActionsSinceLastMovementUpdate = true;
 
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && IsBlockedByDoor(target))
+            {
+                Session.Network.EnqueueSend(new GameMessageSystemChat("You can't quite reach your target!", ChatMessageType.Broadcast));
+                OnAttackDone();
+                return;
+            }
+
             if (AttackSequence != attackSequence)
                 return;
 
@@ -345,9 +355,9 @@ namespace ACE.Server.WorldObjects
                     numStrikes = 1;
 
                 uint baseSkill = GetCreatureSkill(GetCurrentWeaponSkill()).Base;
-                if(baseSkill < 250)
+                if (baseSkill < 250)
                     numStrikes = 1;
-                else if(baseSkill < 325)
+                else if (baseSkill < 325)
                     numStrikes = 2;
             }
 
@@ -420,17 +430,17 @@ namespace ACE.Server.WorldObjects
                             DamageTarget(cleaveHit, weapon);
                         }
                     }
-                    
+
                     if (weapon != null && weapon.IsPiercing)
                     {
                         var pierce = GetPierceTarget(creature, weapon);
 
                         foreach (var pierceHit in pierce)
                         {
-                            DamageTarget(pierceHit, weapon);                 
+                            DamageTarget(pierceHit, weapon);
                         }
                     }
-             });
+                });
 
                 //if (numStrikes == 1 || TwoHandedCombat)
                 //actionChain.AddDelaySeconds(swingTime);
@@ -444,7 +454,7 @@ namespace ACE.Server.WorldObjects
                 Attacking = false;
 
                 // powerbar refill timing
-                float refillMod = 1.0f;
+                float refillMod;
                 if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                     refillMod = IsDualWieldAttack ? 0.8f : 1.0f;     // dual wield swing animation 20% faster
                 else
@@ -511,12 +521,15 @@ namespace ACE.Server.WorldObjects
         public float DoSwingMotion(WorldObject target, out List<(float time, AttackHook attackHook)> attackFrames)
         {
             if (IsDualWieldAttack)
+            {
                 DualWieldAlternate = !DualWieldAlternate;
+                NextDualWieldAlternateReset = Time.GetFutureUnixTime(4);
+            }
 
             // get the proper animation speed for this attack,
             // based on weapon speed and player quickness
             var baseSpeed = GetAnimSpeed();
-            float animSpeedMod = 1.0f;
+            float animSpeedMod;
             if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                 animSpeedMod = IsDualWieldAttack ? 1.2f : 1.0f;     // dual wield swing animation 20% faster
             else
@@ -575,8 +588,8 @@ namespace ACE.Server.WorldObjects
             return animLength;
         }
 
-        public static readonly float KickThreshold = 0.75f;
-        public static readonly float MultiStrikeThreshold = 0.75f;
+        public const float KickThreshold = 0.75f;
+        public const float MultiStrikeThreshold = 0.75f;
 
         public MotionCommand PrevMotionCommand;
 
@@ -636,3 +649,4 @@ namespace ACE.Server.WorldObjects
         }
     }
 }
+

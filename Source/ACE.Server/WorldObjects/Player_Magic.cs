@@ -429,9 +429,15 @@ namespace ACE.Server.WorldObjects
 
         public bool VerifySpellTarget(Spell spell, WorldObject target)
         {
-            if (IsInvalidTarget(spell, target))
+            if (target.StackSize > 1)
             {
-                Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, $"{spell.Name} cannot be cast on {target.Name}."));
+                Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, $"Cannot cast spell on a stack of items."));
+                SendSpellCastingDoneEvent(WeenieError.None);
+                return false;
+            }
+            else if (IsInvalidTarget(spell, target))
+            {
+                Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, $"This spell cannot be cast on {target.Name}."));
                 SendSpellCastingDoneEvent(WeenieError.None);
                 return false;
             }
@@ -643,7 +649,10 @@ namespace ACE.Server.WorldObjects
                 return false;
             }
 
-            Proficiency.OnSuccessUse(this, GetCreatureSkill(Skill.ManaConversion), spell.PowerMod);
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                Proficiency.OnSuccessUse(this, GetCreatureSkill(Skill.ManaConversion), spell.PowerMod);
+            else
+                Proficiency.OnSuccessUse(this, GetCreatureSkill(Skill.ManaConversion), spell.Level * 25);
 
             return true;
         }
@@ -654,7 +663,7 @@ namespace ACE.Server.WorldObjects
 
             var spellWords = spell._spellBase.GetSpellWords(DatManager.PortalDat.SpellComponentsTable);
             if (!string.IsNullOrWhiteSpace(spellWords) && !isWeaponSpell)
-                EnqueueBroadcast(new GameMessageHearSpeech(spellWords, GetNameWithSuffix(), Guid.Full, ChatMessageType.Spellcasting), LocalBroadcastRange, ChatMessageType.Spellcasting);
+                EnqueueBroadcast(new GameMessageHearSpeech(spellWords, GetNameWithSuffix(), Guid.Full, ChatMessageType.Spellcasting), LocalBroadcastRange);
         }
 
         public static float CastSpeed = 2.0f;       // from retail pcaps, player animation speed for windup / first half of cast gesture
@@ -748,7 +757,7 @@ namespace ACE.Server.WorldObjects
         }
 
         // 20 from MoveToManager threshold?
-        public static readonly float MaxAngle = 5;
+        public const float MaxAngle = 5;
 
         public void DoCastSpell(MagicState _state, bool checkAngle = true)
         {
