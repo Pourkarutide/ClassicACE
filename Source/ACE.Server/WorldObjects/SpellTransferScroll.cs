@@ -223,6 +223,16 @@ namespace ACE.Server.WorldObjects
                     return;
                 }
 
+                var lowChance = Math.Clamp(PropertyManager.GetDouble("spell_extraction_scroll_base_chance", 0.50).Item, 0.0, 1.0);
+                var chancePerExtraSpell = PropertyManager.GetDouble("spell_extraction_scroll_chance_per_extra_spell", 0.1).Item;
+
+                var chance = Math.Clamp(lowChance + ((spellCount - 1) * chancePerExtraSpell), lowChance, 1.0);
+
+                if (target.ItemType == ItemType.Gem && target.ItemUseable == Usable.No)
+                    chance = 1; // Non-useable gems have 100% extraction chance.
+
+                var percent = chance * 100;
+
                 var showDialog = player.GetCharacterOption(CharacterOption.UseCraftingChanceOfSuccessDialog);
                 if (showDialog && !confirmed)
                 {
@@ -238,6 +248,13 @@ namespace ACE.Server.WorldObjects
                         player.SendUseDoneEvent(WeenieError.ConfirmationInProgress);
                     else
                         player.SendUseDoneEvent();
+
+                    if (PropertyManager.GetBool("craft_exact_msg").Item)
+                    {
+                        var exactMsg = $"You have a {(float)percent} percent chance of extracting a spell from {target.NameWithMaterial}.";
+
+                        player.Session.Network.EnqueueSend(new GameMessageSystemChat(exactMsg, ChatMessageType.Craft));
+                    }
                     return;
                 }
 
@@ -266,25 +283,35 @@ namespace ACE.Server.WorldObjects
                         return;
                     }
 
+                    var success = ThreadSafeRandom.Next(0.0f, 1.0f) < chance;
                     var spellName = "a spell";
-                    var spellToExtractRoll = ThreadSafeRandom.Next(0, spellCount - 1);
-                    var spellToExtractId = spells[spellToExtractRoll];
 
-                    if (player.TryConsumeFromInventoryWithNetworking(source, 1)) // Consume the scroll
+                    if (success)
                     {
-                        Spell spell = new Spell(spellToExtractId);
-                        spellName = spell.Name;
+                        var spellToExtractRoll = ThreadSafeRandom.Next(0, spellCount - 1);
+                        var spellToExtractId = spells[spellToExtractRoll];
 
-                        var newScroll = WorldObjectFactory.CreateNewWorldObject(50130); // Spell Transfer Scroll
-                        newScroll.SpellDID = (uint)spellToExtractId;
-                        newScroll.Name += spellName;
-                        if (player.TryCreateInInventoryWithNetworking(newScroll)) // Create the transfer scroll
-                            player.TryConsumeFromInventoryWithNetworking(target); // Destroy the item
-                        else
-                            newScroll.Destroy(); // Clean up on creation failure
+                        if (player.TryConsumeFromInventoryWithNetworking(source, 1)) // Consume the scroll
+                        {
+                            Spell spell = new Spell(spellToExtractId);
+                            spellName = spell.Name;
+
+                            var newScroll = WorldObjectFactory.CreateNewWorldObject(50130); // Spell Transfer Scroll
+                            newScroll.SpellDID = (uint)spellToExtractId;
+                            newScroll.Name += spellName;
+                            if (player.TryCreateInInventoryWithNetworking(newScroll)) // Create the transfer scroll
+                                player.TryConsumeFromInventoryWithNetworking(target); // Destroy the item
+                            else
+                                newScroll.Destroy(); // Clean up on creation failure
+                        }
+                    } else
+                    {
+                        player.TryConsumeFromInventoryWithNetworking(source, 1); // Consume the scroll
+                        player.TryConsumeFromInventoryWithNetworking(target); // Destroy the item
                     }
 
-                    BroadcastSpellExtraction(player, spellName, target);
+
+                    BroadcastSpellExtraction(player, spellName, target, chance, success);
                 });
 
                 player.EnqueueMotion(actionChain, MotionCommand.Ready);
