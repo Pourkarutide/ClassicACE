@@ -88,7 +88,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon && !PropertyManager.GetBool("recall_in_dungeon").Item)
             {
                 Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
@@ -174,7 +174,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon && !PropertyManager.GetBool("recall_in_dungeon").Item)
             {
                 Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
@@ -253,7 +253,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon && !PropertyManager.GetBool("recall_in_dungeon").Item)
             {
                 Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
@@ -334,7 +334,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon && !PropertyManager.GetBool("recall_in_dungeon").Item)
             {
                 Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
@@ -439,7 +439,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon && !PropertyManager.GetBool("recall_in_dungeon").Item)
             {
                 Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
@@ -572,7 +572,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon && !PropertyManager.GetBool("recall_in_dungeon").Item)
             {
                 Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
@@ -668,7 +668,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && InDungeon && !PropertyManager.GetBool("recall_in_dungeon").Item)
             {
                 Session.Network.EnqueueSend(new GameMessageSystemChat("You may not recall from this location.", ChatMessageType.Broadcast));
                 return;
