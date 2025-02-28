@@ -29,6 +29,7 @@ namespace ACE.Server.Factories
             InitRares();
             InitClothingColors();
 
+            BuildCantripsTables();
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.Infiltration)
             {
