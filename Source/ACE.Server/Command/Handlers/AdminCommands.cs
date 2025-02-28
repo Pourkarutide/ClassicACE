@@ -5217,7 +5217,7 @@ namespace ACE.Server.Command.Handlers
                 return;
 
             var town = string.Join(" ", parameters);
-            if(!EventManager.PossibleFireSaleTowns.Contains(town))
+            if (!EventManager.PossibleFireSaleTowns.Contains(town))
             {
                 session.Network.EnqueueSend(new GameMessageSystemChat($"Invalid town name.", ChatMessageType.Help));
                 return;
@@ -5397,5 +5397,30 @@ namespace ACE.Server.Command.Handlers
             var blinkLoc = player.Location.InFrontOf(distance);
             WorldManager.ThreadSafeBlink(player, blinkLoc);
         }
+
+        // This command is only used when migrating from season 3 to new dekaru housing changes
+        [CommandHandler("clear-player-housing", AccessLevel.Admin, CommandHandlerFlag.None, 0, "Abandon all player owned housing [caution! players will lose any housing they currently own.")]
+        public static void ClearPlayerHousing(Session session, params string[] parameters)
+        {
+            log.Info("Clearing player housing");
+            var players = PlayerManager.GetAllPlayers();
+
+            var slumlordBiotas = DatabaseManager.Shard.BaseDatabase.GetBiotasByType(WeenieType.SlumLord);
+
+            foreach (var slumlord in slumlordBiotas)
+            {
+                log.Info($"Clearing slumlord biota {slumlord.Id}");
+                DatabaseManager.Shard.BaseDatabase.RemoveBiota(slumlord.Id);
+            }
+
+            foreach (var player in players)
+            {
+                log.Info($"Clearing housing data for player {player.Name}");
+                player.HouseId = null;
+                player.HouseInstance = null;
+                player.HouseRentTimestamp = null;
+            }
+        }
     }
 }
+
