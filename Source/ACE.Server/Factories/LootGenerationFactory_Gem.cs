@@ -13,7 +13,7 @@ namespace ACE.Server.Factories
 {
     public static partial class LootGenerationFactory
     {
-        private static void MutateGem(WorldObject wo, TreasureDeath profile, bool isMagical, TreasureRoll roll = null)
+        private static void MutateGem(WorldObject wo, TreasureDeath profile, bool isMagical, TreasureRoll roll)
         {
             // workmanship
             wo.ItemWorkmanship = WorkmanshipChance.Roll(profile.Tier, profile.LootQualityMod);
@@ -40,7 +40,10 @@ namespace ACE.Server.Factories
 
                 wo.UiEffects = UiEffects.Magical;
 
-                wo.ItemUseable = Usable.Contained;
+                if (PropertyManager.GetBool("useable_gems").Item)
+                    wo.ItemUseable = Usable.Contained;
+                else
+                    wo.ItemUseable = Usable.No;
             }
 
             // item value
@@ -104,9 +107,6 @@ namespace ACE.Server.Factories
                 }
                 else
                     wo.Use = "Use a Spell Extraction Scroll to extract this gem's spell without chance of failure.\n";
-
-                wo.MaxStructure = RollItemMaxStructure(wo);
-                wo.Structure = wo.MaxStructure;
             }
 
             roll.AllSpells = new List<SpellId>();
