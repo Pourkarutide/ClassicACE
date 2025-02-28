@@ -1110,8 +1110,9 @@ namespace ACE.Server.WorldObjects
                 return;
 
             var landblock = (ushort)(location.ObjCellId >> 16);
+            var landblockFull = location.ObjCellId | 0x0000FFFF;
 
-            if (!NoLog_Landblocks.Contains(landblock))
+            if (!NoLog_Landblocks.Contains(landblock) && !LandblockManager.apartmentLandblocks.Contains(landblockFull))
                 return;
 
             if (!biota.PropertiesPosition.TryGetValue(PositionType.Sanctuary, out var lifestone))
