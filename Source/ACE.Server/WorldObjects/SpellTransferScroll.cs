@@ -14,6 +14,7 @@ using log4net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 
 namespace ACE.Server.WorldObjects
 {
@@ -124,6 +125,12 @@ namespace ACE.Server.WorldObjects
                             player.SendUseDoneEvent(WeenieError.ConfirmationInProgress);
                         else
                             player.SendUseDoneEvent();
+
+                        if (data.Percent < 99.998 || !data.IsSafeForTier)
+                        {
+                            var exactMsg = $"The powerful spell ({data.SpellToAdd.Name}) you are attempting to transfer to the weaker {data.Target.NameWithMaterial} has a chance of causing the item's destruction. You have a {(float)data.Percent}% chance of success.";
+                            player.Session.Network.EnqueueSend(new GameMessageSystemChat(exactMsg, ChatMessageType.Craft));
+                        }
                         return;
                     case InjectSpellResult.ReadyToProceed:
                         var actionChain = new ActionChain();
@@ -151,12 +158,23 @@ namespace ACE.Server.WorldObjects
                                 return;
                             }
 
-                            ContinueInjectSpell(data);
+                            bool success;
+
+                            if (data.IsSafeForTier)
+                                success = true;
+                            else
+                                success = ThreadSafeRandom.Next(0.0f, 1.0f) < data.Chance;
+
+                            if (success)
+                                ContinueInjectSpell(data);
+                            else
+                                player.TryConsumeFromInventoryWithNetworking(target);
+
 
                             player.EnqueueBroadcast(new GameMessageUpdateObject(target));
 
                             player.TryConsumeFromInventoryWithNetworking(source); // Consume the scroll.
-                            BroadcastSpellTransfer(player, data.SpellToAdd.Name, target);
+                            BroadcastSpellTransfer(player, data.SpellToAdd.Name, target, data.Chance, success);
                         });
 
                         player.EnqueueMotion(actionChain, MotionCommand.Ready);
@@ -399,6 +417,9 @@ namespace ACE.Server.WorldObjects
             public List<SpellId> LifeCreatureEnchantments;
             public List<SpellId> Cantrips;
             public string ConfirmationMessage;
+            public double Chance;
+            public double Percent;
+            public bool IsSafeForTier;
         }
 
         public static InjectSpellData InjectSpell(WorldObject target, SpellId spellToAddId, bool requireConfirmation = false, bool confirmed = false)
@@ -435,6 +456,12 @@ namespace ACE.Server.WorldObjects
             }
             else if (data.Target.ItemType == ItemType.Gem)
             {
+                if (!PropertyManager.GetBool("useable_gems").Item)
+                {
+                    data.Result = InjectSpellResult.YouDoNotPassCraftingRequirements;
+                    return data;
+                }
+
                 data.IsGem = true;
                 if (data.SpellToAdd.IsCantrip || data.SpellToAdd.School == MagicSchool.ItemEnchantment)
                 {
@@ -524,6 +551,7 @@ namespace ACE.Server.WorldObjects
                 data.AllSpells.Remove((SpellId)spellToReplace.Id);
                 data.LifeCreatureEnchantments.Remove((SpellId)spellToReplace.Id);
                 data.Cantrips.Remove((SpellId)spellToReplace.Id);
+                data.SpellToReplace = spellToReplace;
             }
 
             RemoveTinkerSpellsFromList(data.Target.TinkerLog, data.AllSpells);
@@ -538,6 +566,34 @@ namespace ACE.Server.WorldObjects
                     return data;
                 }
             }
+
+            bool isSafeForTier = true;
+            if (data.Target.Workmanship.HasValue && data.Target.Tier.HasValue)
+            {
+                if (!data.SpellToAdd.IsCantrip && data.SpellToAdd.Level > data.Target.Tier)
+                    isSafeForTier = false; // Item destruction chance if spell is over the item's tier
+                if (data.IsProc && data.Target.ProcSpell.HasValue)
+                {
+                    var currentProc = new Spell(data.Target.ProcSpell.Value);
+                    if (data.SpellToAdd.Level <= currentProc.Level)
+                        isSafeForTier = true; // Allow for swapping CoS builds
+                }
+            }
+
+            double chance = 1.0;
+            if (!isSafeForTier)
+                chance = Math.Clamp(PropertyManager.GetDouble("spelltransfer_over_tier_success_chance").Item, 0.0, 1.0);
+            if (chance > 0.99999)
+            {
+                isSafeForTier = true;
+                chance = 1.0;
+            }
+
+            var percent = Math.Round(chance * 100, 2);
+
+            data.IsSafeForTier = isSafeForTier;
+            data.Chance = chance;
+            data.Percent = percent;
 
             if (requireConfirmation)
             {
@@ -561,7 +617,7 @@ namespace ACE.Server.WorldObjects
                     LootGenerationFactory.CalculateArcaneLore(data.Target, data.AllSpells, data.LifeCreatureEnchantments, data.Cantrips, minSpellcraft, maxSpellcraft, rolledSpellCraft, false, out var minArcane, out var maxArcane, out _);
                     var estimateMessage = minArcane != maxArcane ? $"The new Arcane Lore requirement will be between {minArcane} and {maxArcane}." : $"The new Arcane Lore requirement will be {minArcane}.";
 
-                    data.ConfirmationMessage = $"Transferring {data.SpellToAdd.Name} to {data.Target.NameWithMaterial}.\n{(extraMessage.Length > 0 ? extraMessage : "")}\n{estimateMessage}\n\n";
+                    data.ConfirmationMessage = $"Transferring {data.SpellToAdd.Name} to {data.Target.NameWithMaterial}.\n{(extraMessage.Length > 0 ? extraMessage : "")}You determine that you have a {percent} percent chance to succeed.\n{estimateMessage}\n\n";
                     data.Result = InjectSpellResult.RequiresConfirmation;
                     return data;
                 }
@@ -637,14 +693,10 @@ namespace ACE.Server.WorldObjects
             if (data.IsGem)
             {
                 data.Target.ItemUseable = Usable.Contained;
+                data.Target.ItemManaCost = 1;
+                data.Target.ItemMaxMana = newMaxMana;
+                data.Target.ItemCurMana = Math.Clamp(data.Target.ItemCurMana ?? 0, 0, data.Target.ItemMaxMana ?? 0);
 
-                if (!data.Target.MaxStructure.HasValue)
-                {
-                    data.Target.MaxStructure = LootGenerationFactory.RollItemMaxStructure(data.Target);
-                    data.Target.Structure = data.Target.MaxStructure;
-                }
-
-                data.Target.Structure = data.Target.MaxStructure;
                 var baseWeenie = DatabaseManager.World.GetCachedWeenie(data.Target.WeenieClassId);
                 if (baseWeenie != null)
                 {
