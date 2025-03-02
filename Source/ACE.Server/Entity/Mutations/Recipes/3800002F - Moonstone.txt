@@ -3,6 +3,6 @@
 Tier chances: 1
 
     - Chance: 100%:
-        ItemMaxMana += 1500
+        ItemMaxMana += 500
         NumTimesTinkered (>= 1 ? add : set) 1
 
