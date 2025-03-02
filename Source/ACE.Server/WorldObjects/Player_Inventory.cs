@@ -324,14 +324,6 @@ namespace ACE.Server.WorldObjects
 
             TryShuffleStance(wieldedLocation);
 
-            // handle item spells
-            if (item.ItemCurMana > 0 || item is LeyLineAmulet)
-                TryActivateSpells(item);
-
-            // handle equipment sets
-            if (item.HasItemSet)
-                EquipItemFromSet(item);
-
             return true;
         }
 
