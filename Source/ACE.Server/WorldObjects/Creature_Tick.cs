@@ -261,7 +261,9 @@ namespace ACE.Server.WorldObjects
                         spellId = SpellId.ShockwaveRing;
 
                     var spellToCast = new Server.Entity.Spell(spellId);
-                    CreateSpellProjectiles(spellToCast, attackerwakeup, this);
+
+                    if (spellToCast != null)
+                        CreateSpellProjectiles(spellToCast, attackerwakeup, this);
                 }
             }
 
