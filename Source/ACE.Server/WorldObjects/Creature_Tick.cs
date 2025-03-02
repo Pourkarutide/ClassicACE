@@ -262,7 +262,7 @@ namespace ACE.Server.WorldObjects
 
                     var spellToCast = new Server.Entity.Spell(spellId);
 
-                    if (spellToCast != null)
+                    if (spellToCast != null && !spellToCast.NotFound)
                         CreateSpellProjectiles(spellToCast, attackerwakeup, this);
                 }
             }
