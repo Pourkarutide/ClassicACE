@@ -255,6 +255,7 @@ namespace ACE.Server.WorldObjects
                 if (showDialog && !confirmed)
                 {
                     string msg;
+                    var exactMsg = $"You have a {(float)percent} percent chance of extracting a spell from {target.NameWithMaterial}.";
                     if (spellCount == 1)
                     {
                         var spell = new Spell(spells[0]);
@@ -262,14 +263,13 @@ namespace ACE.Server.WorldObjects
                     }
                     else
                         msg = $"Extracting a random spell from {target.NameWithMaterial}.\nIt will be destroyed in the process.\n\n";
-                    if (!player.ConfirmationManager.EnqueueSend(new Confirmation_CraftInteration(player.Guid, source.Guid, target.Guid), msg))
+                    if (!player.ConfirmationManager.EnqueueSend(new Confirmation_CraftInteration(player.Guid, source.Guid, target.Guid), $"{msg}{exactMsg}\n\n"))
                         player.SendUseDoneEvent(WeenieError.ConfirmationInProgress);
                     else
                         player.SendUseDoneEvent();
 
                     if (PropertyManager.GetBool("craft_exact_msg").Item)
                     {
-                        var exactMsg = $"You have a {(float)percent} percent chance of extracting a spell from {target.NameWithMaterial}.";
 
                         player.Session.Network.EnqueueSend(new GameMessageSystemChat(exactMsg, ChatMessageType.Craft));
                     }
