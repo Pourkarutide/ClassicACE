@@ -919,6 +919,7 @@ namespace ACE.Server.Managers
                 ("cmd_pop_show_7_days", new Property<bool>(true, "Allow the pop command to show the 7 days unique IPs count")),
                 ("cmd_pop_show_30_days", new Property<bool>(true, "Allow the pop command to show the 30 days unique IPs count")),
                 ("recall_in_dungeon", new Property<bool>(true, "Allow players to recall in dungeon")),
+                ("unlimited_respec", new Property<bool>(false, "Allow players to respec their skills/attributes without a quest timer")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
