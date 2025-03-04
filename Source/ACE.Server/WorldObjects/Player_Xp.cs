@@ -533,6 +533,7 @@ namespace ACE.Server.WorldObjects
 
                 ReduceVitae(times);
             });
+            actionChain.EnqueueChain();
         }
 
         /// <summary>
