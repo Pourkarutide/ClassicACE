@@ -346,10 +346,13 @@ namespace ACE.Server.WorldObjects
 
             var isPkDeath = IsPKDeath(topDamager);
 
+            var prevVitae = Vitae;
+
             // update vitae
             // players who died in a PKLite fight do not accrue vitae
             if (!IsPKLiteDeath(topDamager) && !IsHardcore && !IsOnArenaLandblock)
                 InflictVitaePenalty(isPkDeath: isPkDeath);
+            var vitaeDelta = Math.Abs((int)Math.Round(100 * (Vitae - prevVitae)));
 
             if ((isPkDeath || AugmentationSpellsRemainPastDeath == 0) && !IsOnArenaLandblock)
             {
@@ -396,7 +399,7 @@ namespace ACE.Server.WorldObjects
                 ReportCollisions = previousReportCollisions;
                 IsFrozen = previousIsFrozen;
 
-                CreateCorpse(topDamager, hadVitae);
+                CreateCorpse(topDamager, hadVitae, vitaeDelta);
 
                 if(IsHardcore && !IsOnArenaLandblock)
                     Session.Network.EnqueueSend(new GameMessageSystemChat("Your corpse will release your soul in 30 seconds.", ChatMessageType.Broadcast));
