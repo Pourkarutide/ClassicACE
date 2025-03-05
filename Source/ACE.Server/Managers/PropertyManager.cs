@@ -516,6 +516,8 @@ namespace ACE.Server.Managers
         public const bool SEASON3_PATCH_2 = true;
         public const bool SEASON3_PATCH_3 = true;
 
+        public const bool SEASON4_DEFAULTS = false;
+
         public static void LoadDefaultProperties()
         {
             // Place any default properties to load in here
@@ -751,6 +753,156 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyDouble("vitae_penalty_max", 0.30);
                         PropertyManager.ModifyLong("pk_timer", 37);
                     }
+                }
+
+                if (SEASON4_DEFAULTS)
+                {
+                    // Hard Mode - Progression
+                    // Caps on player progression
+                    PropertyManager.ModifyLong("max_level", 20);
+                    PropertyManager.ModifyBool("allow_xp_at_max_level", false);
+                    PropertyManager.ModifyBool("allow_skill_specialization", true);
+
+                    // Rates affecting XP, loot, and quests
+                    PropertyManager.ModifyDouble("quest_xp_modifier", 1.0);
+                    PropertyManager.ModifyDouble("xp_modifier", 1.0);
+                    PropertyManager.ModifyDouble("surface_bonus_xp", 0.0);
+                    PropertyManager.ModifyDouble("cantrip_drop_rate", 0.25);
+                    PropertyManager.ModifyBool("vendor_allow_special_mutations", false);
+                    PropertyManager.ModifyDouble("salvage_amount_multiplier", 0.4);
+                    PropertyManager.ModifyBool("gateway_ties_summonable", false); // No easy portal bots. People won't be able to evade PvP as easily
+                    PropertyManager.ModifyDouble("hot_dungeon_chance", 0.1); // Mitigate lucky gains from relying on hot dungeons being uncontested
+                    PropertyManager.ModifyLong("quest_mindelta_rate_longest", 600000); // Just under 1 week for longest quest timers
+                    PropertyManager.ModifyBool("allow_allegiance_passup", false);
+                    PropertyManager.ModifyDouble("spell_extraction_scroll_base_chance", 0.25);
+                    PropertyManager.ModifyDouble("spell_extraction_scroll_chance_per_extra_spell", 0.05);
+                    PropertyManager.ModifyDouble("coin_stack_multiplier", 0.5);
+                    PropertyManager.ModifyBool("neuter_trade_note_rewards", true);
+
+                    // Hard Mode - PvE Combat
+                    PropertyManager.ModifyDouble("customdm_mob_damage_scale", 0.5);
+                    PropertyManager.ModifyDouble("customdm_mob_war_damage_scale", 0.5); // Normally 0.5
+                    PropertyManager.ModifyDouble("customdm_player_war_damage_scale_pve", 1.0);
+                    PropertyManager.ModifyDouble("bleed_pve_dmg_mod", 0.5);
+
+                    // Hard Mode - Death Penalty
+                    PropertyManager.ModifyDouble("vitae_penalty", 0.15);
+                    PropertyManager.ModifyDouble("vitae_penalty_max", 0.30);
+                    PropertyManager.ModifyLong("min_level_drop_wielded_on_death", 20);
+                    PropertyManager.ModifyLong("min_level_eligible_to_drop_items_on_death", 1);
+                    PropertyManager.ModifyBool("use_fixed_death_item_formula", true);
+                    PropertyManager.ModifyLong("max_items_dropped_per_death", 18);
+                    PropertyManager.ModifyBool("drop_all_coins_on_death", true); // Moved from Grandfathered, fits death mechanics
+
+                    // Gameplay Adjustments
+                    // Disabled Features
+                    PropertyManager.ModifyDouble("elite_mob_spawn_rate", 0.02);
+                    PropertyManager.ModifyBool("customdm_mutate_quest_items", false);
+
+                    // Outdoor Nerfs
+                    PropertyManager.ModifyBool("override_encounter_spawn_rates", true);
+                    PropertyManager.ModifyLong("encounter_regen_interval", 1800);
+                    PropertyManager.ModifyDouble("mob_awareness_range", 1.25);
+
+                    // Quality of Life (QoL)
+                    // Player Experience
+                    PropertyManager.ModifyBool("fellow_busy_no_recruit", false);
+                    PropertyManager.ModifyBool("container_opener_name", true);
+                    PropertyManager.ModifyBool("permit_corpse_all", true);
+                    PropertyManager.ModifyBool("usable_gems_generated_with_1_mana_cost", true);
+
+                    // Housing
+                    PropertyManager.ModifyBool("house_15day_account", false);
+                    PropertyManager.ModifyBool("house_30day_cooldown", false); // Doesn't matter for apartments but decided to change it
+                    PropertyManager.ModifyBool("house_per_char", true); // Allow multiple houses per account, moved from Grandfathered
+
+                    // Server Configs
+                    // Non-Gameplay
+                    PropertyManager.ModifyBool("world_closed", true); // Require /world open to open server after start
+                    PropertyManager.ModifyBool("block_vpn_connections", true);
+                    PropertyManager.ModifyBool("player_receive_immediate_save", true);
+                    PropertyManager.ModifyLong("player_save_interval", 60); // Less rollback for players on crash
+                    PropertyManager.ModifyBool("cmd_pop_last_24_hours", true); // Moved from Grandfathered, fits server monitoring
+
+                    // Cosmetic
+                    PropertyManager.ModifyBool("npc_hairstyle_fullrange", true);
+
+                    // PvP
+                    // General PvP Settings
+                    PropertyManager.ModifyBool("pk_server", true);
+                    PropertyManager.ModifyLong("pk_timer", 37);
+                    PropertyManager.ModifyDouble("pk_cast_radius", 8.0);
+                    PropertyManager.ModifyLong("pk_escape_max_level_difference", 20); // Moved from Grandfathered, PvP-related
+                    PropertyManager.ModifyDouble("extra_vitae_penalty_pvp", 0.15); // Moved from Grandfathered, fits PvP death mechanics
+
+                    // PvP Damage Scalars
+                    // At level 30 (pvp_dmg_mod_low_level), you have low mod for the given weapon
+                    // At level 40 (pvp_dmg_mod_high_level), you have high mod for the given weapon
+                    // Mod scales proportionally between levels (e.g., Axe: 1.0 at 30, 1.25 at 35, 1.4 at 40)
+                    PropertyManager.ModifyLong("pvp_dmg_mod_low_level", 30); // 30-40, from 10-80
+                    PropertyManager.ModifyLong("pvp_dmg_mod_high_level", 40);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_axe", 1.0); // 1.0-1.4, from 0.85-1.5
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_axe", 1.4); // From 1.5, -6.7%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_mace", 1.2); // 1.0-1.2, from 1.0-1.0
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_spear", 1.15); // 1.15-1.4, from 1.15-1.8
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_spear", 1.4); // From 1.5, -6.7%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_staff", 1.5); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_staff", 1.5);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_sword", 1.65); // From 1.5, +10%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_dagger", 1.25); // From 1.2, +4%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_unarmed", 1.3);
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_unarmed", 1.65); // From 1.5, +10%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_unarmed_war", 0.65); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_unarmed_war", 0.85);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_bow", 1.0); // 1.0-1.7, from 1.45-1.9
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_bow", 1.7);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_crossbow", 1.0); // 1.0-1.7, from 1.5-1.5
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_crossbow", 1.7); // From 1.5, +13%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_thrown", 0.90); // 0.90-1.4, from 0.75-1.3
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_thrown", 1.4); // From 1.3, +7%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_dot", 0.75); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_dot", 0.75);
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_void_dot", 0.75); // Same, possibly unused
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_void_dot", 0.75);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_war", 1.0); // Was 1.2
+
+                    // Grandfathered Configs from Previous Seasons
+                    // Combat & Animation
+                    PropertyManager.ModifyBool("dekaru_dual_wield_speed_mod", false);
+                    PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_1h", 1.6);
+                    PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_dualwield", 1.7);
+                    PropertyManager.ModifyDouble("dekaru_tw_animation_speed", 3.0);
+                    PropertyManager.ModifyDouble("fast_missile_modifier", 3.0);
+
+                    // Loot & Crafting
+                    PropertyManager.ModifyBool("craft_exact_msg", true); // QoL crafting success chance, mitigates plugin advantages
+                    PropertyManager.ModifyBool("stackable_trophy_rewards_use_tar", true);
+                    PropertyManager.ModifyBool("useable_gems", true); // Typo? Should it match "usable_gems_generated..."?
+                    PropertyManager.ModifyDouble("spelltransfer_over_tier_success_chance", 0.5);
+                    PropertyManager.ModifyBool("dekarutide_season3_alternate_weapon_wield_reqs", true);
+                    PropertyManager.ModifyBool("dekarutide_season3_alternate_loot_valuations", true);
+
+                    // Miscellaneous
+                    PropertyManager.ModifyBool("assess_creature_pve_always_succeed", true); // Fixes loot delays with vtank in some situations
+                    PropertyManager.ModifyBool("show_discord_chat_ingame", true);
+                    PropertyManager.ModifyBool("spellcast_recoil_queue", true);
+                    PropertyManager.ModifyDouble("spellcast_max_angle", 40.0);
+                    PropertyManager.ModifyBool("ai_anti_perch", false);
+                    PropertyManager.ModifyBool("ai_custom_pathfind", false);
+                    PropertyManager.ModifyBool("die_command_enabled", false);
                 }
             }
         }
