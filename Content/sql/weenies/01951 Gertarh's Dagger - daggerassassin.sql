@@ -39,7 +39,7 @@ INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (1951,   1, 'Gertarh''s Dagger') /* Name */
      , (1951,   7, 'Sometimes, a good dagger is your only friend.') /* Inscription */
      , (1951,   8, 'Gertarh') /* ScribeName */
-     , (1951,  33, 'pickup_mutated_daggeroftikola') /* Quest string */;
+     , (1951,  33, 'pickup_mutated_gertarhdagger') /* Quest string */;
 
 INSERT INTO `weenie_properties_d_i_d` (`object_Id`, `type`, `value`)
 VALUES (1951,   1, 0x0200012F) /* Setup */
