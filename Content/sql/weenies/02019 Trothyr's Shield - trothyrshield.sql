@@ -14,6 +14,7 @@ VALUES (2019,   1,          2) /* ItemType - Armor */
      , (2019,  19,       1000) /* Value */
      , (2019,  27,          2) /* ArmorType - Leather */
      , (2019,  28,         60) /* ArmorLevel */
+     , (2019,  33,          1) /* Bonded - Bonded */
      , (2019,  51,          4) /* CombatUse - Shield */
      , (2019,  93,       1044) /* PhysicsState - Ethereal, IgnoreCollisions, Gravity */
      , (2019, 106,         60) /* ItemSpellcraft */
@@ -37,8 +38,9 @@ VALUES (2019,  13,       1) /* ArmorModVsSlash */
      , (2019,  39,    1.25) /* DefaultScale */
      , (2019, 110,       1) /* BulkMod */
      , (2019, 111,       1) /* SizeMod */
-     , (2019, 10003,      -5) /* MeleeDefenseCap */
-     , (2019, 10004,      -5) /* MissileDefenseCap */;
+     , (2019, 10003,    -0.5) /* MeleeDefenseCap */
+     , (2019, 10004,    -0.5) /* MissileDefenseCap */
+     , (2019, 10013,   0.075) /* BlockMod */;
 
 INSERT INTO `weenie_properties_string` (`object_Id`, `type`, `value`)
 VALUES (2019,   1, 'Trothyr''s Shield') /* Name */

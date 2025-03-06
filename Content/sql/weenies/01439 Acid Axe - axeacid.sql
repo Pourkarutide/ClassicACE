@@ -11,6 +11,7 @@ VALUES (1439,   1,          1) /* ItemType - MeleeWeapon */
      , (1439,  16,          1) /* ItemUseable - No */
      , (1439,  18,        256) /* UiEffects - Acid */
      , (1439,  19,       2800) /* Value */
+     , (1439,  33,          1) /* Bonded - Bonded */
      , (1439,  44,         16) /* Damage */
      , (1439,  45,         32) /* DamageType - Acid */
      , (1439,  46,          2) /* DefaultCombatStyle - OneHanded */
