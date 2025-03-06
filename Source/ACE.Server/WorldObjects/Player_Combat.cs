@@ -653,11 +653,6 @@ namespace ACE.Server.WorldObjects
                 return (int)damageTaken;
             }
 
-            if (damageTaken > 0)
-            {
-                ApplySpellOnSpecializedArmor(this, damageType, bodyPart);
-            }
-
             if (!BodyParts.Indices.TryGetValue(bodyPart, out var iDamageLocation))
             {
                 log.Error($"{Name}.TakeDamage({source.Name}, {damageType}, {amount}, {bodyPart}, {crit}): avoided crash for bad damage location");
@@ -771,59 +766,6 @@ namespace ACE.Server.WorldObjects
 		    { "CANTRIPSTORMBANE3", SpellId.CANTRIPSTORMBANE3 },
 	    };
 
-        private double ApplySpellOnSpecializedArmorActTime = 0;
-        private static double ApplySpellOnSpecializedArmorActInt = 5;
-
-        private void ApplySpellOnSpecializedArmor(Player defender, DamageType damageType, BodyPart bodyPart)
-    {
-	    var currentTime = Time.GetUnixTime();
-        if (ApplySpellOnSpecializedArmorActTime > currentTime)
-            return;
-
-	    ApplySpellOnSpecializedArmorActTime = currentTime + ApplySpellOnSpecializedArmorActInt;
-
-	    var Armor = defender.GetArmorLayers(defender, bodyPart);
-        var armorSkill = defender.GetCreatureSkill(Skill.Armor);
-
-        if (armorSkill.AdvancementClass == SkillAdvancementClass.Specialized)
-        {
-            if (_damageTypeToSpellMapping.TryGetValue(damageType, out string baseSpellName))
-            {
-                int maxUsableSpellLevel = 2;
-                int minSpellLevel = Math.Clamp((int)Math.Floor(((float)armorSkill.Current - 310) / 50.0f), 0, maxUsableSpellLevel);
-                int maxSpellLevel = Math.Clamp((int)Math.Floor(((float)armorSkill.Current - 150) / 50.0f), 0, maxUsableSpellLevel);
-
-                int spellLevel = ThreadSafeRandom.Next(minSpellLevel, maxSpellLevel);
-
-                string spellTypePrefix;
-                switch (spellLevel + 1)
-                {
-                    case 1: spellTypePrefix = "a minor"; break;
-                    default:
-                    case 2: spellTypePrefix = "a major"; break;
-                }
-
-                string actualSpellName = baseSpellName.Remove(baseSpellName.Length - 1) + (spellLevel + 1).ToString();
-
-                    if (_spellNameToIdMapping.TryGetValue(actualSpellName, out SpellId actualSpellId))
-                    {
-                        var equippedArmors = Armor;
-
-                        if (equippedArmors != null && equippedArmors.Any())
-                        {
-                            Spell spellToCast = new Spell(actualSpellId);
-
-                            foreach (var armor in equippedArmors)
-                            {
-                                armor.TryCastSpell(spellToCast, armor, null, null, false, false, false, false);
-                            }
-
-                            defender.Session.Network.EnqueueSend(new GameMessageSystemChat($"Your {bodyPart} armor has been enhanced with {spellTypePrefix} bane to {damageType}.", ChatMessageType.System));
-                        }
-                    }
-               }
-        }
-    }
 
         /// <summary>
         /// Returns the damage rating modifier for an applicable Recklessness attack
