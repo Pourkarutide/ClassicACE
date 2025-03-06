@@ -443,14 +443,14 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Returns the creature armor for a body part
         /// </summary>
-        public List<WorldObject> GetArmorLayers(Player target, BodyPart bodyPart)
+        public List<WorldObject> GetArmorLayers(BodyPart bodyPart)
         {
             //Console.WriteLine("BodyPart: " + bodyPart);
             //Console.WriteLine("===");
 
             var coverageMask = BodyParts.GetCoverageMask(bodyPart);
 
-            var equipped = target.EquippedObjects.Values.Where(e => e is Clothing && (e.ClothingPriority & coverageMask) != 0).ToList();
+            var equipped = EquippedObjects.Values.Where(e => e is Clothing && (e.ClothingPriority & coverageMask) != 0).ToList();
 
             return equipped;
         }
