@@ -234,7 +234,16 @@ namespace ACE.Server.Pathfinding
             if (Meshes.TryGetValue(meshId, out mesh))
                 return mesh is not null;
 
-            TryLoadMesh(pos);
+            try
+            {
+                TryLoadMesh(pos);
+            }
+            catch (Exception e)
+            {
+                log.Warn("Failed to load mesh for pathfinding");
+                log.Warn($"Failed Location: {pos.ToLOCString()}");
+            }
+
             return false;
         }
 
