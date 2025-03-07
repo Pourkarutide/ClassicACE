@@ -285,7 +285,7 @@ namespace ACE.Server.WorldObjects
                     topDamager = topDamagerOther;
             }
 
-            if (IsHardcore && !IsOnArenaLandblock)
+            if (Account.AccessLevel == 0 || CloakStatus == CloakStatus.Player && !IsOnArenaLandblock)
             {
                 var killerName = "misadventure";
                 var killerLevel = 0;
@@ -297,7 +297,7 @@ namespace ACE.Server.WorldObjects
                     wasPvP = topDamager.IsPlayer;
                 }
 
-                DatabaseManager.Shard.BaseDatabase.LogHardcoreDeath(Account, Guid.Full, Name, Level ?? 1, killerName, killerLevel, CurrentLandblock.Id.Raw >> 16, (int)GameplayMode, wasPvP, PlayerKillsPkl ?? 0, TotalExperience ?? 0, Age ?? 0, DateTime.Now, MonarchId);
+                DatabaseManager.Shard.BaseDatabase.LogPlayerDeath(Account.AccountId, Guid.Full, Name, Level ?? 1, killerName, killerLevel, CurrentLandblock.Id.Raw >> 16, (int)GameplayMode, wasPvP, PlayerKillsPkl ?? 0, TotalExperience ?? 0, Age ?? 0, DateTime.Now, MonarchId);
             }
 
             UpdateVital(Health, 0);

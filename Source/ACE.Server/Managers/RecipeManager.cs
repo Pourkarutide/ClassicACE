@@ -1906,7 +1906,7 @@ namespace ACE.Server.Managers
 
                         var slotCount = target.GetMaxExtraSpellsCount();
 
-                        if (!target.IsClothArmor)
+                        if (!target.IsRobe)
                             target.ExtraSpellsMaxOverride = slotCount + 1;
                         else
                             target.ExtraSpellsMaxOverride = slotCount + 2;
