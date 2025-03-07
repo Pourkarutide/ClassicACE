@@ -149,7 +149,7 @@ namespace ACE.Server.WorldObjects
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
                 UpdateCustomSkillFormulae();
 
-            HandleVitaeOnLogin(Time.GetUnixTime());
+            //HandleVitaeOnLogin(Time.GetUnixTime());
 
             HandleDBUpdates();
 
