@@ -566,6 +566,9 @@ namespace ACE.Server.WorldObjects
         {
             get
             {
+                if (!PropertyManager.GetBool("recall_warden").Item)
+                    return true;
+
                 if (Account.AccessLevel > 0)
                     return true;
                 if (ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
