@@ -179,7 +179,15 @@ namespace ACE.Server.WorldObjects
                 UpdateDefenseCapBonus();
 
                 if (PathfindingEnabled && Location != null && Location.Indoors)
-                    Pathfinder.TryLoadMesh(Location);
+                    try
+                    {
+                        Pathfinder.TryLoadMesh(Location);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Warn("Failed to load mesh for pathfinding");
+                        log.Warn($"Failed Location: {Location.ToLOCString()}");
+                    }
             }
 
             if (AiIncapableOfAnyMotion && Location != null && !Location.Indoors)
