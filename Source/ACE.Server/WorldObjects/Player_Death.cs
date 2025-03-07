@@ -1121,6 +1121,10 @@ namespace ACE.Server.WorldObjects
             // if level > 5, lose half coins
             // (trade notes excluded)
             var level = Level ?? 1;
+
+            if (level < 5)
+                return 0;
+
             var coins = CoinValue ?? 0;
 
             if (dropAllCoins)
