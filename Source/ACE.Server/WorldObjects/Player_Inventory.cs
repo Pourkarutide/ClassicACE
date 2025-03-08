@@ -1334,7 +1334,9 @@ namespace ACE.Server.WorldObjects
                 var itemFoundOnMyCorpse = itemFoundOnCorpse && (itemRootOwner.VictimId == Guid.Full);
                 if (item.GeneratorId != null || (itemFoundOnCorpse && !itemFoundOnMyCorpse)) // item is controlled by a generator or is on a corpse that is not my own
                 {
-                    if ((GameplayMode == GameplayModes.Limbo || PropertyManager.GetBool("unlimited_respec").Item) && (item.Quest == "SkillForgetfulnessGemPickedUp" || item.Quest == "SkillEnlightenmentGemPickedUp" || item.Quest == "AttributeLoweringGemPickedUp" || item.Quest == "AttributeRaisingGemPickedUp" || item.Quest == "SkillPrimaryGemPickedUp" || item.Quest == "SkillSecondaryGemPickedUp"))
+                    var unlimitedRespec = PropertyManager.GetBool("unlimited_respec").Item;
+                    var unlimitedRespecLevelLimit = PropertyManager.GetLong("unlimited_respec_max_level").Item;
+                    if ((GameplayMode == GameplayModes.Limbo || (unlimitedRespec && Level <= unlimitedRespecLevelLimit)) && (item.Quest == "SkillForgetfulnessGemPickedUp" || item.Quest == "SkillEnlightenmentGemPickedUp" || item.Quest == "AttributeLoweringGemPickedUp" || item.Quest == "AttributeRaisingGemPickedUp" || item.Quest == "SkillPrimaryGemPickedUp" || item.Quest == "SkillSecondaryGemPickedUp"))
                     {
                         questSolve = false;
                     }
