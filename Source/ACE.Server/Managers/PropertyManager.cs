@@ -1109,6 +1109,7 @@ namespace ACE.Server.Managers
                 ("pk_escape_max_level_difference", new(10, "The maximum level difference, in either direction, where a player may fast escape from another player in pvp. This includes logouts, portals, and recalls.")),
                 ("bz_snitch_level_difference", new(10, "The maximum level difference, in either direction, where a player may receive a bz snitch (location reveal). Doesn't affect hardcore mode.")),
                 ("max_items_dropped_per_death", new(Player.MaxItemsDropped, "The maximum number of items dropped on death. This is not a simple cap on death items. If changed from the default, the number of actual items dropped per death will be scaled lower or higher depending on the proportion of this versus the default.")),
+                ("unlimited_respec_max_level", new(20, "The maximum level you can be to qualify for unlimited respec skills/attributes without a quest timer.")),
 
                 // Do not edit below this line
                 ("null_long", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
