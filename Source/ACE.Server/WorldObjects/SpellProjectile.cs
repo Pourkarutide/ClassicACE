@@ -81,9 +81,9 @@ namespace ACE.Server.WorldObjects
             PathClipped = true;
             IgnoreCollisions = false;
 
-            //// FIXME: use data here
-            //if (!Spell.Name.Equals("Rolling Death"))
-            //    Ethereal = false;
+            // FIXME: use data here
+            if (!Spell.Name.Equals("Rolling Death"))
+                Ethereal = false;
 
             if (SpellType == ProjectileSpellType.Bolt || SpellType == ProjectileSpellType.Streak
                 || SpellType == ProjectileSpellType.Arc || SpellType == ProjectileSpellType.Volley || SpellType == ProjectileSpellType.Blast
@@ -515,6 +515,9 @@ namespace ACE.Server.WorldObjects
                     continue;
 
                 if (!creature.Attackable && creature.TargetingTactic == TargetingTactic.None || creature.Teleporting)
+                    continue;
+
+                if (!aroundCreature.IsDirectVisible(creature, 1))
                     continue;
 
                 var cylDist = GetCylinderDistance(creature);
