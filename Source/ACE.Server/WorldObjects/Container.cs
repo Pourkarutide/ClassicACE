@@ -1177,6 +1177,7 @@ namespace ACE.Server.WorldObjects
 
                 if (PropertyManager.GetBool("stackable_trophy_rewards_use_tar").Item && TrophiesWithStackableRewards.Contains(worldObject.WeenieClassId))
                 {
+                    worldObject.Bonded = BondedStatus.Normal;
                     worldObject.Attuned = AttunedStatus.Attuned;
                 }
                 
