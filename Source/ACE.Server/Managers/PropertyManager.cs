@@ -650,6 +650,8 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyBool("pk_server", true);
                     PropertyManager.ModifyLong("pk_timer", 60);
                     PropertyManager.ModifyDouble("pk_cast_radius", 8.0);
+                    PropertyManager.ModifyBool("pve_death_respite", true);
+                    PropertyManager.ModifyDouble("pve_death_respite_timer", 60);
 
                     // Scalars: At level 30 (pvp_dmg_mod_low_level), you have low mod for the given weapon
                     //          At level 40 (pvp_dmg_mod_high_level), you have high mod for the given weapon
@@ -1074,6 +1076,7 @@ namespace ACE.Server.Managers
                 ("recall_in_dungeon", new Property<bool>(true, "Allow players to recall in dungeon")),
                 ("unlimited_respec", new Property<bool>(false, "Allow players to respec their skills/attributes without a quest timer")),
                 ("recall_warden", new Property<bool>(false, "Toggles the Anti-Recall_Warden")),
+                ("pve_death_respite", new Property<bool>(false, "Toggles pk respite even for pve deaths (players become npk even from pve deaths)")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
@@ -1459,6 +1462,8 @@ namespace ACE.Server.Managers
                 ("bz_snitch_chance", new(0.3, "The chance to proc a bz snitch per tick (PvP player location reveal).")),
                 ("spelltransfer_over_tier_success_chance", new(1.0, "The chance to successfully transfer a spell that is higher than the tier of the target item without destroying the target")),
                 ("extra_vitae_penalty_pvp", new(0.0, "The extra vitae penalty for a PvP death. A value of 0.05 means an extra 5% vitae on top of the usual 5%, for 10% total")),
+                ("pve_death_respite_timer", new Property<double>(60, "Respite timer for pve deaths (players become npk even from pve deaths)")),
+
 
                 // Do not edit below this line
                 ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

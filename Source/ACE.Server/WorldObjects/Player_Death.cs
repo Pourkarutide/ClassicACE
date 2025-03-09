@@ -407,11 +407,13 @@ namespace ACE.Server.WorldObjects
             dieChain.AddDelaySeconds((IsHardcore && !IsOnArenaLandblock) ? 30 : 1);
             dieChain.AddAction(this, () =>
             {
-                var deathFromArena = IsOnArenaLandblock;
                 ThreadSafeTeleportOnDeath(topDamager); // enter portal space
 
-                if ((IsPKDeath(topDamager) || IsPKLiteDeath(topDamager)) && !IsHardcore)
-                    SetMinimumTimeSincePK(deathFromArena);
+                var isArenaLandblock = IsOnArenaLandblock;
+                var isPkDeath = IsPKDeath(topDamager);
+
+                if (IsPK && PropertyManager.GetBool("pve_death_respite").Item || (isPkDeath || IsPKLiteDeath(topDamager)) && !IsHardcore)
+                    SetMinimumTimeSincePK(isPkDeath, isArenaLandblock);
 
                 IsBusy = false;
             });
@@ -1408,8 +1410,9 @@ namespace ACE.Server.WorldObjects
             set { if (!value.HasValue) RemoveProperty(PropertyFloat.MinimumTimeSincePk); else SetProperty(PropertyFloat.MinimumTimeSincePk, value.Value); }
         }
 
-        public void SetMinimumTimeSincePK(bool deathFromArena)
+        public void SetMinimumTimeSincePK(bool isPkDeath, bool isArenaLandblock)
         {
+            var pveDeathRespite = PropertyManager.GetBool("pve_death_respite").Item;
             if (IsOlthoiPlayer)
                 return;
 
@@ -1419,11 +1422,12 @@ namespace ACE.Server.WorldObjects
             var prevStatus = PlayerKillerStatus;
 
             var respiteTimer = PropertyManager.GetDouble("pk_respite_timer").Item;
-            var arenaTimerOffset = 45;
-            var arenaTimerDiff = respiteTimer - arenaTimerOffset;
+            var pveDeathRespiteTimer = PropertyManager.GetDouble("pve_death_respite_timer").Item;
 
-            if (deathFromArena && (arenaTimerDiff > 0))
-                MinimumTimeSincePk = arenaTimerDiff;
+            if (isArenaLandblock)
+                MinimumTimeSincePk = Math.Max(respiteTimer  - 45, 0);
+            else if (pveDeathRespite && !isPkDeath) 
+                MinimumTimeSincePk = Math.Max(respiteTimer - pveDeathRespiteTimer, 0);
             else
                 MinimumTimeSincePk = 0;
 
