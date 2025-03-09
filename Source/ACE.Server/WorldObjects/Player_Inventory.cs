@@ -4537,6 +4537,22 @@ namespace ACE.Server.WorldObjects
             }
         }
 
+        private void InventoryExtraItemChecks()
+        {
+            foreach(var item in Inventory.Values)
+            {
+                ExtraItemChecks(item);
+            }
+        }
+
+        private void EquippedObjectsExtraItemChecks()
+        {
+            foreach(var item in EquippedObjects.Values)
+            {
+                ExtraItemChecks(item);
+            }
+        }
+
         Dictionary<SpellId, int> SpellsToReplace = new Dictionary<SpellId, int>()
         {
             // -1 means replace with a pseudorandom(based on wcid) level 1 proc and so on.
