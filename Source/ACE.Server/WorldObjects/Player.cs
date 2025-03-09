@@ -174,6 +174,8 @@ namespace ACE.Server.WorldObjects
 
             UpdateCoinValue(false);
             UpdateTradeNoteValue(false);
+            InventoryExtraItemChecks();
+            EquippedObjectsExtraItemChecks();
         }
 
         public override void InitPhysicsObj()
