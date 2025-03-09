@@ -407,10 +407,11 @@ namespace ACE.Server.WorldObjects
             dieChain.AddDelaySeconds((IsHardcore && !IsOnArenaLandblock) ? 30 : 1);
             dieChain.AddAction(this, () =>
             {
+                var deathFromArena = IsOnArenaLandblock;
                 ThreadSafeTeleportOnDeath(topDamager); // enter portal space
 
                 if ((IsPKDeath(topDamager) || IsPKLiteDeath(topDamager)) && !IsHardcore)
-                    SetMinimumTimeSincePK();
+                    SetMinimumTimeSincePK(deathFromArena);
 
                 IsBusy = false;
             });
@@ -1407,7 +1408,7 @@ namespace ACE.Server.WorldObjects
             set { if (!value.HasValue) RemoveProperty(PropertyFloat.MinimumTimeSincePk); else SetProperty(PropertyFloat.MinimumTimeSincePk, value.Value); }
         }
 
-        public void SetMinimumTimeSincePK()
+        public void SetMinimumTimeSincePK(bool deathFromArena)
         {
             if (IsOlthoiPlayer)
                 return;
@@ -1417,7 +1418,15 @@ namespace ACE.Server.WorldObjects
 
             var prevStatus = PlayerKillerStatus;
 
-            MinimumTimeSincePk = 0;
+            var respiteTimer = PropertyManager.GetDouble("pk_respite_timer").Item;
+            var arenaTimerOffset = 45;
+            var arenaTimerDiff = respiteTimer - arenaTimerOffset;
+
+            if (deathFromArena && (arenaTimerDiff > 0))
+                MinimumTimeSincePk = arenaTimerDiff;
+            else
+                MinimumTimeSincePk = 0;
+
             PlayerKillerStatus = PlayerKillerStatus.NPK;
 
             if (prevStatus == PlayerKillerStatus.PK)
