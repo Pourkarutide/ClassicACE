@@ -542,7 +542,6 @@ namespace ACE.Server.WorldObjects
                 var weapon = GetEquippedMeleeWeapon();
                 if (weapon != null && weapon.W_AttackType.IsMultiStrike())
                 {
-
                     if (weapon.WeaponSkill == Skill.Dagger)
                     {
                         if (GetEquippedOffHand() == null)
