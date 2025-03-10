@@ -511,12 +511,12 @@ namespace ACE.Server.Managers
         }
 
         // For Dekarutide
-        public const bool SEASON3_DEFAULTS = true;
-        public const bool SEASON3_PATCH_1 = true;
-        public const bool SEASON3_PATCH_2 = true;
-        public const bool SEASON3_PATCH_3 = true;
+        public const bool SEASON3_DEFAULTS = false;
+        public const bool SEASON3_PATCH_1 = false;
+        public const bool SEASON3_PATCH_2 = false;
+        public const bool SEASON3_PATCH_3 = false;
 
-        public const bool SEASON4_DEFAULTS = false;
+        public const bool SEASON4_DEFAULTS = true;
 
         public static void LoadDefaultProperties()
         {
@@ -887,6 +887,10 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyBool("dekaru_dual_wield_speed_mod", false);
                     PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_1h", 1.6);
                     PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_dualwield", 1.7);
+                    PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_shielded", 1.8);
+                    PropertyManager.ModifyDouble("dekaru_sword_ms_animation_speed_1h", 1.6);
+                    PropertyManager.ModifyDouble("dekaru_sword_ms_animation_speed_dualwield", 1.7);
+                    PropertyManager.ModifyDouble("dekaru_sword_ms_animation_speed_shielded", 1.8);
                     PropertyManager.ModifyDouble("dekaru_tw_animation_speed", 3.0);
                     PropertyManager.ModifyDouble("fast_missile_modifier", 3.0);
 
@@ -1175,6 +1179,11 @@ namespace ACE.Server.Managers
                 ("dekaru_dagger_ms_animation_speed_1h", new(1.8, "Multiplier for dagger attack animation speed, if one handed with no shield (with a shield is hard-coded to 1.0).")),
                 ("dekaru_dagger_ms_animation_speed_dualwield", new(1.8, "Multiplier for dagger attack animation speed, if dual wielding.")),
                 ("dekaru_dagger_ms_animation_speed_shielded", new(1.8, "Multiplier for dagger attack animation speed, if using a shield.")),
+
+                // Sword Attack Speed Modifiers (PvE and PvP)
+                ("dekaru_sword_ms_animation_speed_1h", new(1.8, "Multiplier for sword attack animation speed, if one handed with no shield (with a shield is hard-coded to 1.0).")),
+                ("dekaru_sword_ms_animation_speed_dualwield", new(1.8, "Multiplier for sword attack animation speed, if dual wielding.")),
+                ("dekaru_sword_ms_animation_speed_shielded", new(1.8, "Multiplier for sword attack animation speed, if using a shield.")),
 
                 // Dagger bleed mod in pve
                 ("bleed_pve_dmg_mod", new Property<double>(1.0, "Damage mod for dagger bleed in PvE")),
