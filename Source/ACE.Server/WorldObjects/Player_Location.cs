@@ -139,7 +139,7 @@ namespace ACE.Server.WorldObjects
                     return;
                 }
 
-                Teleport(house.SlumLord.Location);
+                Teleport(House.GetRecallDestination());
             });
 
             actionChain.EnqueueChain();
@@ -494,7 +494,7 @@ namespace ACE.Server.WorldObjects
                 if (allegianceHouse == null)
                     return;
 
-                Teleport(allegianceHouse.SlumLord.Location);
+                Teleport(allegianceHouse.GetRecallDestination());
             }); 
 
             actionChain.EnqueueChain();

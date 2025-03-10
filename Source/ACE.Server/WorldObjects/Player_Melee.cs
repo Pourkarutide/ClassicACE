@@ -534,30 +534,14 @@ namespace ACE.Server.WorldObjects
                 animSpeedMod = IsDualWieldAttack ? 1.2f : 1.0f;     // dual wield swing animation 20% faster
             else
             {
-                var weapon = GetEquippedMeleeWeapon();
-                if (weapon != null && weapon.WeaponSkill == Skill.Dagger && weapon.W_AttackType.IsMultiStrike())
-                {
-                    if (GetEquippedOffHand() == null)
-                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_1h").Item;
-                    else if (IsDualWieldAttack)
-                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_dualwield").Item;
-                    else
-                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_shielded").Item;
-                }
+                if (GetEquippedOffHand() == null && !TwoHandedCombat)
+                    animSpeedMod = 1.2f;
                 else
-                {
-                    if (PropertyManager.GetBool("dekaru_dual_wield_speed_mod").Item)
-                    {
-                        if (GetEquippedOffHand() == null && !TwoHandedCombat)
-                            animSpeedMod = 1.2f;
-                        else
-                            animSpeedMod = 1.0f;
-                    }
-                    else
-                    {
-                        animSpeedMod = IsDualWieldAttack ? 1.2f : 1.0f;     // dual wield swing animation 20% faster
-                    }
-                }
+                    animSpeedMod = 1.0f;
+
+                var weapon = GetEquippedMeleeWeapon();
+                if (weapon != null && weapon.W_AttackType.IsMultiStrike())
+                    animSpeedMod += 0.8f;
             }
 
             var animSpeed = baseSpeed * animSpeedMod;

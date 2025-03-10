@@ -230,7 +230,11 @@ namespace ACE.Server.Entity
             }
 
             PositionsForExplorationMarkers.Shuffle();
-            ExplorationMarkerCount = Math.Clamp(1 + PositionsForExplorationMarkers.Count / 50, 1, 5);
+            if (LandblockInfo != null && LandblockInfo.NumCells >= 30)
+                ExplorationMarkerCount = 1 + ((int)LandblockInfo.NumCells - 30) / 80;
+            else
+                ExplorationMarkerCount = 1 + PositionsForExplorationMarkers.Count / 50;
+            ExplorationMarkerCount = Math.Min(ExplorationMarkerCount, PositionsForExplorationMarkers.Count);
 
             var actionChain = new ActionChain();
             for (int i = 0; i < ExplorationMarkerCount; i++)
@@ -261,7 +265,16 @@ namespace ACE.Server.Entity
                         if (player.IsOvertlyPlussed)
                             continue;
 
-                        if (marker.Location.DistanceTo(player.Location) < 50)
+                        float distance;
+                        if (Pathfinder.PathfindingEnabled && player.Location.Indoors)
+                        {
+                            if(!Pathfinder.GetRouteDistance(player.Location, marker.Location, AgentWidth.Narrow, out distance))
+                                distance = player.Location.DistanceTo(marker.Location);
+                        }
+                        else
+                            distance = player.Location.DistanceTo(marker.Location);
+
+                        if (distance < 50)
                         {
                             isInRange = true;
                             break;
@@ -313,13 +326,30 @@ namespace ACE.Server.Entity
                 {
                     var marker = obj.Value;
 
-                    if (entryPos.DistanceTo(marker.Location) < 25)
+                    float distance;
+                    if (Pathfinder.PathfindingEnabled && entryPos.Indoors)
+                    {
+                        if(!Pathfinder.GetRouteDistance(entryPos, marker.Location, AgentWidth.Narrow, out distance))
+                            distance = entryPos.DistanceTo(marker.Location);
+                    }
+                    else
+                        distance = entryPos.DistanceTo(marker.Location);
+
+                    if (distance < 50)
                     {
                         attempts++;
                         if (attempts < 10)
                             SpawnExplorationMarker(attempts);
                         else
-                            log.Warn($"Landblock 0x{Id} failed to find position to spawn exploration marker that was not too close to another exploration marker.");
+                        {
+                            var msg = $"Landblock 0x{Id} failed to find position to spawn exploration marker that was not too close to another exploration marker.";
+                            if (ExplorationMarkerCount > 1)
+                            {
+                                ExplorationMarkerCount--;
+                                msg += $" Reducing ExplorationMarkerCount to {ExplorationMarkerCount}";
+                            }
+                            log.Warn(msg);
+                        }
                         return;
                     }
                 }
