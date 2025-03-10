@@ -607,7 +607,7 @@ namespace ACE.Server.Managers
             {
                 arenaEvent.Status = -1;
                 arenaEvent.EndDateTime = DateTime.Now;
-                DatabaseManager.Log.SaveArenaEvent(arenaEvent);
+                DatabaseManager.Shard.BaseDatabase.SaveArenaEvent(arenaEvent);
 
                 foreach (var arenaPlayer in arenaEvent.Players)
                 {

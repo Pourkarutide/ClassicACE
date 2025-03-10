@@ -19,6 +19,7 @@ using ACE.Database.Models.Shard;
 using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
 using ACE.Database.Models.Auth;
+using System.Text;
 
 namespace ACE.Database
 {
@@ -1150,5 +1151,340 @@ namespace ACE.Database
                 return count;
             }
         }
+
+        #region Arena
+        public uint SaveArenaEvent(ArenaEvent arenaEvent)
+        {
+            try
+            {
+                using (var context = new ShardDbContext())
+                {
+                    if (arenaEvent.Id <= 0)
+                    {
+                        context.ArenaEvents.Add(arenaEvent);
+                    }
+                    else
+                    {
+                        context.Entry(arenaEvent).State = EntityState.Modified;
+                    }
+
+                    context.SaveChanges();
+
+                    foreach (var arenaPlayer in arenaEvent.Players)
+                    {
+                        arenaPlayer.EventId = arenaEvent.Id;
+
+                        if (arenaPlayer.Id <= 0)
+                        {
+                            context.ArenaPlayers.Add(arenaPlayer);
+                        }
+                        else
+                        {
+                            context.Entry(arenaPlayer).State = EntityState.Modified;
+                        }
+                    }
+
+                    context.SaveChanges();
+
+                    return arenaEvent.Id;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Exception in SaveArenaEvent. Ex: {ex}");
+            }
+
+            return 0;
+        }
+
+        public void AddToArenaStats(uint characterId, string characterName, string eventType, uint totalMatches, uint totalWins, uint totalDraws, uint totalLosses, uint totalDisqualified, uint totalDeaths, uint totalKills, uint totalDmgDealt, uint totalDmgReceived, uint? newRankPoints = null)
+        {
+            try
+            {
+                using (var context = new ShardDbContext())
+                {
+                    var stats = context.ArenaCharacterStats.FirstOrDefault(x => x.CharacterId == characterId && x.EventType.Equals(eventType));
+                    if (stats == null)
+                    {
+                        stats = new ArenaCharacterStats();
+                        stats.CharacterId = characterId;
+                        stats.CharacterName = characterName;
+                        stats.EventType = eventType;
+                        context.ArenaCharacterStats.Add(stats);
+                    }
+                    else
+                    {
+                        context.Entry(stats).State = EntityState.Modified;
+                    }
+
+                    stats.TotalMatches += totalMatches;
+                    stats.TotalWins += totalWins;
+                    stats.TotalDraws += totalDraws;
+                    stats.TotalLosses += totalLosses;
+                    stats.TotalDisqualified += totalDisqualified;
+                    stats.TotalDeaths += totalDeaths;
+                    stats.TotalKills += totalKills;
+                    stats.TotalDmgDealt += totalDmgDealt;
+                    stats.TotalDmgReceived += totalDmgReceived;
+                    stats.RankPoints = newRankPoints.HasValue ? newRankPoints.Value : stats.RankPoints;
+
+                    context.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Exception saving ArenaCharacterStats. ex: {ex}");
+            }
+        }
+
+        public ArenaCharacterStats GetCharacterArenaStatsByEvent(uint characterId, string eventType)
+        {
+            try
+            {
+                using (var context = new ShardDbContext())
+                {
+                    return context.ArenaCharacterStats.FirstOrDefault(x => x.CharacterId == characterId && x.EventType.Equals(eventType));
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Error in GetCharacterArenaStatsByEvent. ex:{ex}");
+            }
+
+            return null;
+        }
+
+        public string GetArenaStatsByCharacterId(uint characterId, string characterName)
+        {
+            var returnMsg = new StringBuilder();
+
+            try
+            {
+                using (var context = new ShardDbContext())
+                {
+                    var stats = context.ArenaCharacterStats.Where(x => x.CharacterId == characterId)?.ToList();
+                    if (stats == null)
+                    {
+                        stats = new List<ArenaCharacterStats>();
+                    }
+
+                    returnMsg.Append($"********* Arena Stats for {characterName} *********\n\n");
+                    var onesStats = stats.FirstOrDefault(x => x.EventType.Equals("1v1"));
+                    if (onesStats == null)
+                        onesStats = new ArenaCharacterStats();
+
+                    returnMsg.Append($"1v1\n");
+                    returnMsg.Append($"  Rank: {DatabaseManager.Shard.BaseDatabase.GetArenaRank("1v1", onesStats.RankPoints).ToString("n0")}\n");
+                    returnMsg.Append($"  Rank Points: {onesStats.RankPoints.ToString("n0")}\n");
+                    returnMsg.Append($"  Matches: {onesStats.TotalMatches.ToString("n0")}\n");
+                    returnMsg.Append($"  Wins: {onesStats.TotalWins.ToString("n0")}\n");
+                    returnMsg.Append($"  Draws: {onesStats.TotalDraws.ToString("n0")}\n");
+                    returnMsg.Append($"  Losses: {onesStats.TotalLosses.ToString("n0")}\n");
+                    returnMsg.Append($"  Disqualified: {onesStats.TotalDisqualified.ToString("n0")}\n");
+                    returnMsg.Append($"  Kills: {onesStats.TotalKills.ToString("n0")}\n");
+                    returnMsg.Append($"  Deaths: {onesStats.TotalDeaths.ToString("n0")}\n");
+                    returnMsg.Append($"  Damage Dealt: {onesStats.TotalDmgDealt.ToString("n0")}\n");
+                    returnMsg.Append($"  Damage Received: {onesStats.TotalDmgReceived.ToString("n0")}\n\n");
+
+                    var twosStats = stats.FirstOrDefault(x => x.EventType.Equals("2v2"));
+                    if (twosStats == null)
+                        twosStats = new ArenaCharacterStats();
+
+                    returnMsg.Append($"2v2\n");
+                    returnMsg.Append($"  Rank: {DatabaseManager.Shard.BaseDatabase.GetArenaRank("2v2", twosStats.RankPoints).ToString("n0")}\n");
+                    returnMsg.Append($"  Rank Points: {twosStats.RankPoints.ToString("n0")}\n");
+                    returnMsg.Append($"  Matches: {twosStats.TotalMatches.ToString("n0")}\n");
+                    returnMsg.Append($"  Wins: {twosStats.TotalWins.ToString("n0")}\n");
+                    returnMsg.Append($"  Draws: {twosStats.TotalDraws.ToString("n0")}\n");
+                    returnMsg.Append($"  Losses: {twosStats.TotalLosses.ToString("n0")}\n");
+                    returnMsg.Append($"  Disqualified: {twosStats.TotalDisqualified.ToString("n0")}\n");
+                    returnMsg.Append($"  Kills: {twosStats.TotalKills.ToString("n0")}\n");
+                    returnMsg.Append($"  Deaths: {twosStats.TotalDeaths.ToString("n0")}\n");
+                    returnMsg.Append($"  Damage Dealt: {twosStats.TotalDmgDealt.ToString("n0")}\n");
+                    returnMsg.Append($"  Damage Received: {twosStats.TotalDmgReceived.ToString("n0")}\n\n");
+
+                    var ffaStats = stats.FirstOrDefault(x => x.EventType.Equals("ffa"));
+                    if (ffaStats == null)
+                        ffaStats = new ArenaCharacterStats();
+
+                    returnMsg.Append($"FFA\n");
+                    returnMsg.Append($"  Rank: {DatabaseManager.Shard.BaseDatabase.GetArenaRank("ffa", ffaStats.RankPoints).ToString("n0")}\n");
+                    returnMsg.Append($"  Rank Points: {ffaStats.RankPoints.ToString("n0")}\n");
+                    returnMsg.Append($"  Matches: {ffaStats.TotalMatches.ToString("n0")}\n");
+                    returnMsg.Append($"  Wins: {ffaStats.TotalWins.ToString("n0")}\n");
+                    returnMsg.Append($"  Draws: {ffaStats.TotalDraws.ToString("n0")}\n");
+                    returnMsg.Append($"  Losses: {ffaStats.TotalLosses.ToString("n0")}\n");
+                    returnMsg.Append($"  Disqualified: {ffaStats.TotalDisqualified.ToString("n0")}\n");
+                    returnMsg.Append($"  Kills: {ffaStats.TotalKills.ToString("n0")}\n");
+                    returnMsg.Append($"  Deaths: {ffaStats.TotalDeaths.ToString("n0")}\n");
+                    returnMsg.Append($"  Damage Dealt: {ffaStats.TotalDmgDealt.ToString("n0")}\n");
+                    returnMsg.Append($"  Damage Received: {ffaStats.TotalDmgReceived.ToString("n0")}\n\n");
+
+                    var groupStats = stats.FirstOrDefault(x => x.EventType.Equals("group"));
+                    if (groupStats == null)
+                        groupStats = new ArenaCharacterStats();
+
+                    returnMsg.Append($"Group\n");
+                    returnMsg.Append($"  Matches: {groupStats.TotalMatches.ToString("n0")}\n");
+                    returnMsg.Append($"  Wins: {groupStats.TotalWins.ToString("n0")}\n");
+                    returnMsg.Append($"  Draws: {groupStats.TotalDraws.ToString("n0")}\n");
+                    returnMsg.Append($"  Losses: {groupStats.TotalLosses.ToString("n0")}\n");
+                    returnMsg.Append($"  Disqualified: {groupStats.TotalDisqualified.ToString("n0")}\n");
+                    returnMsg.Append($"  Kills: {groupStats.TotalKills.ToString("n0")}\n");
+                    returnMsg.Append($"  Deaths: {groupStats.TotalDeaths.ToString("n0")}\n");
+                    returnMsg.Append($"  Damage Dealt: {groupStats.TotalDmgDealt.ToString("n0")}\n");
+                    returnMsg.Append($"  Damage Received: {groupStats.TotalDmgReceived.ToString("n0")}\n\n");
+
+                    returnMsg.Append($"Totals:\n");
+                    returnMsg.Append($"  Total Matches: {stats.Sum(x => x.TotalMatches).ToString("n0")}\n");
+                    returnMsg.Append($"  Total Wins: {stats.Sum(x => x.TotalWins).ToString("n0")}\n");
+                    returnMsg.Append($"  Total Draws: {stats.Sum(x => x.TotalDraws).ToString("n0")}\n");
+                    returnMsg.Append($"  Total Losses: {stats.Sum(x => x.TotalLosses).ToString("n0")}\n");
+                    returnMsg.Append($"  Total Disqualified: {stats.Sum(x => x.TotalDisqualified).ToString("n0")}\n");
+                    returnMsg.Append($"  Total Kills: {stats.Sum(x => x.TotalKills).ToString("n0")}\n");
+                    returnMsg.Append($"  Total Deaths: {stats.Sum(x => x.TotalDeaths).ToString("n0")}\n");
+                    returnMsg.Append($"  Total Damage Dealt: {stats.Sum(x => x.TotalDmgDealt).ToString("n0")}\n");
+                    returnMsg.Append($"  Total Damage Received: {stats.Sum(x => x.TotalDmgReceived).ToString("n0")}\n\n");
+
+                    returnMsg.Append($"*****************************\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Exception in GetEventStatsByCharacterId for characterId = {characterId}. ex: {ex}");
+            }
+
+            return returnMsg.ToString();
+        }
+
+        public int GetArenaRank(string eventType, uint rankPoints)
+        {
+            try
+            {
+                using (var context = new ShardDbContext())
+                {
+                    var higherPlayers = context.ArenaCharacterStats.Where(x => x.EventType.Equals(eventType) && x.RankPoints > rankPoints);
+                    if (higherPlayers != null)
+                    {
+                        return higherPlayers.Count() + 1;
+                    }
+                    else
+                    {
+                        return 1;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Error in GetArenaRank. ex:{ex}");
+            }
+
+            return -1;
+        }
+
+        public List<ArenaCharacterStats> GetArenaTopRankedByEventType(string eventType)
+        {
+            try
+            {
+                using (var context = new ShardDbContext())
+                {
+                    var topTenPlayers = context.ArenaCharacterStats.Where(x => x.EventType.Equals(eventType))?.OrderByDescending(x => x.RankPoints)?.Take(10);
+
+                    if (topTenPlayers != null)
+                    {
+                        return topTenPlayers.ToList();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Error in GetArenaTopRankedByEventType. ex:{ex}");
+            }
+
+            return new List<ArenaCharacterStats>();
+        }
+
+        public uint CreateArenaPlayer(ArenaPlayer player)
+        {
+            try
+            {
+                using (var context = new ShardDbContext())
+                {
+                    context.ArenaPlayers.Add(player);
+                    context.SaveChanges();
+
+                    return player.Id;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Exception in CreateArenaEvent. Ex: {ex}");
+            }
+
+            return 0;
+        }
+
+        public void UpdateArenaPlayer(ArenaPlayer player)
+        {
+            using (var context = new ShardDbContext())
+            {
+                context.Entry(player).State = EntityState.Modified;
+                context.SaveChanges();
+            }
+        }
+
+        public List<ArenaEvent> GetAllArenaEvents()
+        {
+            List<ArenaEvent> eventList = null;
+
+            try
+            {
+                using (var context = new ShardDbContext())
+                {
+                    eventList = context.ArenaEvents
+                            .AsNoTracking()
+                            .OrderByDescending(r => r.StartDateTime)
+                            .Where(r => r.EndDateTime.HasValue)?.ToList() ?? new List<ArenaEvent>();
+                }
+
+                foreach (var arenaEvent in eventList)
+                {
+                    arenaEvent.Players = GetAllArenaPlayersByEvent(arenaEvent.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Exception in GetAllArenaEvents. Ex: {ex}");
+            }
+
+            return eventList ?? new List<ArenaEvent>();
+        }
+
+        public List<ArenaPlayer> GetAllArenaPlayersByEvent(uint eventId)
+        {
+            List<ArenaPlayer> playerList = null;
+
+            try
+            {
+                using (var context = new ShardDbContext())
+                {
+                    var result =
+                        context.ArenaPlayers
+                            .AsNoTracking();
+
+                    result = result.Where(x => x.EventId == (uint?)eventId);
+                    playerList = result?.ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Exception in GetAllArenaPlayersByEvent. Ex: {ex}");
+            }
+
+            return playerList ?? new List<ArenaPlayer>();
+        }
+
+        #endregion Arena
+
     }
 }

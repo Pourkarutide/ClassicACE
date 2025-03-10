@@ -1218,7 +1218,7 @@ namespace ACE.Server.Entity
             if (wo is Corpse && wo.Level.HasValue)
             {
                 //Set corpse rot time in arena landblocks based on config
-                if (this.IsArenaLandblock)
+                if (IsArenaLandblock)
                 {
                     wo.TimeToRot = PropertyManager.GetDouble("arena_corpse_rot_seconds", 300).Item;
                 }
