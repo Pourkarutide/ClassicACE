@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
 
 namespace ACE.Database.Models.Shard;
 
@@ -105,6 +102,13 @@ public partial class ShardDbContext : DbContext
     public virtual DbSet<PKKill> PKKills { get; set; }
 
     public virtual DbSet<CharacterObituary> CharacterObituary { get; set; }
+
+    public virtual DbSet<ArenaEvent> ArenaEvents { get; set; }
+
+    public virtual DbSet<ArenaPlayer> ArenaPlayers { get; set; }
+
+    public virtual DbSet<ArenaCharacterStats> ArenaCharacterStats { get; set; }
+
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
