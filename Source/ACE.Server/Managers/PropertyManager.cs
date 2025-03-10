@@ -889,7 +889,7 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_dualwield", 1.7);
                     PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_shielded", 1.8);
                     PropertyManager.ModifyDouble("dekaru_sword_ms_animation_speed_1h", 1.6);
-                    PropertyManager.ModifyDouble("dekaru_sword_ms_animation_speed_dualwield", 1.7);
+                    PropertyManager.ModifyDouble("dekaru_sword_ms_animation_speed_dualwield", 1.6);
                     PropertyManager.ModifyDouble("dekaru_sword_ms_animation_speed_shielded", 1.8);
                     PropertyManager.ModifyDouble("dekaru_tw_animation_speed", 3.0);
                     PropertyManager.ModifyDouble("fast_missile_modifier", 3.0);
