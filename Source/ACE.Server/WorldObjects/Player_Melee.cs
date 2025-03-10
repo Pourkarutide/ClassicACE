@@ -551,7 +551,7 @@ namespace ACE.Server.WorldObjects
                             animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_dualwield").Item;
                         else
                             animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_shielded").Item;
-                    } else if (weapon.WeaponSkill == Skill.Sword && !TwoHandedCombat) 
+                    } else if (weapon.WeaponSkill == Skill.Sword) 
                     {
                         if (GetEquippedOffHand() == null)
                             animSpeedMod = (float)PropertyManager.GetDouble("dekaru_sword_ms_animation_speed_1h").Item;
