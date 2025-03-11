@@ -217,6 +217,37 @@ namespace ACE.Server.Managers
                     session.Player.Location = new Position(0xA9B40019, 84, 7.1f, 94, 0, 0, -0.0784591f, 0.996917f);  // ultimate fallback
             }
 
+            //Handle logging into arena
+            if (ArenaLocation.IsArenaLandblock(session.Player.Location?.Landblock ?? 0))
+            {
+                session.Player.Location = new Position(session.Player.Sanctuary);
+            }
+
+            //Handle players who disconnected while Arena observers
+            if (session.Player.IsArenaObserver ||
+                session.Player.IsPendingArenaObserver ||
+                (!session.Player.IsPlussed && session.Player.Cloaked.HasValue && session.Player.Cloaked.Value))
+                ArenaManager.ExitArenaObserverMode(session.Player);
+
+            //Catch-all in case anyone gets stuck being cloaked or unattackable but isn't still flagged as an Arena Observer
+            if (!session.Player.IsPlussed)
+            {
+                player.RecallsDisabled = false;
+                player.IsFrozen = false;
+                player.Attackable = true;
+                if (player.GagDuration <= 0)
+                {
+                    player.IsGagged = false;
+                }
+                player.EnqueueBroadcastPhysicsState();
+                player.DeCloak();
+                player.IsPendingArenaObserver = false;
+                player.IsArenaObserver = false;
+            }
+
+            if (session.Player.HasArenaRareDmgBuff || session.Player.HasArenaRareDmgReductionBuff)
+                ArenaManager.DispelArenaRares(session.Player);
+
             if (session.Player.Location.PositionX == 0 && session.Player.Location.PositionY == 0 && session.Player.Location.Cell == 0) // Trying to catch invalid position.
                 session.Player.Location = new Position(session.Player.Sanctuary) ?? new Position(session.Player.Instantiation) ?? new Position(0xA9B00015, 60.108139f, 103.333549f, 64.402885f, 0.000000f, 0.000000f, -0.381155f, -0.924511f);
 
