@@ -604,6 +604,16 @@ namespace ACE.Server.WorldObjects
                     srcVital = "stamina";
                     break;
                 default:   // Health
+                    var targetP = targetCreature as Player;
+
+                    if (targetP != null && ArenaLocation.IsArenaLandblock(targetP.Location.Landblock))
+                    {
+                        var arenaEvent = ArenaManager.GetArenaEventByLandblock(targetP.Location.Landblock);
+                        if (arenaEvent != null && arenaEvent.IsOvertime)
+                        {
+                            tryBoost = boost = (int)Math.Round((boost * arenaEvent.OvertimeHealingModifier));
+                        }
+                    }
                     boost = targetCreature.UpdateVitalDelta(targetCreature.Health, tryBoost);
                     srcVital = "health";
 
@@ -963,6 +973,17 @@ namespace ACE.Server.WorldObjects
                     break;
                 case PropertyAttribute2nd.Stamina:
                     srcVital = "stamina";
+                    if (targetPlayer != null &&
+                      spell.Destination == PropertyAttribute2nd.Health &&
+                      srcVitalChange < 0 &&
+                      ArenaLocation.IsArenaLandblock(targetPlayer.Location.Landblock))
+                    {
+                        var arenaEvent = ArenaManager.GetArenaEventByLandblock(targetPlayer.Location.Landblock);
+                        if (arenaEvent != null && arenaEvent.IsOvertime)
+                        {
+                            srcVitalChange = Convert.ToUInt32(Math.Round(srcVitalChange * arenaEvent.OvertimeHealingModifier));
+                        }
+                    }
                     srcVitalChange = (uint)-transferSource.UpdateVitalDelta(transferSource.Stamina, -(int)srcVitalChange);
                     break;
                 default:   // Health
@@ -991,6 +1012,16 @@ namespace ACE.Server.WorldObjects
                     break;
                 default:   // Health
                     destVital = "health";
+
+                    if (targetPlayer != null && ArenaLocation.IsArenaLandblock(targetPlayer.Location.Landblock))
+                    {
+                        var arenaEvent = ArenaManager.GetArenaEventByLandblock(targetPlayer.Location.Landblock);
+                        if (arenaEvent != null && arenaEvent.IsOvertime)
+                        {
+                            destVitalChange = Convert.ToUInt32(Math.Round(destVitalChange * arenaEvent.OvertimeHealingModifier));
+                        }
+                    }
+
                     destVitalChange = (uint)destination.UpdateVitalDelta(destination.Health, destVitalChange);
 
                     destination.DamageHistory.OnHeal(destVitalChange);

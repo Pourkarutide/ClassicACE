@@ -33,6 +33,8 @@ using ACE.Server.WorldObjects.Entity;
 using ACE.Server.Network.Handlers;
 
 using Position = ACE.Entity.Position;
+using ACE.Database.Models.Shard;
+using System.Text;
 
 namespace ACE.Server.Command.Handlers
 {
@@ -2050,7 +2052,7 @@ namespace ACE.Server.Command.Handlers
                             if (newPlayerBiota.HousePermissions != null)
                                 newPlayerBiota.HousePermissions.Clear();
 
-                            var newTempWieldedItems = new List<Biota>();
+                            var newTempWieldedItems = new List<ACE.Entity.Models.Biota>();
                             foreach (var item in existingPossessions.WieldedItems)
                             {
                                 var newItemBiota = Database.Adapter.BiotaConverter.ConvertToEntityBiota(item);
@@ -2060,7 +2062,7 @@ namespace ACE.Server.Command.Handlers
                                 newTempWieldedItems.Add(newItemBiota);
                             }
 
-                            var newTempInventoryItems = new List<Biota>();
+                            var newTempInventoryItems = new List<ACE.Entity.Models.Biota>();
                             foreach (var item in existingPossessions.Inventory)
                             {
                                 if (item.WeenieClassId == (uint)WeenieClassName.W_DEED_CLASS)
@@ -2234,7 +2236,7 @@ namespace ACE.Server.Command.Handlers
                             }
 
                             var possessions = newPlayer.GetAllPossessions();
-                            var possessedBiotas = new Collection<(Biota biota, ReaderWriterLockSlim rwLock)>();
+                            var possessedBiotas = new Collection<(ACE.Entity.Models.Biota biota, ReaderWriterLockSlim rwLock)>();
                             foreach (var possession in possessions)
                                 possessedBiotas.Add((possession.Biota, possession.BiotaDatabaseLock));
 
@@ -3642,7 +3644,7 @@ namespace ACE.Server.Command.Handlers
                 player.GenerateNewFace();
 
                 var possessions = player.GetAllPossessions();
-                var possessedBiotas = new Collection<(Biota biota, ReaderWriterLockSlim rwLock)>();
+                var possessedBiotas = new Collection<(ACE.Entity.Models.Biota biota, ReaderWriterLockSlim rwLock)>();
                 foreach (var possession in possessions)
                     possessedBiotas.Add((possession.Biota, possession.BiotaDatabaseLock));
 
@@ -5419,6 +5421,219 @@ namespace ACE.Server.Command.Handlers
                 player.HouseId = null;
                 player.HouseInstance = null;
                 player.HouseRentTimestamp = null;
+            }
+        }
+
+        /* Arenas */
+        [CommandHandler("arenadebug", AccessLevel.Sentinel, CommandHandlerFlag.None, 0,
+            "Displays debug info about arenas")]
+        public static void HandleArenaDebug(Session session, params string[] parameters)
+        {
+            StringBuilder returnMsg = new StringBuilder();
+            returnMsg.Append("******** Arena Debug Info ********\n\n");
+
+            returnMsg.Append("Queued Players:\n\n");
+
+            var queuedPlayers = ArenaManager.GetQueuedPlayers();
+            if (queuedPlayers != null)
+            {
+                foreach (var arenaPlayer in queuedPlayers)
+                {
+                    returnMsg.Append($"  CharacterID = {arenaPlayer.CharacterId}\n");
+                    returnMsg.Append($"  CharacterName = {arenaPlayer.CharacterName}\n");
+                    returnMsg.Append($"  EventType = {arenaPlayer.EventType}\n");
+                    returnMsg.Append($"  CreatedDate = {arenaPlayer.CreateDateTime}\n");
+                    returnMsg.Append($"  IP = {arenaPlayer.PlayerIP}\n");
+                    returnMsg.Append($"  Level = {arenaPlayer.CharacterLevel}\n");
+                    returnMsg.Append($"  MonarchId = {arenaPlayer.MonarchId}\n");
+                    returnMsg.Append($"  MonarchName = {arenaPlayer.MonarchName}\n");
+                    returnMsg.Append($"  * properties that should be empty when queued *\n");
+                    returnMsg.Append($"    TeamGuid = {arenaPlayer.TeamGuid}\n");
+                    returnMsg.Append($"    EventID = {arenaPlayer.EventId}\n");
+                    returnMsg.Append($"    FinishPlace = {arenaPlayer.FinishPlace}\n");
+                    returnMsg.Append($"    IsDisqualified = {arenaPlayer.IsDisqualified}\n");
+                    returnMsg.Append($"    IsEliminated = {arenaPlayer.IsEliminated}\n");
+                    returnMsg.Append($"    TotalDeaths = {arenaPlayer.TotalDeaths}\n");
+                    returnMsg.Append($"    TotalKills = {arenaPlayer.TotalKills}\n");
+                    returnMsg.Append($"    TotalDmgDealt = {arenaPlayer.TotalDmgDealt}\n");
+                    returnMsg.Append($"    TotalDmgReceived = {arenaPlayer.TotalDmgReceived}\n\n");
+                }
+            }
+            else
+            {
+                returnMsg.Append("  No Queued Players\n\n");
+            }
+
+            returnMsg.Append($"\nActive Events:\n\n");
+
+            var activeEvents = ArenaManager.GetActiveEvents();
+            if (activeEvents != null)
+            {
+                foreach (var arenaEvent in activeEvents)
+                {
+                    returnMsg.Append($"  EventID = {arenaEvent.Id}\n");
+                    returnMsg.Append($"  EventType = {arenaEvent.EventType}\n");
+                    returnMsg.Append($"  Status = {arenaEvent.Status}\n");
+                    returnMsg.Append($"  Location = {arenaEvent.Location}\n");
+                    returnMsg.Append($"  CreatedDateTime = {arenaEvent.CreatedDateTime}\n");
+                    returnMsg.Append($"  StartDateTime = {arenaEvent.StartDateTime}\n");
+                    returnMsg.Append($"  EndDateTime = {arenaEvent.EndDateTime}\n");
+                    returnMsg.Append($"  PreEventCountdownStartDateTime = {arenaEvent.PreEventCountdownStartDateTime}\n");
+                    returnMsg.Append($"  CountdownStartDateTime = {arenaEvent.CountdownStartDateTime}\n");
+                    returnMsg.Append($"  TimeRemaining = {arenaEvent.TimeRemaining}\n");
+                    returnMsg.Append($"  WinningTeamGuid = {arenaEvent.WinningTeamGuid}\n");
+                    returnMsg.Append($"  IsOvertime = {arenaEvent.IsOvertime}\n");
+                    returnMsg.Append($"  OvertimeHealingModifier = {arenaEvent.OvertimeHealingModifier}\n");
+                    returnMsg.Append($"  OvertimeRemaining = {arenaEvent.OvertimeRemaining}\n");
+                    returnMsg.Append($"  CancelReason = {arenaEvent.CancelReason}\n");
+                    returnMsg.Append($"  Players:\n");
+                    foreach (var arenaPlayer in arenaEvent.Players)
+                    {
+                        returnMsg.Append($"    CharacterID = {arenaPlayer.CharacterId}\n");
+                        returnMsg.Append($"    CharacterName = {arenaPlayer.CharacterName}\n");
+                        returnMsg.Append($"    EventType = {arenaPlayer.EventType}\n");
+                        returnMsg.Append($"    CreatedDate = {arenaPlayer.CreateDateTime}\n");
+                        returnMsg.Append($"    IP = {arenaPlayer.PlayerIP}\n");
+                        returnMsg.Append($"    Level = {arenaPlayer.CharacterLevel}\n");
+                        returnMsg.Append($"    MonarchId = {arenaPlayer.MonarchId}\n");
+                        returnMsg.Append($"    MonarchName = {arenaPlayer.MonarchName}\n");
+                        returnMsg.Append($"    TeamGuid = {arenaPlayer.TeamGuid}\n");
+                        returnMsg.Append($"    EventID = {arenaPlayer.EventId}\n");
+                        returnMsg.Append($"    FinishPlace = {arenaPlayer.FinishPlace}\n");
+                        returnMsg.Append($"    IsDisqualified = {arenaPlayer.IsDisqualified}\n");
+                        returnMsg.Append($"    IsEliminated = {arenaPlayer.IsEliminated}\n");
+                        returnMsg.Append($"    TotalDeaths = {arenaPlayer.TotalDeaths}\n");
+                        returnMsg.Append($"    TotalKills = {arenaPlayer.TotalKills}\n");
+                        returnMsg.Append($"    TotalDmgDealt = {arenaPlayer.TotalDmgDealt}\n");
+                        returnMsg.Append($"    TotalDmgReceived = {arenaPlayer.TotalDmgReceived}\n\n");
+                    }
+
+                    returnMsg.Append($"\n");
+                }
+            }
+            else
+            {
+                returnMsg.Append("  No Active Events\n\n");
+            }
+
+            CommandHandlerHelper.WriteOutputInfo(session, returnMsg.ToString());
+        }
+
+        [CommandHandler("arenaclearqueue", AccessLevel.Sentinel, CommandHandlerFlag.None, 0,
+            "Removes all players from one or all arena queues")]
+        public static void HandleArenaClearQueue(Session session, params string[] parameters)
+        {
+            string eventType = "";
+
+            if (parameters.Count() == 1)
+            {
+                eventType = parameters[0].ToLower();
+                if (!ArenaManager.IsValidEventType(eventType))
+                {
+                    CommandHandlerHelper.WriteOutputInfo(session, $"Invalid parameters.  EventType {eventType} is not supported.  \nUsage:\n  To clear all queues  /ArenaClearQueue\n  To clear a single queue (2v2 in this example): /ArenaClearQueue 2v2");
+                    return;
+                }
+            }
+
+            if (parameters.Count() > 1)
+            {
+                CommandHandlerHelper.WriteOutputInfo(session, $"Invalid parameters.\nUsage:\n  To clear all queues  /ArenaClearQueue\n  To clear a single queue (2v2 in this example): /ArenaClearQueue 2v2");
+                return;
+            }
+
+            ArenaManager.ClearQueue(eventType);
+            CommandHandlerHelper.WriteOutputInfo(session, $"You've successfully cleared the queue for {(string.IsNullOrEmpty(eventType) ? "all arena event types" : "the " + eventType + " event type")}");
+        }
+
+        [CommandHandler("arenacancelevent", AccessLevel.Sentinel, CommandHandlerFlag.None, 1,
+            "Removes all players from one or all arena queues")]
+        public static void HandleArenaCancelEvent(Session session, params string[] parameters)
+        {
+            string eventIdParam = "";
+            int eventId = -1;
+
+            if (parameters.Count() == 1)
+            {
+                eventIdParam = parameters[0].ToLower();
+                try
+                {
+                    eventId = int.Parse(eventIdParam);
+                }
+                catch (Exception)
+                {
+                    CommandHandlerHelper.WriteOutputInfo(session, $"Invalid parameters.  EventID {eventIdParam} is not a valid number.\nUsage:\n  /ArenaCancelEvent EventID");
+                    return;
+                }
+
+                var arenaEvent = ArenaManager.GetActiveEvents().FirstOrDefault(x => x.Id == eventId);
+
+                if (arenaEvent != null)
+                {
+                    arenaEvent.CancelReason = "Admin In-Game";
+                    ArenaManager.CancelEvent(arenaEvent);
+                    CommandHandlerHelper.WriteOutputInfo(session, $"You've successfully cancelled the {arenaEvent.EventType} arena event with EventID = {eventId}.");
+                }
+                else
+                {
+                    CommandHandlerHelper.WriteOutputInfo(session, $"There is no active arena event with EventID = {eventId}.");
+                }
+            }
+            else
+            {
+                CommandHandlerHelper.WriteOutputInfo(session, $"Invalid parameters.  Must provide a single EventID as parameter.\nUsage:\n  /ArenaCancelEvent EventID");
+                return;
+            }
+        }
+
+        [CommandHandler("arenarecalcelo", AccessLevel.Sentinel, CommandHandlerFlag.None, 0,
+            "Recalculates all players ELO from match history")]
+        public static void HandleArenaRecalcELO(Session session, params string[] parameters)
+        {
+            //Process 1v1
+            var arenaEvents = DatabaseManager.Shard.BaseDatabase.GetAllArenaEvents();
+            Dictionary<uint, uint> characterRankings = new Dictionary<uint, uint>();
+            arenaEvents = arenaEvents.Where(x => x.EventType.ToLower().Equals("1v1"))?.OrderBy(x => x.CreatedDateTime).ToList() ?? new List<ArenaEvent>();
+            foreach (var arenaEvent in arenaEvents)
+            {
+                if (arenaEvent.WinningTeamGuid.HasValue)
+                {
+                    var winner = arenaEvent.Players?.FirstOrDefault(x => x.TeamGuid == arenaEvent.WinningTeamGuid);
+                    if (winner != null)
+                    {
+                        var loser = arenaEvent.Players?.FirstOrDefault(x => x.CharacterId != winner.CharacterId);
+                        if (loser != null)
+                        {
+                            var winnerCurrentRank = characterRankings.ContainsKey(winner.CharacterId) ? characterRankings[winner.CharacterId] : 1500;
+                            var loserCurrentRank = characterRankings.ContainsKey(loser.CharacterId) ? characterRankings[loser.CharacterId] : 1500;
+
+                            var rankChange = ArenaRanking.GetRankChange(winnerCurrentRank, loserCurrentRank, 32);
+
+                            var winnerNewRank = (int)winnerCurrentRank + rankChange > 0 ? (uint)(winnerCurrentRank + rankChange) : default(uint);
+                            var loserNewRank = (int)loserCurrentRank - rankChange > 0 ? (uint)(loserCurrentRank - rankChange) : default(uint);
+
+                            if (characterRankings.ContainsKey(winner.CharacterId))
+                            {
+                                characterRankings[winner.CharacterId] = winnerNewRank;
+                            }
+                            else
+                            {
+                                characterRankings.Add(winner.CharacterId, winnerNewRank);
+                            }
+
+                            if (characterRankings.ContainsKey(loser.CharacterId))
+                            {
+                                characterRankings[loser.CharacterId] = loserNewRank;
+                            }
+                            else
+                            {
+                                characterRankings.Add(loser.CharacterId, loserNewRank);
+                            }
+
+                            DatabaseManager.Shard.BaseDatabase.AddToArenaStats(winner.CharacterId, winner.CharacterName, "1v1", 0, 0, 0, 0, 0, 0, 0, 0, 0, winnerNewRank);
+                            DatabaseManager.Shard.BaseDatabase.AddToArenaStats(loser.CharacterId, loser.CharacterName, "1v1", 0, 0, 0, 0, 0, 0, 0, 0, 0, loserNewRank);
+                        }
+                    }
+                }
             }
         }
     }
