@@ -1055,8 +1055,7 @@ namespace ACE.Database
                 log.Error($"Exception in LogCharacterLogin saving character login info to DB. Ex: {ex}");
             }
         }
-
-        public void CreatePKKill(uint victimId, uint killerId, uint? victimMonarchId, uint? killerMonarchId, uint? victimArenaPlayerId = null, uint? killerArenaPlayerId = null)
+        public void CreatePKKill(uint victimId, uint killerId, uint? victimMonarchId, uint? killerMonarchId)
         {
             var kill = new PKKill();
 
@@ -1067,12 +1066,34 @@ namespace ACE.Database
                 kill.VictimMonarchId = victimMonarchId;
                 kill.KillerMonarchId = killerMonarchId;
                 kill.KillDateTime = DateTime.Now;
-                kill.VictimArenaPlayerID = victimArenaPlayerId;
-                kill.KillerArenaPlayerID = killerArenaPlayerId;
 
                 using (var context = new ShardDbContext())
                 {
                     context.PKKills.Add(kill);
+                    context.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"Exception in CreateKill saving kill data to PKKills DB. Ex: {ex}");
+            }
+        }
+
+        public void CreateArenaPKKill(uint victimId, uint killerId, uint? victimMonarchId, uint? killerMonarchId)
+        {
+            var kill = new ArenaPKKill();
+
+            try
+            {
+                kill.VictimId = victimId;
+                kill.KillerId = killerId;
+                kill.VictimMonarchId = victimMonarchId;
+                kill.KillerMonarchId = killerMonarchId;
+                kill.KillDateTime = DateTime.Now;
+
+                using (var context = new ShardDbContext())
+                {
+                    context.ArenaPKKills.Add(kill);
                     context.SaveChanges();
                 }
             }

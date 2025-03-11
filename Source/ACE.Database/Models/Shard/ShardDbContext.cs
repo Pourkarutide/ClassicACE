@@ -101,6 +101,8 @@ public partial class ShardDbContext : DbContext
 
     public virtual DbSet<PKKill> PKKills { get; set; }
 
+    public virtual DbSet<ArenaPKKill> ArenaPKKills { get; set; }
+
     public virtual DbSet<CharacterObituary> CharacterObituary { get; set; }
 
     public virtual DbSet<ArenaEvent> ArenaEvents { get; set; }
@@ -1399,6 +1401,32 @@ public partial class ShardDbContext : DbContext
             entity.Property(e => e.KillDateTime)
                 .HasColumnName("kill_datetime");
         });
+
+        modelBuilder.Entity<ArenaPKKill>(entity =>
+        {
+            entity.HasKey(e => e.Id)
+                .HasName("PRIMARY");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+
+            entity.ToTable("arena_pkkills");
+
+            entity.Property(e => e.VictimId)
+                .HasColumnName("victim_id");
+
+            entity.Property(e => e.KillerId)
+                .HasColumnName("killer_id");
+
+            entity.Property(e => e.VictimMonarchId)
+                .HasColumnName("victim_monarch_id");
+
+            entity.Property(e => e.KillerMonarchId)
+                .HasColumnName("killer_monarch_id");
+
+            entity.Property(e => e.KillDateTime)
+                .HasColumnName("kill_datetime");
+        });
+
 
         modelBuilder.Entity<CharacterObituary>(entity =>
         {

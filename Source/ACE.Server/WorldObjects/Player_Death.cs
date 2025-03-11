@@ -418,7 +418,7 @@ namespace ACE.Server.WorldObjects
 
                     try
                     {
-                        DatabaseManager.Shard.BaseDatabase.CreatePKKill((uint)Character.Id, (uint)killerPlayer.Guid.Full, victimMonarchId, killerMonarchId, victimArenaPlayerId, killerArenaPlayerId);
+                        DatabaseManager.Shard.BaseDatabase.CreateArenaPKKill((uint)Character.Id, (uint)killerPlayer.Guid.Full, victimMonarchId, killerMonarchId);
                     }
                     catch (Exception ex)
                     {
