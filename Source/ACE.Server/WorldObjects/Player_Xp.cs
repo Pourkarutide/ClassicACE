@@ -959,6 +959,9 @@ namespace ACE.Server.WorldObjects
 
         public void GrantLevelProportionalXpForArena(double percent, long min, long max)
         {
+            // temporarily give no xp
+            return;
+
             var nextLevelXP = GetXPBetweenLevels(Level.Value, Level.Value + 1);
 
             var scaledXP = (long)Math.Round(nextLevelXP * percent);
@@ -974,6 +977,7 @@ namespace ACE.Server.WorldObjects
 
         private void EarnXpForArena(long amount, XpType xpType, ShareType shareType = ShareType.All)
         {
+
             //Console.WriteLine($"{Name}.EarnXP({amount}, {sharable}, {fixedAmount})");
 
             // apply xp modifiers.  Quest XP is multiplicative with general XP modification
