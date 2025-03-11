@@ -720,7 +720,7 @@ namespace ACE.Server.WorldObjects
 
                     var isPKdeath = player.IsPKDeath(killer);
                     var isPKLdeath = player.IsPKLiteDeath(killer);
-                    var isArenaDeath = ArenaLocation.IsArenaLandblock(corpse.Location.Landblock);
+                    var isArenaDeath = player.IsOnArenaLandblock;
 
                     if (isPKdeath || (GameplayMode == GameplayModes.HardcorePK && isPKLdeath))
 	                {
