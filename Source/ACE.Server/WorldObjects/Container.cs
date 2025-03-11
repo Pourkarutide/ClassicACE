@@ -619,7 +619,7 @@ namespace ACE.Server.WorldObjects
 
             container = this;
 
-            ExtraItemChecks(worldObject);
+            worldObject.ExtraItemChecks();
 
             OnAddItem();
 

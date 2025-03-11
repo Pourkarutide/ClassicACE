@@ -322,7 +322,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public uint GetEffectiveMagicDefense()
         {
-            var current = GetCreatureSkill(Skill.MagicDefense).Current;
+            var skill = GetCreatureSkill(Skill.MagicDefense);
             var weaponDefenseMod = GetWeaponMagicDefenseModifier(this);
             var defenseImbues = (uint)GetDefenseImbues(ImbuedEffectType.MagicDefense);
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
@@ -330,7 +330,13 @@ namespace ACE.Server.WorldObjects
                 defenseImbues *= (uint)PropertyManager.GetLong("dekaru_imbue_magic_defense_per_imbue").Item;
             }
 
-            var effectiveMagicDefense = (uint)Math.Round((current * weaponDefenseMod) + defenseImbues);
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                defenseImbues *= 3;
+                defenseImbues = Math.Min(defenseImbues, skill.Base / 10);
+            }
+
+            var effectiveMagicDefense = (uint)Math.Round((skill.Current * weaponDefenseMod) + defenseImbues);
 
             //Console.WriteLine($"EffectiveMagicDefense: {effectiveMagicDefense}");
 
