@@ -1461,15 +1461,15 @@ namespace ACE.Server.Entity
                     {
                         0x0067, //PKL Arena
                         //0x007F,  //Binding Realm
-                        0x0145, //Bone Lair
-                        0x01AD, //Dungeon Galley Tower
-                        0x02E3, //Yaraq PK Arena
+                        //0x0145, //Bone Lair
+                        //0x01AD, //Dungeon Galley Tower
+                        //0x02E3, //Yaraq PK Arena
                         //0xECEC, //Pyramid -Admin Island
                         //0x00AF, //Mad Cow Arena
-                        0x596A, //Fowl Basement
+                        //0x596A, //Fowl Basement
                         //0xD50E, //Landing Strip
                         //0x7222  //The Heptagon
-                        0x039D, //One Ten
+                        //0x039D, //One Ten
                     };
                 }
 
