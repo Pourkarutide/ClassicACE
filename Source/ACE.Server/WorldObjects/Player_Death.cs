@@ -37,7 +37,7 @@ namespace ACE.Server.WorldObjects
         {
             get
             {
-                return ArenaLandblocks.Contains(Location.LandblockId.Landblock);
+                return ArenaLandblocks.Contains(Location.LandblockId.Landblock) || ArenaLocation.IsArenaLandblock(Location.Landblock);
             }
         }
 
