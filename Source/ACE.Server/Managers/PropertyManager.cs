@@ -768,8 +768,8 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyBool("allow_skill_specialization", true);
 
                     // Rates affecting XP, loot, and quests
-                    PropertyManager.ModifyDouble("quest_xp_modifier", 0.25);
-                    PropertyManager.ModifyDouble("xp_modifier", 0.25);
+                    PropertyManager.ModifyDouble("quest_xp_modifier", 1.0);
+                    PropertyManager.ModifyDouble("xp_modifier", 1.0);
                     PropertyManager.ModifyDouble("surface_bonus_xp", 0.0);
                     PropertyManager.ModifyDouble("cantrip_drop_rate", 0.25);
                     PropertyManager.ModifyBool("vendor_allow_special_mutations", false);
