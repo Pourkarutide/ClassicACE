@@ -642,7 +642,7 @@ namespace ACE.Server.WorldObjects
                 OfflineInstances = null;
             }
 
-            if (!PKRecallAllowed && !forceImmediate)
+            if ((!PKRecallAllowed || PKLogoutActive) && !forceImmediate)
             {
                 var timer = PropertyManager.GetLong("pk_timer").Item;
                 Session.Network.EnqueueSend(new GameMessageSystemChat($"You will logout in {timer} seconds...", ChatMessageType.Broadcast));
