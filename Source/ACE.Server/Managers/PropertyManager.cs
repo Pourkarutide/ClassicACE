@@ -517,6 +517,7 @@ namespace ACE.Server.Managers
         public const bool SEASON3_PATCH_3 = false;
 
         public const bool SEASON4_DEFAULTS = true;
+        public const bool SEASON4_PATCH_1_6 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -767,8 +768,8 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyBool("allow_skill_specialization", true);
 
                     // Rates affecting XP, loot, and quests
-                    PropertyManager.ModifyDouble("quest_xp_modifier", 1.0);
-                    PropertyManager.ModifyDouble("xp_modifier", 1.0);
+                    PropertyManager.ModifyDouble("quest_xp_modifier", 0.25);
+                    PropertyManager.ModifyDouble("xp_modifier", 0.25);
                     PropertyManager.ModifyDouble("surface_bonus_xp", 0.0);
                     PropertyManager.ModifyDouble("cantrip_drop_rate", 0.25);
                     PropertyManager.ModifyBool("vendor_allow_special_mutations", false);
@@ -910,6 +911,19 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyBool("ai_anti_perch", false);
                     PropertyManager.ModifyBool("ai_custom_pathfind", false);
                     PropertyManager.ModifyBool("die_command_enabled", false);
+
+                    if (SEASON4_PATCH_1_6)
+                    {
+                        PropertyManager.ModifyLong("arenas_min_level", 5); 
+                        PropertyManager.ModifyLong("arenas_reward_min_level", 1);
+                        PropertyManager.ModifyLong("arenas_reward_min_age", 1);
+                        PropertyManager.ModifyDouble("arena_corpse_rot_seconds", 900);
+                        PropertyManager.ModifyString("arenas_blacklist", "");
+                        PropertyManager.ModifyString("arena_globals_webhook", "");
+                        PropertyManager.ModifyBool("disable_arenas", false);
+                        PropertyManager.ModifyBool("arena_allow_same_ip_match", false);
+                        PropertyManager.ModifyBool("arena_allow_observers", true);
+                    }
                 }
             }
         }
