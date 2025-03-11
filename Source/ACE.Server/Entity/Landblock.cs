@@ -1714,6 +1714,13 @@ namespace ACE.Server.Entity
             return locationString;
         }
 
+        public List<Player> GetCurrentLandblockPlayers()
+        {
+            var playerList = new List<Player>();
+            playerList.AddRange(players);
+            return playerList;
+        }
+
         private bool? _isArenaLandblock = null;
         public bool IsArenaLandblock
         {
