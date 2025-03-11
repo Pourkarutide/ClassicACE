@@ -517,6 +517,7 @@ namespace ACE.Server.Managers
         public const bool SEASON3_PATCH_3 = false;
 
         public const bool SEASON4_DEFAULTS = true;
+        public const bool SEASON4_PATCH_1_6 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -910,6 +911,19 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyBool("ai_anti_perch", false);
                     PropertyManager.ModifyBool("ai_custom_pathfind", false);
                     PropertyManager.ModifyBool("die_command_enabled", false);
+
+                    if (SEASON4_PATCH_1_6)
+                    {
+                        PropertyManager.ModifyLong("arenas_min_level", 5); 
+                        PropertyManager.ModifyLong("arenas_reward_min_level", 1);
+                        PropertyManager.ModifyLong("arenas_reward_min_age", 1);
+                        PropertyManager.ModifyDouble("arena_corpse_rot_seconds", 900);
+                        PropertyManager.ModifyString("arenas_blacklist", "");
+                        PropertyManager.ModifyString("arena_globals_webhook", "");
+                        PropertyManager.ModifyBool("disable_arenas", false);
+                        PropertyManager.ModifyBool("arena_allow_same_ip_match", false);
+                        PropertyManager.ModifyBool("arena_allow_observers", true);
+                    }
                 }
             }
         }
@@ -1081,6 +1095,9 @@ namespace ACE.Server.Managers
                 ("unlimited_respec", new Property<bool>(false, "Allow players to respec their skills/attributes without a quest timer")),
                 ("recall_warden", new Property<bool>(false, "Toggles the Anti-Recall_Warden")),
                 ("pve_death_respite", new Property<bool>(false, "Toggles pk respite even for pve deaths (players become npk even from pve deaths)")),
+                ("disable_arenas", new Property<bool>(false, "set to true to disable arena events")),
+                ("arena_allow_same_ip_match", new Property<bool>(false, "enable this allow two characters connected from the same IP to be matched in an arena event")),
+                ("arena_allow_observers", new Property<bool>(true, "enable this to allow players to watch arena matches as invisible observers")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
@@ -1117,6 +1134,10 @@ namespace ACE.Server.Managers
                 ("bz_snitch_level_difference", new(10, "The maximum level difference, in either direction, where a player may receive a bz snitch (location reveal). Doesn't affect hardcore mode.")),
                 ("max_items_dropped_per_death", new(Player.MaxItemsDropped, "The maximum number of items dropped on death. This is not a simple cap on death items. If changed from the default, the number of actual items dropped per death will be scaled lower or higher depending on the proportion of this versus the default.")),
                 ("unlimited_respec_max_level", new(20, "The maximum level you can be to qualify for unlimited respec skills/attributes without a quest timer.")),
+                ("arenas_min_level", new Property<long>(25, "the minimum level required to join an arena queue")),
+                ("arenas_reward_min_level", new Property<long>(25, "the minimum level required to get arena rewards")),
+                ("arenas_reward_min_age", new Property<long>(864000, "the minimum in-game age in seconds required to get arena rewards")),
+
 
                 // Do not edit below this line
                 ("null_long", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
@@ -1472,7 +1493,7 @@ namespace ACE.Server.Managers
                 ("spelltransfer_over_tier_success_chance", new(1.0, "The chance to successfully transfer a spell that is higher than the tier of the target item without destroying the target")),
                 ("extra_vitae_penalty_pvp", new(0.0, "The extra vitae penalty for a PvP death. A value of 0.05 means an extra 5% vitae on top of the usual 5%, for 10% total")),
                 ("pve_death_respite_timer", new Property<double>(60, "Respite timer for pve deaths (players become npk even from pve deaths)")),
-
+                ("arena_corpse_rot_seconds", new Property<double>(900, "the number of seconds a corpse that is generated in an arena landblock takes to rot. Default 15 mins.")),
 
                 // Do not edit below this line
                 ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
@@ -1496,6 +1517,8 @@ namespace ACE.Server.Managers
                 ("proxycheck_api_key", new Property<string>("", "API key for proxycheck.io service for VPN detection")),
                 ("vpn_account_whitelist", new Property<string>("", "A comma separated list of account names for which VPN detection is bypassed")),
                 ("discord_login_token", new Property<string>("", "Login Token used for Discord chat integration")),
+                ("arenas_blacklist", new Property<string>("", "A comma separated list of CharacterID values that cannot participate in Arenas")),
+                ("arena_globals_webhook", new Property<string>("", "Webhook to be send Arena global messages.")),
 
                 // Do not edit below this line
                 ("null_string", new("", "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

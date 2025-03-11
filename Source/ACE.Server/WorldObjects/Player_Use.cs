@@ -1,5 +1,5 @@
 using System;
-
+using System.Linq;
 using ACE.Entity;
 using ACE.Entity.Enum;
 using ACE.Server.Entity;
@@ -184,12 +184,51 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            if (IsArenaObserver)
+            {
+                SendUseDoneEvent(WeenieError.AbuseReportedSelf);
+                return;
+            }
+
             StopExistingMoveToChains();
 
             var item = FindObject(itemGuid, SearchLocations.MyInventory | SearchLocations.MyEquippedItems | SearchLocations.Landblock);
 
             if (item != null)
             {
+                //Arena gems
+                if (item.WeenieClassId == 480701 || item.WeenieClassId == 480702)
+                {
+                    var arenaPlayer = ArenaManager.GetArenaPlayerByCharacterId(this.Character.Id);
+                    if (arenaPlayer == null)
+                    {
+                        Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, $"You must be a player in an active arena match to use the {item.Name}."));
+                        SendUseDoneEvent(WeenieError.CorruptQuality);
+                        return;
+                    }
+                    else
+                    {
+                        var arenaEvent = ArenaManager.GetActiveEvents().FirstOrDefault(x => x.Id == arenaPlayer.EventId);
+                        if (arenaEvent == null || (arenaEvent.Status != 4 && arenaEvent.Status != 3))
+                        {
+                            Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, $"You must be a player in an active arena match to use the {item.Name}."));
+                            SendUseDoneEvent(WeenieError.CorruptQuality);
+                            return;
+                        }
+                        else if (!IsBusy)
+                        {
+                            if (item.WeenieClassId == 480701)
+                            {
+                                this.HasArenaRareDmgBuff = true;
+                            }
+                            else
+                            {
+                                this.HasArenaRareDmgReductionBuff = true;
+                            }
+                        }
+                    }
+                }
+
                 if (item.TargetType.HasValue && item.TargetType.Value != ItemType.None)
                 {
                     // We have a target requirement, so redirect this to the appropriate function.

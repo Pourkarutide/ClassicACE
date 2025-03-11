@@ -350,7 +350,7 @@ namespace ACE.Server.WorldObjects
 
             // update vitae
             // players who died in a PKLite fight do not accrue vitae
-            if (!IsPKLiteDeath(topDamager) && !IsHardcore && !IsOnArenaLandblock)
+            if (!IsPKLiteDeath(topDamager) && !IsHardcore && !IsOnArenaLandblock && !ArenaLocation.IsArenaLandblock(Location.Landblock))
                 InflictVitaePenalty(isPkDeath: isPkDeath);
             var vitaeDelta = Math.Abs((int)Math.Round(100 * (Vitae - prevVitae)));
 
@@ -365,6 +365,59 @@ namespace ACE.Server.WorldObjects
                 var msgPurgeBadEnchantments = new GameEventMagicPurgeBadEnchantments(Session);
                 EnchantmentManager.RemoveAllBadEnchantments();
                 Session.Network.EnqueueSend(msgPurgeBadEnchantments, new GameMessageSystemChat("Your augmentation prevents the tides of death from ripping away your current enchantments!", ChatMessageType.Broadcast));
+            }
+
+            //Handle arena deaths and logging PK kills
+            bool isArenaDeath = false;
+            if (topDamager != null)
+            {
+                var killerPlayer = PlayerManager.FindByGuid(topDamager.Guid);
+                if (killerPlayer != null && KillerId.HasValue)
+                {
+                    uint? victimMonarchId = null;
+                    uint? killerMonarchId = null;
+                    var killerAllegiance = AllegianceManager.GetAllegiance(killerPlayer);
+                    var victimAllegiance = AllegianceManager.GetAllegiance(this);
+
+                    if (killerAllegiance != null)
+                    {
+                        killerMonarchId = killerAllegiance.MonarchId;
+                    }
+
+                    if (victimAllegiance != null)
+                    {
+                        victimMonarchId = victimAllegiance.MonarchId;
+                    }
+
+                    //Handle arena kills
+                    try
+                    {
+                        if (ArenaLocation.IsArenaLandblock(Location.Landblock))
+                        {
+                            var victimArenaPlayer = ArenaManager.GetArenaPlayerByCharacterId(Character.Id);
+                            var killerArenaPlayer = ArenaManager.GetArenaPlayerByCharacterId(killerPlayer.Guid.Full);
+
+                            if (victimArenaPlayer != null)
+                            {
+                                ArenaManager.HandlePlayerDeath((uint)Character.Id, (uint)killerPlayer.Guid.Full);
+                                isArenaDeath = true;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"Error in Player_Death handling arena logic. Ex: {ex}");
+                    }
+
+                    try
+                    {
+                        DatabaseManager.Shard.BaseDatabase.CreateArenaPKKill((uint)Character.Id, (uint)killerPlayer.Guid.Full, victimMonarchId, killerMonarchId);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"Exception logging PK Kill to DB. Ex: {ex}");
+                    }
+                }
             }
 
             // wait for the death animation to finish
@@ -409,7 +462,7 @@ namespace ACE.Server.WorldObjects
             {
                 ThreadSafeTeleportOnDeath(topDamager); // enter portal space
 
-                var isArenaLandblock = IsOnArenaLandblock;
+                var isArenaLandblock = IsOnArenaLandblock || isArenaDeath;
                 var isPkDeath = IsPKDeath(topDamager);
 
                 if (IsPK && PropertyManager.GetBool("pve_death_respite").Item || (isPkDeath || IsPKLiteDeath(topDamager)) && !IsHardcore)
@@ -562,7 +615,7 @@ namespace ACE.Server.WorldObjects
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.ActionCancelled));
                 return;
             }
-            if (IsDead || Teleporting)
+            if (IsDead || Teleporting || IsArenaObserver)
             {
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
                 return;

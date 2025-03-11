@@ -856,6 +856,11 @@ namespace ACE.Server.WorldObjects
         {
             //log.Info($"{Name}.HandleActionChangeCombatMode({newCombatMode})");
 
+            if (IsArenaObserver)
+            {
+                newCombatMode = CombatMode.NonCombat;
+            }
+
             // Make sure the player doesn't have an invalid weapon setup (e.g. sword + wand)
             if (!CheckWeaponCollision(null, null, newCombatMode))
             {
@@ -1354,6 +1359,30 @@ namespace ACE.Server.WorldObjects
 
                     if (spell == null || spell.IsHarmful || targetPlayer.PlayerKillerStatus != PlayerKillerStatus.NPK)
                         return new List<WeenieErrorWithString>() { WeenieErrorWithString.YouFailToAffect_NotSamePKType, WeenieErrorWithString._FailsToAffectYou_NotSamePKType };
+                }
+
+                //Disable most inepts in arenas
+                if (ArenaLocation.IsArenaLandblock(this.Location.Landblock) &&
+                    spell != null &&
+                    spell.IsHarmful)
+                {
+                    if ((spell.School == MagicSchool.CreatureEnchantment &&
+                    spell.Category != SpellCategory.MagicDefenseLowering &&
+                    spell.Category != SpellCategory.MeleeDefenseLowering &&
+                    spell.Category != SpellCategory.MissileDefenseLowering) ||
+                    spell.School == MagicSchool.ItemEnchantment)
+                    {
+                        return new List<WeenieErrorWithString>() { WeenieErrorWithString.YouFailToAffect_YouCannotAffectAnyone, WeenieErrorWithString._FailsToAffectYou_TheyCannotAffectAnyone };
+                    }
+
+                    if (spell.School == MagicSchool.VoidMagic)
+                    {
+                        var arenaEvent = ArenaManager.GetArenaEventByLandblock(this.Location.Landblock);
+                        if (arenaEvent == null || arenaEvent.Status != 4)
+                        {
+                            return new List<WeenieErrorWithString>() { WeenieErrorWithString.YouFailToAffect_YouCannotAffectAnyone, WeenieErrorWithString._FailsToAffectYou_TheyCannotAffectAnyone };
+                        }
+                    }
                 }
             }
             else

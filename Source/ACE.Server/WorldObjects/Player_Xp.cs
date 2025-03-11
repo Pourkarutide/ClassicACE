@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Linq;
 
 using ACE.Common.Extensions;
+using ACE.Database.Models.Auth;
 using ACE.DatLoader;
 using ACE.DatLoader.Entity;
 using ACE.Entity.Enum;
@@ -953,6 +954,64 @@ namespace ACE.Server.WorldObjects
                 return Math.Min((Math.Pow(level, 2) * 5 + 20) * Math.Pow(vitae, 5.0) + 0.5, 12500);
             }
         }
+
+        
+
+        public void GrantLevelProportionalXpForArena(double percent, long min, long max)
+        {
+            // temporarily give no xp
+            return;
+
+            var nextLevelXP = GetXPBetweenLevels(Level.Value, Level.Value + 1);
+
+            var scaledXP = (long)Math.Round(nextLevelXP * percent);
+
+            if (max > 0)
+                scaledXP = Math.Min(scaledXP, max);
+
+            if (min > 0)
+                scaledXP = Math.Max(scaledXP, min);
+
+            EarnXpForArena(scaledXP, XpType.Quest, ShareType.Allegiance);
+        }
+
+        private void EarnXpForArena(long amount, XpType xpType, ShareType shareType = ShareType.All)
+        {
+
+            //Console.WriteLine($"{Name}.EarnXP({amount}, {sharable}, {fixedAmount})");
+
+            // apply xp modifiers.  Quest XP is multiplicative with general XP modification
+            var questModifier = PropertyManager.GetDouble("quest_xp_modifier").Item;
+            var modifier = PropertyManager.GetDouble("xp_modifier").Item;
+            if (xpType == XpType.Quest)
+                modifier *= questModifier;
+
+            // should this be passed upstream to fellowship / allegiance?
+            var enchantment = GetXPAndLuminanceModifier(xpType);
+
+            var m_amount = (long)Math.Round(amount * enchantment * modifier);
+
+            if (m_amount < 0)
+            {
+                log.Warn($"{Name}.EarnXP({amount}, {shareType})");
+                log.Warn($"modifier: {modifier}, enchantment: {enchantment}, m_amount: {m_amount}");
+                return;
+            }
+
+            GrantXPForArena(m_amount, xpType, shareType);
+
+        }
+
+        public void GrantXPForArena(long amount, XpType xpType, ShareType shareType = ShareType.All)
+        {
+            // Make sure UpdateXpAndLevel is done on this players thread
+            EnqueueAction(new ActionEventDelegate(() => UpdateXpAndLevel(amount, xpType)));
+
+            // only certain types of XP are granted to items
+            if (xpType == XpType.Kill || xpType == XpType.Quest)
+                GrantItemXP(amount);
+        }
+
 
         /// <summary>
         /// Raise the available XP by a percentage of the current level XP or a maximum

@@ -816,6 +816,12 @@ namespace ACE.Server.WorldObjects
             HandlePreTeleportVisibility(newPosition);
 
             UpdatePlayerPosition(new Position(newPosition), true);
+
+            //If you're an arena observer, or pending becoming an observer, and you're teleporting to somewhere that's not an arena landblock, exit observer mode
+            if ((IsArenaObserver || IsPendingArenaObserver) && !ArenaLocation.IsArenaLandblock(newPosition.Landblock))
+            {
+                ArenaManager.ExitArenaObserverMode(this);
+            }
         }
 
         public void DoPreTeleportHide()

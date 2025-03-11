@@ -171,6 +171,14 @@ namespace ACE.Server.WorldObjects
 
             GagsTick();
 
+            if (IsArenaObserver)
+            {
+                if (!ArenaLocation.IsArenaLandblock(Location?.Landblock ?? 0))
+                {
+                    ArenaManager.ExitArenaObserverMode(this);
+                }
+            }
+
             PhysicsObj.ObjMaint.DestroyObjects();
 
             // Check if we're due for our periodic SavePlayer

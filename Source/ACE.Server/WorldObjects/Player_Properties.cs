@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System;
 using ACE.Common;
 using ACE.Entity;
 using ACE.Entity.Enum;
@@ -1622,5 +1624,122 @@ namespace ACE.Server.WorldObjects
             get => GetProperty(PropertyFloat.VitaeDecayTimestamp);
             set { if (!value.HasValue) RemoveProperty(PropertyFloat.VitaeDecayTimestamp); else SetProperty(PropertyFloat.VitaeDecayTimestamp, value.Value); }
         }
+
+        /* Arena Custom Properties */
+        public double? ArenaHourlyTimestamp
+        {
+            get => GetProperty(PropertyFloat.ArenaHourlyTimestamp) ?? 0;
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.ArenaHourlyTimestamp); else SetProperty(PropertyFloat.ArenaHourlyTimestamp, value.Value); }
+        }
+
+        public double? ArenaHourlyCount
+        {
+            get => GetProperty(PropertyFloat.ArenaHourlyCount) ?? 0;
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.ArenaHourlyCount); else SetProperty(PropertyFloat.ArenaHourlyCount, value.Value); }
+        }
+
+        public double? ArenaDailyRewardTimestamp
+        {
+            get => GetProperty(PropertyFloat.ArenaDailyRewardTimestamp) ?? 0;
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.ArenaDailyRewardTimestamp); else SetProperty(PropertyFloat.ArenaDailyRewardTimestamp, value.Value); }
+        }
+
+        public double? ArenaDailyRewardCount
+        {
+            get => GetProperty(PropertyFloat.ArenaDailyRewardCount) ?? 0;
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.ArenaDailyRewardCount); else SetProperty(PropertyFloat.ArenaDailyRewardCount, value.Value); }
+        }
+
+        public double? ArenaSameClanDailyRewardCount
+        {
+            get => GetProperty(PropertyFloat.ArenaSameClanDailyRewardCount) ?? 0;
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.ArenaSameClanDailyRewardCount); else SetProperty(PropertyFloat.ArenaSameClanDailyRewardCount, value.Value); }
+        }
+
+        public Dictionary<uint, uint> ArenaRewardsByOpponent
+        {
+            get
+            {
+                var retVal = new Dictionary<uint, uint>();
+                var records = GetProperty(PropertyString.ArenaRewardsByOpponent)?.Split(" ");
+                if (records != null)
+                {
+                    foreach (var rec in records)
+                    {
+                        var vals = rec.Split(",");
+                        if (vals != null && vals.Length == 2)
+                        {
+                            uint? charId = null;
+                            uint? rewardCount = null;
+
+                            try
+                            {
+                                charId = uint.Parse(vals[0]);
+                                rewardCount = uint.Parse(vals[1]);
+                            }
+                            catch (Exception) { }
+
+                            if (charId.HasValue && rewardCount.HasValue)
+                            {
+                                retVal.Add(charId.Value, rewardCount.Value);
+                            }
+                        }
+                    }
+                }
+
+                return retVal;
+            }
+            set
+            {
+                if (value == null || value.Count == 0)
+                {
+                    RemoveProperty(PropertyString.ArenaRewardsByOpponent);
+                }
+                else
+                {
+                    string serializedList = "";
+                    foreach (var item in value)
+                    {
+                        serializedList += $"{item.Key},{item.Value} ";
+                    }
+
+                    SetProperty(PropertyString.ArenaRewardsByOpponent, serializedList.Trim());
+                }
+            }
+        }
+
+        public bool IsArenaObserver
+        {
+            get => GetProperty(PropertyBool.IsArenaObserver) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.IsArenaObserver); else SetProperty(PropertyBool.IsArenaObserver, value); }
+        }
+
+        public bool IsPendingArenaObserver
+        {
+            get => GetProperty(PropertyBool.IsPendingArenaObserver) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.IsPendingArenaObserver); else SetProperty(PropertyBool.IsPendingArenaObserver, value); }
+        }
+
+
+        public bool HasArenaRareDmgBuff
+        {
+            get => GetProperty(PropertyBool.HasArenaRareDmgBuff) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.HasArenaRareDmgBuff); else SetProperty(PropertyBool.HasArenaRareDmgBuff, value); }
+        }
+
+        public bool HasArenaRareDmgReductionBuff
+        {
+            get => GetProperty(PropertyBool.HasArenaRareDmgReductionBuff) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.HasArenaRareDmgReductionBuff); else SetProperty(PropertyBool.HasArenaRareDmgReductionBuff, value); }
+        }
+
+        //Don't let players spam arena commands
+        public double? LastArenaCommandTimestamp
+        {
+            get => GetProperty(PropertyFloat.LastArenaCommandTimestamp) ?? 0;
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.LastArenaCommandTimestamp); else SetProperty(PropertyFloat.LastArenaCommandTimestamp, value.Value); }
+        }
+
+
     }
 }
