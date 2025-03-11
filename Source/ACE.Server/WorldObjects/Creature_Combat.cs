@@ -200,6 +200,10 @@ namespace ACE.Server.WorldObjects
             ExecuteMotionPersist(motion);
 
             var player = this as Player;
+
+            if (player != null && player.IsArenaObserver)
+                return 0.0f;
+
             if (player != null)
             {
                 player.HandleActionTradeSwitchToCombatMode(player.Session);

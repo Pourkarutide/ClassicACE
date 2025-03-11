@@ -615,7 +615,7 @@ namespace ACE.Server.WorldObjects
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.ActionCancelled));
                 return;
             }
-            if (IsDead || Teleporting)
+            if (IsDead || Teleporting || IsArenaObserver)
             {
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
                 return;
