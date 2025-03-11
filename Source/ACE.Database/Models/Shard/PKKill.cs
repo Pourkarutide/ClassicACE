@@ -14,9 +14,5 @@ namespace ACE.Database.Models.Shard
         public uint? VictimMonarchId { get; set; }
 
         public DateTime KillDateTime { get; set; }
-
-        public uint? VictimArenaPlayerID { get; set; }
-
-        public uint? KillerArenaPlayerID { get; set; }
     }
 }

@@ -1,28 +1,4 @@
-using ACE.Common;
-using ACE.Database;
-using ACE.Database.Models.Log;
-using ACE.Database.Models.TownControl;
-using ACE.Entity;
-using ACE.Entity.Enum;
-using ACE.Server.Factories;
-using ACE.Server.Managers;
-using ACE.Server.Network.GameMessages.Messages;
-using ACE.Server.Network.Handlers;
-using ACE.Server.WorldObjects;
-using ACE.Server.WorldObjects.Managers;
-using log4net;
-using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics.X86;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
-using System.Transactions;
 
 namespace ACE.Server.Entity
 {

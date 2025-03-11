@@ -314,7 +314,7 @@ namespace ACE.Server.Managers
                 else if(firstArenaPlayer.CharacterLevel < 80)
                 {
                     maxMatchLevel = firstArenaPlayer.CharacterLevel + 20;
-                    minMatchLevel = Math.Max(firstArenaPlayer.CharacterLevel - 20, 1);
+                    minMatchLevel = firstArenaPlayer.CharacterLevel <= 20 ? 1 : firstArenaPlayer.CharacterLevel - 20;
                 }
 
                 var otherPlayers = queuedPlayers.Values?

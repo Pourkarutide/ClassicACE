@@ -350,7 +350,7 @@ namespace ACE.Server.WorldObjects
 
             // update vitae
             // players who died in a PKLite fight do not accrue vitae
-            if (!IsPKLiteDeath(topDamager) && !IsHardcore && !IsOnArenaLandblock)
+            if (!IsPKLiteDeath(topDamager) && !IsHardcore && !IsOnArenaLandblock && !ArenaLocation.IsArenaLandblock(Location.Landblock))
                 InflictVitaePenalty(isPkDeath: isPkDeath);
             var vitaeDelta = Math.Abs((int)Math.Round(100 * (Vitae - prevVitae)));
 
@@ -390,8 +390,6 @@ namespace ACE.Server.WorldObjects
                     }
 
                     //Handle arena kills
-                    uint? victimArenaPlayerId = null;
-                    uint? killerArenaPlayerId = null;
                     try
                     {
                         if (ArenaLocation.IsArenaLandblock(Location.Landblock))
@@ -402,11 +400,6 @@ namespace ACE.Server.WorldObjects
                             if (victimArenaPlayer != null)
                             {
                                 ArenaManager.HandlePlayerDeath((uint)Character.Id, (uint)killerPlayer.Guid.Full);
-                                victimArenaPlayerId = victimArenaPlayer.Id;
-
-                                if (killerArenaPlayer != null)
-                                    killerArenaPlayerId = killerArenaPlayer.Id;
-
                                 isArenaDeath = true;
                             }
                         }

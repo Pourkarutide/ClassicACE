@@ -720,6 +720,7 @@ namespace ACE.Server.WorldObjects
 
                     var isPKdeath = player.IsPKDeath(killer);
                     var isPKLdeath = player.IsPKLiteDeath(killer);
+                    var isArenaDeath = ArenaLocation.IsArenaLandblock(corpse.Location.Landblock);
 
                     if (isPKdeath || (GameplayMode == GameplayModes.HardcorePK && isPKLdeath))
 	                {
@@ -742,7 +743,8 @@ namespace ACE.Server.WorldObjects
 	                            victimMonarchId = victimAllegiance.MonarchId;
 	                        }
 	
-	                        DatabaseManager.Shard.CreatePKKill((uint)corpse.VictimId, (uint)killer.Guid.Full, victimMonarchId, killerMonarchId);
+                            if (!isArenaDeath)
+                                DatabaseManager.Shard.CreatePKKill((uint)corpse.VictimId, (uint)killer.Guid.Full, victimMonarchId, killerMonarchId);
 	                    }
 	                }
 

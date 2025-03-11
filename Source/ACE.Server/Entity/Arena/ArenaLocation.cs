@@ -1345,15 +1345,16 @@ namespace ACE.Server.Entity
             var locList = new Dictionary<uint, ArenaLocation>();
 
             //PKL Arena
-            var pklArena = new ArenaLocation();
-            pklArena.LandblockId = 0x0067;
-            pklArena.SupportedEventTypes = new List<string>();
-            pklArena.SupportedEventTypes.Add("1v1");
-            pklArena.SupportedEventTypes.Add("2v2");
-            pklArena.SupportedEventTypes.Add("ffa");
-            pklArena.SupportedEventTypes.Add("group");
-            pklArena.ArenaName = "PKL Arena";
-            locList.Add(pklArena.LandblockId, pklArena);
+            //var pklArena = new ArenaLocation();
+            //pklArena.LandblockId = 0x0067;
+            //pklArena.SupportedEventTypes = new List<string>();
+            //pklArena.SupportedEventTypes.Add("1v1");
+            //pklArena.SupportedEventTypes.Add("2v2");
+            //pklArena.SupportedEventTypes.Add("ffa");
+            //pklArena.SupportedEventTypes.Add("group");
+            //pklArena.ArenaName = "PKL Arena";
+            //locList.Add(pklArena.LandblockId, pklArena);
+
 
             ////Binding Realm
             //var bindRealm = new ArenaLocation();
@@ -1364,32 +1365,33 @@ namespace ACE.Server.Entity
             //bindRealm.ArenaName = "Binding Realm";
             //locList.Add(bindRealm.LandblockId, bindRealm);
 
+
             //0x0145, //Bone Lair            
-            var boneLair = new ArenaLocation();
-            boneLair.LandblockId = 0x0145;
-            boneLair.SupportedEventTypes = new List<string>();
-            boneLair.SupportedEventTypes.Add("ffa");
-            boneLair.SupportedEventTypes.Add("group");
-            boneLair.ArenaName = "Bone Lair";
-            locList.Add(boneLair.LandblockId, boneLair);
+            //var boneLair = new ArenaLocation();
+            //boneLair.LandblockId = 0x0145;
+            //boneLair.SupportedEventTypes = new List<string>();
+            //boneLair.SupportedEventTypes.Add("ffa");
+            //boneLair.SupportedEventTypes.Add("group");
+            //boneLair.ArenaName = "Bone Lair";
+            //locList.Add(boneLair.LandblockId, boneLair);
 
             //0x01AD, //Dungeon Galley Tower            
-            var galleyTower = new ArenaLocation();
-            galleyTower.LandblockId = 0x01AD;
-            galleyTower.SupportedEventTypes = new List<string>();
-            galleyTower.SupportedEventTypes.Add("ffa");
-            galleyTower.SupportedEventTypes.Add("group");
-            galleyTower.ArenaName = "Galley Tower";
-            locList.Add(galleyTower.LandblockId, galleyTower);
+            //var galleyTower = new ArenaLocation();
+            //galleyTower.LandblockId = 0x01AD;
+            //galleyTower.SupportedEventTypes = new List<string>();
+            //galleyTower.SupportedEventTypes.Add("ffa");
+            //galleyTower.SupportedEventTypes.Add("group");
+            //galleyTower.ArenaName = "Galley Tower";
+            //locList.Add(galleyTower.LandblockId, galleyTower);
 
             //0x02E3, //Yaraq PK Arena
-            var ypk = new ArenaLocation();
-            ypk.LandblockId = 0x02E3;
-            ypk.SupportedEventTypes = new List<string>();
-            ypk.SupportedEventTypes.Add("ffa");
-            ypk.SupportedEventTypes.Add("group");
-            ypk.ArenaName = "Yaraq PK Arena";
-            locList.Add(ypk.LandblockId, ypk);
+            //var ypk = new ArenaLocation();
+            //ypk.LandblockId = 0x02E3;
+            //ypk.SupportedEventTypes = new List<string>();
+            //ypk.SupportedEventTypes.Add("ffa");
+            //ypk.SupportedEventTypes.Add("group");
+            //ypk.ArenaName = "Yaraq PK Arena";
+            //locList.Add(ypk.LandblockId, ypk);
 
             ////0xECEC //Pyramid -Admin Island
             //var pyramid = new ArenaLocation();
@@ -1410,33 +1412,34 @@ namespace ACE.Server.Entity
             //locList.Add(cow.LandblockId, cow);
 
             //Fowl Basement
-            var fowl = new ArenaLocation();
-            fowl.LandblockId = 0x596A;
-            fowl.SupportedEventTypes = new List<string>();
-            fowl.SupportedEventTypes.Add("1v1");
-            fowl.SupportedEventTypes.Add("2v2");
-            fowl.SupportedEventTypes.Add("group");
-            fowl.ArenaName = "Fowl Basement";
-            locList.Add(fowl.LandblockId, fowl);
+            //var fowl = new ArenaLocation();
+            //fowl.LandblockId = 0x596A;
+            //fowl.SupportedEventTypes = new List<string>();
+            //fowl.SupportedEventTypes.Add("1v1");
+            //fowl.SupportedEventTypes.Add("2v2");
+            //fowl.SupportedEventTypes.Add("group");
+            //fowl.ArenaName = "Fowl Basement";
+            //locList.Add(fowl.LandblockId, fowl);
 
             ////Landing Strip
-            //var ls = new ArenaLocation();
-            //ls.LandblockId = 0xD50E;
-            //ls.SupportedEventTypes = new List<string>();
-            //ls.SupportedEventTypes.Add("1v1");
-            //ls.SupportedEventTypes.Add("2v2");
-            //ls.ArenaName = "The Landing Strip";
-            //locList.Add(ls.LandblockId, ls);
+            var ls = new ArenaLocation();
+            ls.LandblockId = 0xD50E;
+            ls.SupportedEventTypes = new List<string>();
+            ls.SupportedEventTypes.Add("1v1");
+            ls.SupportedEventTypes.Add("2v2");
+            ls.ArenaName = "The Landing Strip";
+            locList.Add(ls.LandblockId, ls);
 
-            ////The Heptagon
-            //var heptagon = new ArenaLocation();
-            //heptagon.LandblockId = 0x7222;
-            //heptagon.SupportedEventTypes = new List<string>();
-            //heptagon.SupportedEventTypes.Add("1v1");
-            //heptagon.SupportedEventTypes.Add("2v2");
-            //heptagon.ArenaName = "The Heptagon";
-            //locList.Add(heptagon.LandblockId, heptagon);
+            //The Heptagon
+            var heptagon = new ArenaLocation();
+            heptagon.LandblockId = 0x7222;
+            heptagon.SupportedEventTypes = new List<string>();
+            heptagon.SupportedEventTypes.Add("1v1");
+            heptagon.SupportedEventTypes.Add("2v2");
+            heptagon.ArenaName = "The Heptagon";
+            locList.Add(heptagon.LandblockId, heptagon);
 
+            /*
             //oneTen
             var oneTen = new ArenaLocation();
             oneTen.LandblockId = 0x039D;
@@ -1446,6 +1449,7 @@ namespace ACE.Server.Entity
             oneTen.SupportedEventTypes.Add("ffa");
             oneTen.ArenaName = "One Ten";
             locList.Add(oneTen.LandblockId, oneTen);
+            */
 
             return locList;
         }
@@ -1459,7 +1463,7 @@ namespace ACE.Server.Entity
                 {
                     _arenaLandblocks = new List<uint>()
                     {
-                        0x0067, //PKL Arena
+                        //0x0067, //PKL Arena
                         //0x007F,  //Binding Realm
                         //0x0145, //Bone Lair
                         //0x01AD, //Dungeon Galley Tower
@@ -1467,8 +1471,8 @@ namespace ACE.Server.Entity
                         //0xECEC, //Pyramid -Admin Island
                         //0x00AF, //Mad Cow Arena
                         //0x596A, //Fowl Basement
-                        //0xD50E, //Landing Strip
-                        //0x7222  //The Heptagon
+                        0xD50E, //Landing Strip
+                        0x7222  //The Heptagon
                         //0x039D, //One Ten
                     };
                 }
@@ -1630,19 +1634,19 @@ namespace ACE.Server.Entity
                             //0x01450114[5.084766 -76.363258 0.005000] 0.918772 0.000000 0.000000 -0.394789
                         }); //Bone Lair
 
-                    //_arenaLocationStartingPositions.Add(
-                    //0x00AF,
-                    //new List<Position>()
-                    //{
-                    //        new Position(0x00AF015D, 201.930344f, -47.542015f, 0.110000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f),
-                    //        //0x00AF015D [201.930344 -47.542015 0.110000] 1.000000 0.000000 0.000000 0.000000
-                    //        new Position(0x00AF015B, 201.882141f, -32.338894f, 0.110000f, 0.000000f, 0.000000f, 0.999997f, -0.002561f),
-                    //        //0x00AF015B [201.882141 -32.338894 0.110000] -0.002561 0.000000 0.000000 0.999997
-                    //        new Position(0x00AF015D, 198.203186f, -47.391590f, 0.110000f, 0.000000f, 0.000000f, 0.010101f, 0.999949f),
-                    //        //0x00AF015D [198.203186 -47.391590 0.110000] 0.999949 0.000000 0.000000 0.010101
-                    //        new Position(0x00AF015B, 198.134445f, -32.373367f, 0.110000f, 0.000000f, 0.000000f, -0.999939f, -0.011021f),
-                    //        //0x00AF015B [198.134445 -32.373367 0.110000] -0.011021 0.000000 0.000000 -0.999939   
-                    //}); //Mad Cow Arena
+                    _arenaLocationStartingPositions.Add(
+                    0x00AF,
+                    new List<Position>()
+                    {
+                            new Position(0x00AF015D, 201.930344f, -47.542015f, 0.110000f, 0.000000f, 0.000000f, 0.000000f, 1.000000f),
+                            //0x00AF015D [201.930344 -47.542015 0.110000] 1.000000 0.000000 0.000000 0.000000
+                            new Position(0x00AF015B, 201.882141f, -32.338894f, 0.110000f, 0.000000f, 0.000000f, 0.999997f, -0.002561f),
+                            //0x00AF015B [201.882141 -32.338894 0.110000] -0.002561 0.000000 0.000000 0.999997
+                            new Position(0x00AF015D, 198.203186f, -47.391590f, 0.110000f, 0.000000f, 0.000000f, 0.010101f, 0.999949f),
+                            //0x00AF015D [198.203186 -47.391590 0.110000] 0.999949 0.000000 0.000000 0.010101
+                            new Position(0x00AF015B, 198.134445f, -32.373367f, 0.110000f, 0.000000f, 0.000000f, -0.999939f, -0.011021f),
+                            //0x00AF015B [198.134445 -32.373367 0.110000] -0.011021 0.000000 0.000000 -0.999939   
+                    }); //Mad Cow Arena
 
                     _arenaLocationStartingPositions.Add(
                     0x596A,
@@ -1658,33 +1662,33 @@ namespace ACE.Server.Entity
                             //0x596A0102 [5.146578 -21.661127 0.005000] 0.718819 0.000000 0.000000 -0.695197
                     }); //Fowl Basement
 
-                    //_arenaLocationStartingPositions.Add(
-                    //0xD50E,
-                    //new List<Position>()
-                    //{
-                    //        new Position(0xD50E0012, 48.137695f, 40.723217f, -0.095000f, 0.000000f, 0.000000f, 0.011873f, -0.999929f),
-                    //        //0xD50E0012 [48.137695 40.723217 -0.095000] -0.999929 0.000000 0.000000 0.011873
-                    //        new Position(0xD50E000E, 47.949497f, 130.815628f, -0.095000f, 0.000000f, 0.000000f, -0.999986f, 0.005301f),
-                    //        //0xD50E000E [47.949497 130.815628 -0.095000] 0.005301 0.000000 0.000000 -0.999986
-                    //        new Position(0xD50E000D, 36.021290f, 96.158844f, -0.095000f, 0.000000f, 0.000000f, -0.707318f, 0.706895f),
-                    //        //0xD50E000D [36.021290 96.158844 -0.095000] 0.706895 0.000000 0.000000 -0.707318
-                    //        new Position(0xD50E0015, 61.040390f, 96.038742f, -0.445000f, 0.000000f, 0.000000f, -0.707665f, -0.706548f),
-                    //        //0xD50E0015 [61.040390 96.038742 -0.445000] -0.706548 0.000000 0.000000 -0.707665
-                    //}); //Landing Strip
+                    _arenaLocationStartingPositions.Add(
+                    0xD50E,
+                    new List<Position>()
+                    {
+                            new Position(0xD50E0012, 48.137695f, 40.723217f, -0.095000f, 0.000000f, 0.000000f, 0.011873f, -0.999929f),
+                            //0xD50E0012 [48.137695 40.723217 -0.095000] -0.999929 0.000000 0.000000 0.011873
+                            new Position(0xD50E000E, 47.949497f, 130.815628f, -0.095000f, 0.000000f, 0.000000f, -0.999986f, 0.005301f),
+                            //0xD50E000E [47.949497 130.815628 -0.095000] 0.005301 0.000000 0.000000 -0.999986
+                            new Position(0xD50E000D, 36.021290f, 96.158844f, -0.095000f, 0.000000f, 0.000000f, -0.707318f, 0.706895f),
+                            //0xD50E000D [36.021290 96.158844 -0.095000] 0.706895 0.000000 0.000000 -0.707318
+                            new Position(0xD50E0015, 61.040390f, 96.038742f, -0.445000f, 0.000000f, 0.000000f, -0.707665f, -0.706548f),
+                            //0xD50E0015 [61.040390 96.038742 -0.445000] -0.706548 0.000000 0.000000 -0.707665
+                    }); //Landing Strip
 
-                    //_arenaLocationStartingPositions.Add(
-                    //0x7222,
-                    //new List<Position>()
-                    //{
-                    //        new Position(0x7222002D, 131.824692f, 96.041451f, -0.445000f, 0.000000f, 0.000000f, -0.709499f, 0.704706f),
-                    //        // 0x7222002D [131.824692 96.041451 -0.445000] 0.704706 0.000000 0.000000 -0.709499
-                    //        new Position(0x72220034, 156.016724f, 95.997833f, -0.445000f, 0.000000f, 0.000000f, -0.719308f, -0.694692f),
-                    //        // 0x72220034 [156.016724 95.997833 -0.445000] -0.694692 0.000000 0.000000 -0.719308
-                    //        new Position(0x7222002D, 143.945587f, 110.087395f, -0.445000f, 0.000000f, 0.000000f, -0.999998f, -0.002127f),
-                    //        // 0x7222002D [143.945587 110.087395 -0.445000] -0.002127 0.000000 0.000000 -0.999998
-                    //        new Position(0x7222002C, 143.886292f, 81.059364f, -0.445000f, 0.000000f, 0.000000f, 0.004404f, -0.999990f),
-                    //        // 0x7222002C [143.886292 81.059364 -0.445000] -0.999990 0.000000 0.000000 0.004404
-                    //}); //The Heptagon
+                    _arenaLocationStartingPositions.Add(
+                    0x7222,
+                    new List<Position>()
+                    {
+                            new Position(0x7222002D, 131.824692f, 96.041451f, -0.445000f, 0.000000f, 0.000000f, -0.709499f, 0.704706f),
+                            // 0x7222002D [131.824692 96.041451 -0.445000] 0.704706 0.000000 0.000000 -0.709499
+                            new Position(0x72220034, 156.016724f, 95.997833f, -0.445000f, 0.000000f, 0.000000f, -0.719308f, -0.694692f),
+                            // 0x72220034 [156.016724 95.997833 -0.445000] -0.694692 0.000000 0.000000 -0.719308
+                            new Position(0x7222002D, 143.945587f, 110.087395f, -0.445000f, 0.000000f, 0.000000f, -0.999998f, -0.002127f),
+                            // 0x7222002D [143.945587 110.087395 -0.445000] -0.002127 0.000000 0.000000 -0.999998
+                            new Position(0x7222002C, 143.886292f, 81.059364f, -0.445000f, 0.000000f, 0.000000f, 0.004404f, -0.999990f),
+                            // 0x7222002C [143.886292 81.059364 -0.445000] -0.999990 0.000000 0.000000 0.004404
+                    }); //The Heptagon
 
                     _arenaLocationStartingPositions.Add(
                         0x039D,
