@@ -1673,6 +1673,86 @@ namespace ACE.Server.WorldObjects
             return estimatedTier;
         }
 
+        static readonly HashSet<uint> TrophiesWithStackableRewards = new HashSet<uint>()
+        {
+            266,  // Auroch Horn
+            3669, // Drudge Charm
+            3670, // Copper Heart
+            3671, // Granite Heart
+            3672, // Iron Heart
+            3673, // Wood Heart
+            3675, // Ivory Gromnie Tooth
+            3676, // Jade Gromnie Tooth
+            3677, // Swamp Gromnie Tooth
+            3681, // Black Rat Tail
+            3682, // Brown Rat Tail
+            3683, // Grey Rat Tail
+            3684, // Red Rat Tail
+            3685, // White Rat Tail
+            3686, // Black Rock
+            3687, // Skeleton's Skull
+            3688, // Bronze Armoredillo Spine
+            3689, // Grey Spine
+            3690, // Sandy Armoredillo Spine
+            3691, // Shore Armoredillo Spine
+            3692, // Black Stone
+            3693, // Banderling Scalp
+            3694, // Swamp Stone
+            3695, // Gold Tumerok Insignia
+            3696, // Blue Gem
+            3697, // Red Jewel
+            3699, // Blue Phyntos Wasp Wing
+            3700, // Gold Phyntos Wasp Wing
+            3701, // Green Phyntos Wasp Wing
+            3702, // Mire Phyntos Wasp Wing
+            3703, // Red Phyntos Wasp Wing
+            4133, // Tan Rat Tail
+            4134, // Russet Rat Tail
+            5873, // Seal
+            7039, // Fire Auroch Horn
+            7040, // Ravener Guts
+            7041, // Undead Thighbone
+            7042, // Small Lugian Sinew
+            7043, // Large Lugian Sinew
+            7044, // Great Mattekar Horn
+            7046, // Sclavus Tongue
+            7338, // Diamond Heart
+            7603, // White Phyntos Wasp Wing
+            7604, // Yellow jewel
+            8019, // Caulnalain Key
+            8020, // Fenmalain Key
+            8223, // Xarabydun Swamp Rat Tail
+            8424, // Island Armoredillo Spine
+            8426, // Jungle Phyntos Wasp Wing
+            8701, // Lucky Gold Letter
+            8702, // Scarlet Red Letter
+            9310, // A Large Mnemosyne
+            9312, // A Small Mnemosyne
+            9314, // A Tiny Mnemosyne
+            9324, // Obsidian Heart
+            10705, // Niffis Pearl
+            10759, // Muddy Towel
+            10760, // Wet Towel
+            11339, // Carenzi Burrower Pelt
+            11342, // Carenzi Sentry Pelt
+            11351, // Mud Golem Heart
+            11352, // Sand Golem Heart
+            11354, // Water Golem Heart
+            11366, // Littoral Siraluun Claw
+            11369, // Tidal Siraluun Claw
+            12215, // Flaming Pumpkin Head
+            12689, // Diamond Powder
+            19476, // Grievver Tibia
+            19477, // Undead Femur Bone
+            22950, // Hoary Armoredillo Spine
+            22951, // Plate Armoredillo Spine
+            23201, // Glacial Golem Heart
+            25798, // Scold's Heart
+            28209, // Rust Gromnie Tooth
+            28205, // Azure Gromnie Tooth
+            28520, // Gold Golem Heart
+        };
+
         public void ExtraItemChecks()
         {
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
@@ -1693,6 +1773,29 @@ namespace ACE.Server.WorldObjects
                             containedItem.ExtraItemChecks();
                     }
                     return;
+                }
+
+                if (this is not Creature && !ItemWorkmanship.HasValue)
+                {
+                    //Add bonded to quest items
+                    if (!Bonded.HasValue || Bonded == BondedStatus.Normal)
+                    {
+                        if (ItemType == ItemType.Clothing ||
+                            ItemType == ItemType.Armor ||
+                            ItemType == ItemType.Caster ||
+                            ItemType == ItemType.Jewelry ||
+                            ItemType == ItemType.MissileWeapon ||
+                            ItemType == ItemType.MeleeWeapon)
+                        {
+                            Bonded = BondedStatus.Bonded;
+                        }
+                    }
+                }
+
+                if (PropertyManager.GetBool("stackable_trophy_rewards_use_tar").Item && TrophiesWithStackableRewards.Contains(WeenieClassId))
+                {
+                    Bonded = BondedStatus.Normal;
+                    Attuned = AttunedStatus.Attuned;
                 }
 
                 var currentVersion = 1;
