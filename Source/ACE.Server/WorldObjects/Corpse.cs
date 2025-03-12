@@ -251,10 +251,10 @@ namespace ACE.Server.WorldObjects
                 if (Time.GetUnixTime() >= DeathTimestamp + 300)
                     return true;
             }
-            else if (DefaultPropertyManager.SEASON3_PATCH_2)
+            else if (VictimId != null)
             {
-                // Free for all after 2 hours
-                if (Time.GetUnixTime() >= DeathTimestamp + 7200)
+                // Free for all after after configurable milliseconds
+                if (Time.GetUnixTime() >= DeathTimestamp + PropertyManager.GetLong("player_corpse_permissible_age").Item)
                     return true;
             }
 

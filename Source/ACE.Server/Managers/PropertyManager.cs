@@ -518,6 +518,7 @@ namespace ACE.Server.Managers
 
         public const bool SEASON4_DEFAULTS = true;
         public const bool SEASON4_PATCH_1_6 = true;
+        public const bool SEASON4_PATCH_1_9 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -924,6 +925,11 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyBool("arena_allow_same_ip_match", false);
                         PropertyManager.ModifyBool("arena_allow_observers", true);
                     }
+
+                    if (SEASON4_PATCH_1_9)
+                    {
+                        PropertyManager.ModifyLong("player_corpse_permissible_age", 7200);
+                    }
                 }
             }
         }
@@ -1137,6 +1143,7 @@ namespace ACE.Server.Managers
                 ("arenas_min_level", new Property<long>(25, "the minimum level required to join an arena queue")),
                 ("arenas_reward_min_level", new Property<long>(25, "the minimum level required to get arena rewards")),
                 ("arenas_reward_min_age", new Property<long>(864000, "the minimum in-game age in seconds required to get arena rewards")),
+                ("player_corpse_permissible_age", new Property<long>(7200, "the amount of time in milliseconds before a player's corpse becomes lootable by anyone. Default is 2 hours")),
 
 
                 // Do not edit below this line
@@ -1523,6 +1530,7 @@ namespace ACE.Server.Managers
                 // Do not edit below this line
                 ("null_string", new("", "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
                 );
+
     }
 }
 
