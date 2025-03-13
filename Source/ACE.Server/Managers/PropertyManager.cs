@@ -929,6 +929,20 @@ namespace ACE.Server.Managers
                     if (SEASON4_PATCH_1_9)
                     {
                         PropertyManager.ModifyLong("player_corpse_permissible_age", 7200);
+
+                        // Reason: Economy is too hard
+                        PropertyManager.ModifyDouble("coin_stack_multiplier", 1.0);
+                        PropertyManager.ModifyDouble("spell_extraction_scroll_base_chance", 0.5);
+                        PropertyManager.ModifyDouble("spell_extraction_scroll_chance_per_extra_spell", 0.1);
+                        // Reason: Dekaru's Arcane Lore changes make this unnecessary to penalize people for
+                        PropertyManager.ModifyDouble("spelltransfer_over_tier_success_chance", 1.0);
+                        // Reason: More hot dungeons is good for the morale of the people
+                        PropertyManager.ModifyDouble("hot_dungeon_interval", 3600.0);
+                        PropertyManager.ModifyDouble("hot_dungeon_chance", 0.33);
+                        // Reason: Item loss is bad enough
+                        PropertyManager.ModifyDouble("extra_vitae_penalty_pvp", 0.0);
+                        // Reason: Global xp is already reduced by 25%, no need to keep quest xp reduced on top of it
+                        PropertyManager.ModifyDouble("quest_xp_modifier", 1.0);
                     }
                 }
             }
