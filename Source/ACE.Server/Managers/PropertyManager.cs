@@ -943,6 +943,9 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyDouble("extra_vitae_penalty_pvp", 0.0);
                         // Reason: Global xp is already reduced by 25%, no need to keep quest xp reduced on top of it
                         PropertyManager.ModifyDouble("quest_xp_modifier", 1.0);
+
+
+                        PropertyManager.ModifyDouble("mob_awareness_range_indoors", 1.0);
                     }
                 }
             }
@@ -1189,6 +1192,7 @@ namespace ACE.Server.Managers
                 ("luminance_modifier", new Property<double>(1.0, "Scales the amount of luminance received by players")),
                 ("melee_max_angle", new Property<double>(0.0, "for melee players, the maximum angle before a TurnTo is required. retail appeared to have required a TurnTo even for the smallest of angle offsets.")),
                 ("mob_awareness_range", new Property<double>(1.0, "Scales the distance the monsters become alerted and aggro the players")),
+                ("mob_awareness_range_indoors", new Property<double>(1.0, "Scales the distance the monsters become alerted and aggro the players inside dungeons")),
                 ("pk_new_character_grace_period", new Property<double>(300, "the number of seconds, in addition to pk_respite_timer, that a player killer is set to non-player killer status after first exiting training academy")),
                 ("pk_respite_timer", new Property<double>(300, "the number of seconds that a player killer is set to non-player killer status after dying to another player killer")),
                 ("quest_lum_modifier", new Property<double>(1.0, "Scale multiplier for amount of quest luminance received by players.  Quest lum is also modified by 'luminance_modifier'.")),
