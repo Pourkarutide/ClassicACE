@@ -946,6 +946,13 @@ namespace ACE.Server.Managers
 
 
                         PropertyManager.ModifyDouble("mob_awareness_range_indoors", 1.0);
+
+                        // Reason: Death penalty is too harsh for newer players
+                        PropertyManager.ModifyLong("min_level_drop_wielded_on_death", 30); // previously was 20
+                        PropertyManager.ModifyLong("max_items_dropped_per_death", 10); // previously was 18
+
+                        // Reason: Voted by the majority of the playerbase
+                        PropertyManager.ModifyBool("require_spell_comps", true); // previously was false
                     }
                 }
             }
