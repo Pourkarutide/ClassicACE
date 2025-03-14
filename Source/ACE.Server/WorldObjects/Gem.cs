@@ -73,7 +73,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && SpellDID != null && player.InDungeon)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && SpellDID != null && player.InDungeon && !PropertyManager.GetBool("recall_in_dungeon").Item)
             {
                 switch((SpellId)SpellDID)
                 {
