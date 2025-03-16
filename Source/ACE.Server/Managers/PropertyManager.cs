@@ -960,6 +960,8 @@ namespace ACE.Server.Managers
                     {
                         // Reason: Aggro is too difficult outdoors
                         PropertyManager.ModifyDouble("mob_awareness_range", 1.0); // previously 1.25
+                        // Reason: Value was relevent for the previous season, but not for this one
+                        PropertyManager.ModifyDouble("salvage_amount_multiplier", 1.0); // previously 0.4
                     }
                 }
             }
