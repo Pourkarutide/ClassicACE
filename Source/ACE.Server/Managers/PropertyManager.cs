@@ -519,6 +519,7 @@ namespace ACE.Server.Managers
         public const bool SEASON4_DEFAULTS = true;
         public const bool SEASON4_PATCH_1_6 = true;
         public const bool SEASON4_PATCH_1_9 = true;
+        public const bool SEASON4_PATCH_1_10 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -953,6 +954,12 @@ namespace ACE.Server.Managers
 
                         // Reason: Voted by the majority of the playerbase
                         PropertyManager.ModifyBool("require_spell_comps", true); // previously was false
+                    }
+
+                    if (SEASON4_PATCH_1_10)
+                    {
+                        // Reason: Aggro is too difficult outdoors
+                        PropertyManager.ModifyDouble("mob_awareness_range", 1.0); // previously 1.25
                     }
                 }
             }
