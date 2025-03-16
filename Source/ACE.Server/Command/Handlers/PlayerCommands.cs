@@ -21,6 +21,7 @@ using ACE.Entity.Enum.Properties;
 using ACE.Database.Models.Shard;
 using ACE.DatLoader.FileTypes;
 using ACE.Entity.Models;
+using ACE.Server.Network.GameAction.Actions;
 
 namespace ACE.Server.Command.Handlers
 {
@@ -1485,6 +1486,7 @@ namespace ACE.Server.Command.Handlers
             public int ReachedLevelTimestamp;
             public bool Living;
             public bool isPK;
+            public string PlayerAge;
         }
 
         public static List<LeaderboardEntry> PrepareLeaderboard(GameplayModes gameplayMode, bool onlyLiving)
@@ -1508,6 +1510,7 @@ namespace ACE.Server.Command.Handlers
                 leaderboardEntry.HardcoreKills = entry.GetProperty(PropertyInt.PlayerKillsPkl) ?? 0;
                 leaderboardEntry.PKKills = entry.GetProperty(PropertyInt.PlayerKillsPk) ?? 0;
                 leaderboardEntry.isPK = entry.GetProperty(PropertyInt.PlayerKillerStatus) == (int)PlayerKillerStatus.PKLite || entry.GetProperty(PropertyInt.PlayerKillerStatus) == (int)PlayerKillerStatus.PK;
+                leaderboardEntry.PlayerAge = GameActionQueryAge.CalculateAgeMessage(entry.GetProperty(PropertyInt.Age) ?? 0);
 
                 leaderboard.Add(leaderboardEntry);
             }
@@ -1799,7 +1802,7 @@ namespace ACE.Server.Command.Handlers
                 {
                     var label = playerCounter < 10 ? $" {playerCounter}." : $"{playerCounter}.";
                     var pkStatus = entry.isPK ? "(PK)" : "";
-                    message.Append($"{label} {entry.Name} - Level {entry.Level}{pkStatus}\n");
+                    message.Append($"{label} {entry.Name} - Level {entry.Level}{pkStatus} - Age: {entry.PlayerAge}\n");
                     playerCounter++;
 
                     if (playerCounter > 10)
