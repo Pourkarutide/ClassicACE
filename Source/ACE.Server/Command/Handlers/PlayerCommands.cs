@@ -22,6 +22,7 @@ using ACE.Database.Models.Shard;
 using ACE.DatLoader.FileTypes;
 using ACE.Entity.Models;
 using ACE.Server.Network.GameAction.Actions;
+using ACE.Server.Physics.Common;
 
 namespace ACE.Server.Command.Handlers
 {
@@ -2462,5 +2463,44 @@ namespace ACE.Server.Command.Handlers
             return DatabaseManager.Shard.BaseDatabase.GetArenaStatsByCharacterId(characterId, characterName);
         }
 
+
+        [CommandHandler("FollowRoad", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, 0, "Follows the nearest road")]
+        public static void HandleFollowRoad(Session session, params string[] parameters)
+        {
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+            {
+                session.Network.EnqueueSend(new GameMessageSystemChat($"Unknown command: FollowRoad", ChatMessageType.Help));
+                return;
+            }
+
+            var player = session.Player;
+            if (player == null)
+                return;
+
+            var landblock = player.CurrentLandblock;
+
+            if (landblock == null)
+                return;
+
+            var forwardPosition = player.Location.InFrontOf(LandDefs.CellLength * 1.5);
+
+            var distanceToRoad = landblock.GetDistanceToNearestRoad(forwardPosition, true, out var roadPosition, player.Location);
+
+            if (roadPosition != null && distanceToRoad < LandDefs.CellLength * 2)
+            {
+                player.CreateMoveToChain(roadPosition, (success) =>
+                {
+                    if (success)
+                    {
+                        var actionChain = new ActionChain();
+                        actionChain.AddDelaySeconds(0.1);
+                        actionChain.AddAction(session.Player, () => HandleFollowRoad(session));
+                        actionChain.EnqueueChain();
+                    }
+                }, 2);
+            }
+            else
+                session.Network.EnqueueSend(new GameMessageSystemChat($"Can't find a road to follow.", ChatMessageType.Help));
+        }
     }
 }
