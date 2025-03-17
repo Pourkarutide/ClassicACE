@@ -695,7 +695,7 @@ namespace ACE.Server.Entity
                                     }
                                 }
 
-                                if(GetDistanceToNearestRoad(wo.Location, true, out _) < 60 * awarenessMod)
+                                if (GetDistanceToNearestRoad(wo.Location, true, out _) < 60 * awarenessMod)
                                 {
                                     wo.GeneratorDisabled = true;
 
@@ -1429,9 +1429,10 @@ namespace ACE.Server.Entity
             if (includeSelf)
                 list.Add(Id.Landblock);
 
-            foreach(var adjacent in Adjacents)
+            var adjacentLandblocks = LandblockManager.GetAdjacentIDs(this);
+            foreach (var adjacent in adjacentLandblocks)
             {
-                list.Add(adjacent.Id.Landblock);
+                list.Add(adjacent.Landblock);
             }
 
             return list;
@@ -1439,14 +1440,14 @@ namespace ACE.Server.Entity
 
         public List<LandblockInstance> GetLandblockInstances(bool includeAdjacents)
         {
-            var list = DatabaseManager.World.GetCachedInstancesByLandblock(Id.Landblock);
+            var list = DatabaseManager.World.GetCachedInstancesByLandblock(Id.Landblock).ToList();
 
             if (includeAdjacents)
             {
-                foreach (Landblock lb in Adjacents)
+                var adjacentLandblocks = LandblockManager.GetAdjacentIDs(this);
+                foreach (var adjacent in adjacentLandblocks)
                 {
-                    if (lb != null)
-                        list.AddRange(lb.GetLandblockInstances(false));
+                    list.AddRange(DatabaseManager.World.GetCachedInstancesByLandblock(adjacent.Landblock));
                 }
             }
 
