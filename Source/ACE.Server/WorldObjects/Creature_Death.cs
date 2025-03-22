@@ -837,7 +837,7 @@ namespace ACE.Server.WorldObjects
                 foreach (WorldObject wo in items)
                 {
                     if (corpse != null)
-                        corpse.TryAddToInventory(wo);
+                        corpse.TryAddToInventory(wo, allowStacking: Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM);
                     else
                         droppedItems.Add(wo);
 

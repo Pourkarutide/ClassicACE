@@ -1698,6 +1698,9 @@ namespace ACE.Server.Factories
             if (mult != 1.0)
                 rng = Math.Clamp((int)(rng * mult), 1, wo.MaxStackSize ?? 25000);
 
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                rng = (int)(rng * (1 + profile.LootQualityMod));
+
             wo.SetStackSize(rng);
         }
 
