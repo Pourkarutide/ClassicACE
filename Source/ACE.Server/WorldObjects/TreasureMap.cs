@@ -348,7 +348,7 @@ namespace ACE.Server.WorldObjects
                             player.EnqueueBroadcastMotion(new Motion(player.CurrentMotionState.Stance));
 
                             var level = Math.Min(player.Level ?? 1, Level ?? 1);
-                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, msg, PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5);
+                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, msg, PropertyManager.GetDouble("exploration_bonus_xp_treasure").Item + 0.5);
 
                             var visibleCreatures = player.PhysicsObj.ObjMaint.GetVisibleObjectsValuesOfTypeCreature();
                             foreach (var creature in visibleCreatures)
