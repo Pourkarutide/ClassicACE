@@ -522,6 +522,7 @@ namespace ACE.Server.Managers
         public const bool SEASON4_PATCH_1_10 = true;
         public const bool SEASON4_PATCH_1_16 = true;
         public const bool SEASON4_PATCH_1_17 = true;
+        public const bool SEASON4_PATCH_1_18 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -978,6 +979,15 @@ namespace ACE.Server.Managers
                     {
                         // Reason: New property for exploration contract location discovery
                         PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 0.5); 
+                    }
+
+                    if (SEASON4_PATCH_1_18)
+                    {
+                        // Reason: Boost xp for discovering a contract dungeon  
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 0.5125); // was 0.5
+
+                        // Reason: Boost xp for treasure maps, making them more rewarding 
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_treasure", 0.55);  // was 0.5
                     }
                 }
             }
