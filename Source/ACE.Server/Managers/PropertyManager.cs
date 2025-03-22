@@ -520,6 +520,7 @@ namespace ACE.Server.Managers
         public const bool SEASON4_PATCH_1_6 = true;
         public const bool SEASON4_PATCH_1_9 = true;
         public const bool SEASON4_PATCH_1_10 = true;
+        public const bool SEASON4_PATCH_1_16 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -962,6 +963,14 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyDouble("mob_awareness_range", 1.0); // previously 1.25
                         // Reason: Value was relevent for the previous season, but not for this one
                         PropertyManager.ModifyDouble("salvage_amount_multiplier", 1.0); // previously 0.4
+                    }
+
+                    if (SEASON4_PATCH_1_16)
+                    {
+                        // Reason: Reaching exploration contract location still uses this modifier and it needs to be increased
+                        PropertyManager.ModifyDouble("exploration_bonus_xp", 0.5); // previously 0
+                        // Reason: New property for exploration contract treasure
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_treasure", 0.5); 
                     }
                 }
             }
@@ -1517,6 +1526,7 @@ namespace ACE.Server.Managers
                 ("hot_dungeon_bonus_xp", new(1.0, "Extra xp earned for kills when inside hot dungeons. 1.0 means 100% more xp.")),
                 ("exploration_bonus_xp_markers", new(1.0, "Extra xp earned while completing exploration assignment's marker objectives. 1.0 means 100% more xp.")),
                 ("exploration_bonus_xp_kills", new(2.0, "Extra xp earned while completing exploration assignment's kill objectives. 1.0 means 100% more xp.")),
+                ("exploration_bonus_xp_treasure", new(0.5, "Extra xp earned while completing exploration treasure map hunting. 1.0 means 100% more xp.")),
 
                 ("elite_mob_spawn_rate", new(0.00, "Probability of a creature spawning as an elite mob. 1.0 means 100%")),
                 ("elite_mob_loot_quality", new(0.5, "Loot quality mod of elite mob (For reference, normal is 1.0, chests are 1.2, Awareness chests are 1.4")),
