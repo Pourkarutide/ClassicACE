@@ -70,7 +70,7 @@ namespace ACE.Server.Command.Handlers
                 player.Character.IsDeleted = true;
                 player.CharacterChangesDetected = true;                
                 player.Session.LogOffPlayer(true);
-                PlayerManager.HandlePlayerDelete(player.Character.Id);
+                PlayerManager.HandlePlayerDelete(player.Character.Id, player.Name);
 
                 if(session.Player != player)
                     CommandHandlerHelper.WriteOutputInfo(session, $"Successfully booted and deleted character {foundPlayer.Name} (0x{foundPlayer.Guid}).", ChatMessageType.Broadcast);
@@ -90,7 +90,7 @@ namespace ACE.Server.Command.Handlers
                             if (result)
                             {
                                 var deleteOfflineChain = new ActionChain();
-                                deleteOfflineChain.AddAction(WorldManager.ActionQueue, () => PlayerManager.HandlePlayerDelete(character.Id));
+                                deleteOfflineChain.AddAction(WorldManager.ActionQueue, () => PlayerManager.HandlePlayerDelete(character.Id, character.Name));
                                 deleteOfflineChain.AddDelayForOneTick();
                                 deleteOfflineChain.AddAction(WorldManager.ActionQueue, () =>
                                 {

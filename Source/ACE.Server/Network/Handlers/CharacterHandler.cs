@@ -194,6 +194,16 @@ namespace ACE.Server.Network.Handlers
                     PlayerManager.AddOfflinePlayer(player);
                     session.Characters.Add(player.Character);
 
+                    var msg = $"Character {player.Name} has been created, welcome!";
+                    log.Info(msg);
+
+                    if (PropertyManager.GetBool("broadcast_player_life").Item && PropertyManager.GetBool("broadcast_player_create").Item)
+                    {
+                        PlayerManager.BroadcastToAll(new GameMessageSystemChat("[Global] " + msg, ChatMessageType.Broadcast));
+                        _ = TurbineChatHandler.SendWebhookedChat("", msg, null, "Welcome");
+
+                    }
+
                     SendCharacterCreateResponse(session, CharacterGenerationVerificationResponse.Ok, player.Guid, characterCreateInfo.Name);
                 });
             });
@@ -355,7 +365,7 @@ namespace ACE.Server.Network.Handlers
                 {
                     session.Network.EnqueueSend(new GameMessageCharacterList(session.Characters, session));
 
-                    PlayerManager.HandlePlayerDelete(character.Id);
+                    PlayerManager.HandlePlayerDelete(character.Id, character.Name);
                 }
                 else
                     session.SendCharacterError(CharacterError.Delete);
@@ -383,7 +393,7 @@ namespace ACE.Server.Network.Handlers
             if (character == null)
                 return;
 
-            if (Time.GetUnixTime() > character.DeleteTime || character.IsDeleted)
+            if (PlayerManager.IsRecentlyRestored(character.Id) || Time.GetUnixTime() > character.DeleteTime || character.IsDeleted)
             {
                 session.SendCharacterError(CharacterError.EnterGameCharacterNotOwned);
                 return;
@@ -410,7 +420,20 @@ namespace ACE.Server.Network.Handlers
                             name = "+" + name;
 
                         if (result)
+                        {
                             session.Network.EnqueueSend(new GameMessageCharacterRestore(guid, name, 0u));
+
+                            var msg = $"Character {name} has had second thoughts about his life, welcome back!";
+                            log.Info(msg);
+
+                            if (PropertyManager.GetBool("broadcast_player_life").Item && PropertyManager.GetBool("broadcast_player_restore").Item)
+                            {
+                                PlayerManager.BroadcastToAll(new GameMessageSystemChat("[Global] " + msg, ChatMessageType.Broadcast));
+                                _ = TurbineChatHandler.SendWebhookedChat("", msg, null, "Welcome");
+                            }
+
+                            PlayerManager.OnRestore(character.Id);
+                        }
                         else
                             SendCharacterCreateResponse(session, CharacterGenerationVerificationResponse.Corrupt);
                     });
