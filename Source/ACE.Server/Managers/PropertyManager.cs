@@ -522,6 +522,7 @@ namespace ACE.Server.Managers
         public const bool SEASON4_PATCH_1_10 = true;
         public const bool SEASON4_PATCH_1_16 = true;
         public const bool SEASON4_PATCH_1_17 = true;
+        public const bool SEASON4_PATCH_1_18 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -979,6 +980,21 @@ namespace ACE.Server.Managers
                         // Reason: New property for exploration contract location discovery
                         PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 0.5); 
                     }
+
+                    if (SEASON4_PATCH_1_18)
+                    {
+                        // Reason: Boost xp for discovering a contract dungeon  
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 0.5125); // was 0.5
+
+                        // Reason: Boost xp for treasure maps, making them more rewarding 
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_treasure", 0.55);  // was 0.5
+
+                        // Reason: Broadcast player life actions such as creation/deletion/restoration
+                        PropertyManager.ModifyBool("broadcast_player_life", true); 
+                        PropertyManager.ModifyBool("broadcast_player_delete", true); 
+                        PropertyManager.ModifyBool("broadcast_player_create", false); 
+                        PropertyManager.ModifyBool("broadcast_player_restore", true); 
+                    }
                 }
             }
         }
@@ -1153,6 +1169,10 @@ namespace ACE.Server.Managers
                 ("disable_arenas", new Property<bool>(false, "set to true to disable arena events")),
                 ("arena_allow_same_ip_match", new Property<bool>(false, "enable this allow two characters connected from the same IP to be matched in an arena event")),
                 ("arena_allow_observers", new Property<bool>(true, "enable this to allow players to watch arena matches as invisible observers")),
+                ("broadcast_player_life", new Property<bool>(false, "enable this to braodcast player life messages such as player creation/deletion/restoration")),
+                ("broadcast_player_delete", new Property<bool>(false, "enable this to braodcast player deletion actions")),
+                ("broadcast_player_create", new Property<bool>(false, "enable this to braodcast player creation actions")),
+                ("broadcast_player_restore", new Property<bool>(false, "enable this to braodcast player restoration actions")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

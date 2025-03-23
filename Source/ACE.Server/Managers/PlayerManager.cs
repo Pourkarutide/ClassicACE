@@ -36,6 +36,7 @@ namespace ACE.Server.Managers
         private static readonly ReaderWriterLockSlim playersLock = new ReaderWriterLockSlim();
         private static readonly Dictionary<uint, Player> onlinePlayers = new Dictionary<uint, Player>();
         private static readonly Dictionary<uint, OfflinePlayer> offlinePlayers = new Dictionary<uint, OfflinePlayer>();
+        private static readonly HashSet<uint> recentlyRestored = new HashSet<uint>();
 
         // indexed by player name
         private static readonly Dictionary<string, IPlayer> playerNames = new Dictionary<string, IPlayer>(StringComparer.OrdinalIgnoreCase);
@@ -490,11 +491,21 @@ namespace ACE.Server.Managers
         /// <summary>
         /// Called when a character is initially deleted on the character select screen
         /// </summary>
-        public static void HandlePlayerDelete(uint characterGuid)
+        public static void HandlePlayerDelete(uint characterGuid, string name)
         {
             AllegianceManager.HandlePlayerDelete(characterGuid);
 
             HouseManager.HandlePlayerDelete(characterGuid);
+
+            var msg = $"Character {name} has been deleted in solidarity.";
+            log.Info(msg);
+
+            if (PropertyManager.GetBool("broadcast_player_life").Item && PropertyManager.GetBool("broadcast_player_delete").Item)
+            {
+                PlayerManager.BroadcastToAll(new GameMessageSystemChat("[Global] " + msg, ChatMessageType.Broadcast));
+                _ = TurbineChatHandler.SendWebhookedChat("", msg, null, "RIP");
+
+            }
         }
 
         /// <summary>
@@ -512,6 +523,8 @@ namespace ACE.Server.Managers
                 playerNames.Remove(offlinePlayer.Name);
 
                 playerAccounts[offlinePlayer.Account.AccountId].Remove(offlinePlayer.Guid.Full);
+
+
             }
             finally
             {
@@ -1015,6 +1028,16 @@ namespace ACE.Server.Managers
                 result += uniqueIPsConnectedByDate[yesterday].Count(kvp => kvp.Value > oneDayAgo);
 
             return result;
+        }
+
+        public static bool IsRecentlyRestored(uint guid)
+        {
+            return recentlyRestored.Contains(guid);
+        }
+
+        public static bool OnRestore(uint guid)
+        {
+            return recentlyRestored.Add(guid);
         }
     }
 }
