@@ -306,10 +306,11 @@ namespace ACE.Server.WorldObjects
 
             if (xpType == XpType.Kill && CurrentLandblock != null)
             {
+                var bonusMod = (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * PropertyManager.GetDouble("exploration_bonus_xp_kills").Item;
                 if (Exploration1LandblockId == CurrentLandblock.Id.Raw >> 16 && Exploration1KillProgressTracker > 0)
                 {
                     Exploration1KillProgressTracker--;
-                    long explorationXP = (long)((m_amount_before_extra * (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5)) * (float)PropertyManager.GetDouble("exploration_bonus_xp_kills").Item);
+                    long explorationXP = (long)(m_amount_before_extra * bonusMod);
                     xpMessage = $"{Exploration1KillProgressTracker:N0} kill{(Exploration1KillProgressTracker != 1 ? "s" : "")} remaining.";
                     GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
 
@@ -323,7 +324,7 @@ namespace ACE.Server.WorldObjects
                 else if (Exploration2LandblockId == CurrentLandblock.Id.Raw >> 16 && Exploration2KillProgressTracker > 0)
                 {
                     Exploration2KillProgressTracker--;
-                    long explorationXP = (long)((m_amount_before_extra * (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5)) * (float)PropertyManager.GetDouble("exploration_bonus_xp_kills").Item);
+                    long explorationXP = (long)(m_amount_before_extra * bonusMod);
                     xpMessage = $"{Exploration2KillProgressTracker:N0} kill{(Exploration2KillProgressTracker != 1 ? "s" : "")} remaining.";
                     GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
 
@@ -337,7 +338,7 @@ namespace ACE.Server.WorldObjects
                 else if (Exploration3LandblockId == CurrentLandblock.Id.Raw >> 16 && Exploration3KillProgressTracker > 0)
                 {
                     Exploration3KillProgressTracker--;
-                    long explorationXP = (long)((m_amount_before_extra * (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5)) * (float)PropertyManager.GetDouble("exploration_bonus_xp_kills").Item);
+                    long explorationXP = (long)(m_amount_before_extra * bonusMod);
                     xpMessage = $"{Exploration3KillProgressTracker:N0} kill{(Exploration3KillProgressTracker != 1 ? "s" : "")} remaining.";
                     GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
 

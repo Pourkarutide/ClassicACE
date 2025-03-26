@@ -332,6 +332,7 @@ namespace ACE.Server.WorldObjects
             if (landblock == null || Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                 return;
 
+            var bonusMod = ((PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * PropertyManager.GetDouble("exploration_bonus_xp_contract_location").Item) * 3;
             var landblockId = landblock.Id.Raw >> 16;
             if (!Exploration1LandblockReached && Exploration1LandblockId != 0 && Exploration1LandblockId == landblockId)
             {
@@ -340,7 +341,7 @@ namespace ACE.Server.WorldObjects
 
                 var explorationSite = DatabaseManager.World.GetExplorationSitesByLandblock((ushort)landblockId).FirstOrDefault();
                 var level = explorationSite != null ? Math.Min(explorationSite.Level, Level ?? 1) : Level;
-                EarnXP((int)(((-level ?? -1) - 1000) * (PropertyManager.GetDouble("exploration_bonus_xp_contract_location").Item + 0.5)), XpType.Exploration, null, null, 0, null, ShareType.Fellowship, msg, (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * 3);
+                EarnXP((-level ?? -1) - 1000, XpType.Exploration, null, null, 0, null, ShareType.Fellowship, msg, bonusMod);
                 PlayParticleEffect(PlayScript.AugmentationUseAttribute, Guid);
                 if (Exploration1KillProgressTracker == 0 && Exploration1MarkerProgressTracker == 0)
                     Session.Network.EnqueueSend(new GameMessageSystemChat("Your exploration assignment is now fulfilled!", ChatMessageType.Broadcast));
@@ -353,7 +354,7 @@ namespace ACE.Server.WorldObjects
 
                 var explorationSite = DatabaseManager.World.GetExplorationSitesByLandblock((ushort)landblockId).FirstOrDefault();
                 var level = explorationSite != null ? Math.Min(explorationSite.Level, Level ?? 1) : Level;
-                EarnXP((int)(((-level ?? -1) - 1000) * (PropertyManager.GetDouble("exploration_bonus_xp_contract_location").Item + 0.5)), XpType.Exploration, null, null, 0, null, ShareType.Fellowship, msg, (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * 3);
+                EarnXP((-level ?? -1) - 1000, XpType.Exploration, null, null, 0, null, ShareType.Fellowship, msg, bonusMod);
                 PlayParticleEffect(PlayScript.AugmentationUseAttribute, Guid);
                 if (Exploration2KillProgressTracker == 0 && Exploration2MarkerProgressTracker == 0)
                     Session.Network.EnqueueSend(new GameMessageSystemChat("Your exploration assignment is now fulfilled!", ChatMessageType.Broadcast));
@@ -366,7 +367,7 @@ namespace ACE.Server.WorldObjects
 
                 var explorationSite = DatabaseManager.World.GetExplorationSitesByLandblock((ushort)landblockId).FirstOrDefault();
                 var level = explorationSite != null ? Math.Min(explorationSite.Level, Level ?? 1) : Level;
-                EarnXP((int)(((-level ?? -1) - 1000) * (PropertyManager.GetDouble("exploration_bonus_xp_contract_location").Item + 0.5)), XpType.Exploration, null, null, 0, null, ShareType.Fellowship, msg, (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * 3);
+                EarnXP((-level ?? -1) - 1000, XpType.Exploration, null, null, 0, null, ShareType.Fellowship, msg, bonusMod);
                 PlayParticleEffect(PlayScript.AugmentationUseAttribute, Guid);
                 if (Exploration3KillProgressTracker == 0 && Exploration3MarkerProgressTracker == 0)
                     Session.Network.EnqueueSend(new GameMessageSystemChat("Your exploration assignment is now fulfilled!", ChatMessageType.Broadcast));

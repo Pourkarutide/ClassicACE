@@ -14,6 +14,7 @@ using System.Runtime.CompilerServices;
 using ACE.Server.Entity.Actions;
 using ACE.Server.Entity;
 using log4net.Core;
+using ACE.Server.Network.Handlers;
 
 namespace ACE.Server.Managers
 {
@@ -163,7 +164,9 @@ namespace ACE.Server.Managers
 
             if (!eventType.ToLower().Equals("group"))
             {
-                PlayerManager.BroadcastToAll(new GameMessageSystemChat($"A new player has queued for a{(eventType.ToLower().Equals("ffa") ? "n" : "")} {eventType} arena match. There {(queueCount > 1 ? "are" : "is")} currently {queueCount} player{(queueCount > 1 ? "s" : "")} queued for {eventType}", ChatMessageType.Broadcast));
+                var msg = $"A new player has queued for a{(eventType.ToLower().Equals("ffa") ? "n" : "")} {eventType} arena match. There {(queueCount > 1 ? "are" : "is")} currently {queueCount} player{(queueCount > 1 ? "s" : "")} queued for {eventType}";
+                PlayerManager.BroadcastToAll(new GameMessageSystemChat(msg, ChatMessageType.Broadcast));
+                _ = TurbineChatHandler.SendWebhookedChat("Arenas", msg, null, "Global");
             }
 
             return true;

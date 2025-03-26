@@ -523,6 +523,7 @@ namespace ACE.Server.Managers
         public const bool SEASON4_PATCH_1_16 = true;
         public const bool SEASON4_PATCH_1_17 = true;
         public const bool SEASON4_PATCH_1_18 = true;
+        public const bool SEASON4_PATCH_1_19 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -994,6 +995,17 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyBool("broadcast_player_delete", true); 
                         PropertyManager.ModifyBool("broadcast_player_create", false); 
                         PropertyManager.ModifyBool("broadcast_player_restore", true); 
+                    }
+
+                    if (SEASON4_PATCH_1_19)
+                    {
+                        // Reason: Give unlimited respecs to all players
+                        PropertyManager.ModifyLong("unlimited_respec_max_level", 126);  // was 20
+
+                        // Reason: Fixed bug for exploration bonus xp
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_treasure", 5.0);  // was 0.55
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_markers", 5.0);  // was 0.55
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 5.0);  // was 0.5125
                     }
                 }
             }
