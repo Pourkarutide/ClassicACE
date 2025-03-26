@@ -1001,7 +1001,11 @@ namespace ACE.Server.Managers
                     {
                         // Reason: Give unlimited respecs to all players
                         PropertyManager.ModifyLong("unlimited_respec_max_level", 126);  // was 20
+
+                        // Reason: Fixed bug for exploration bonus xp
                         PropertyManager.ModifyDouble("exploration_bonus_xp_treasure", 5.0);  // was 0.55
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_markers", 5.0);  // was 0.55
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 5.0);  // was 0.5125
                     }
                 }
             }
