@@ -328,6 +328,8 @@ namespace ACE.Server.WorldObjects
                     if (!Damage.HasValue)
                         Damage = 0;
 
+                    var bonusMod = (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * PropertyManager.GetDouble("exploration_bonus_xp_treasure").Item;
+
                     if (Damage < 7)
                     {
                         string msg;
@@ -348,7 +350,7 @@ namespace ACE.Server.WorldObjects
                             player.EnqueueBroadcastMotion(new Motion(player.CurrentMotionState.Stance));
 
                             var level = Math.Min(player.Level ?? 1, Level ?? 1);
-                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, msg, (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * (PropertyManager.GetDouble("exploration_bonus_xp_treasure").Item));
+                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, msg, bonusMod);
 
                             var visibleCreatures = player.PhysicsObj.ObjMaint.GetVisibleObjectsValuesOfTypeCreature();
                             foreach (var creature in visibleCreatures)
@@ -371,7 +373,7 @@ namespace ACE.Server.WorldObjects
                             player.EnqueueBroadcastMotion(new Motion(player.CurrentMotionState.Stance));
 
                             var level = Math.Min(player.Level ?? 1, Level ?? 1);
-                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, "You unearth a treasure chest!", ((PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * (PropertyManager.GetDouble("exploration_bonus_xp_treasure").Item)) * 3);
+                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, "You unearth a treasure chest!", bonusMod * 3);
 
                             var tier = RollTier(Tier ?? 1);
                             var treasureChest = WorldObjectFactory.CreateNewWorldObject(TreasureChests[tier - 1]);
