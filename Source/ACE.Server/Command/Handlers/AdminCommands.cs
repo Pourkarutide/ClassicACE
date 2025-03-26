@@ -5669,5 +5669,36 @@ public static class AdminCommands
         else
             CommandHandlerHelper.WriteOutputInfo(session, "Map creation failed.");
     }
+
+    /// <summary>
+    /// Teleport to a treasure map location from your inventory
+    /// </summary>
+    [CommandHandler("tpTreasureMap", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, 1, "Teleports to a treasure map's location from your inventory.", "Guid of treasure map(string or number)\n")]
+    public static void HandleTPTreasureMap(Session session, params string[] parameters)
+    {
+        if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+        {
+            session.Network.EnqueueSend(new GameMessageSystemChat($"This command is only available in the CustomDM ruleset.", ChatMessageType.Broadcast));
+            return;
+        }
+
+        if (!uint.TryParse(parameters[0], out var guid))
+        {
+            session.Network.EnqueueSend(new GameMessageSystemChat($"Invalid Guid parameter.", ChatMessageType.Help));
+            return;
+        }
+
+        var treasureMap = session.Player.Inventory.Values.OfType<TreasureMap>().Where(wo => wo.Guid.Full == guid).FirstOrDefault();
+
+        if (treasureMap == null)
+        {
+            session.Network.EnqueueSend(new GameMessageSystemChat($"No treasure map found with that guid on your person.", ChatMessageType.Broadcast));
+            return;
+        }
+
+        var position = new Position((float)(treasureMap.NSCoordinates ?? 0), (float)(treasureMap.EWCoordinates ?? 0f));
+
+        session.Player.Teleport(position);
+    }
 }
 
