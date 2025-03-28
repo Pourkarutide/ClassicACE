@@ -524,6 +524,7 @@ namespace ACE.Server.Managers
         public const bool SEASON4_PATCH_1_17 = true;
         public const bool SEASON4_PATCH_1_18 = true;
         public const bool SEASON4_PATCH_1_19 = true;
+        public const bool SEASON4_PATCH_1_20 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -1007,6 +1008,13 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyDouble("exploration_bonus_xp_markers", 5.0);  // was 0.55
                         PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 5.0);  // was 0.5125
                     }
+
+                    if (SEASON4_PATCH_1_20)
+                    {
+                        PropertyManager.ModifyLong("max_level", 60);  // was 40
+                        PropertyManager.ModifyLong("previous_max_level", 40);
+                        PropertyManager.ModifyDouble("catchup_xp_modifier", 2.0);
+                    }
                 }
             }
         }
@@ -1225,6 +1233,7 @@ namespace ACE.Server.Managers
                 ("arenas_reward_min_level", new Property<long>(25, "the minimum level required to get arena rewards")),
                 ("arenas_reward_min_age", new Property<long>(864000, "the minimum in-game age in seconds required to get arena rewards")),
                 ("player_corpse_permissible_age", new Property<long>(7200, "the amount of time in milliseconds before a player's corpse becomes lootable by anyone. Default is 2 hours")),
+                ("previous_max_level", new Property<long>(0, "Set the previously set max character level.")),
 
 
                 // Do not edit below this line
@@ -1585,6 +1594,7 @@ namespace ACE.Server.Managers
                 ("extra_vitae_penalty_pvp", new(0.0, "The extra vitae penalty for a PvP death. A value of 0.05 means an extra 5% vitae on top of the usual 5%, for 10% total")),
                 ("pve_death_respite_timer", new Property<double>(60, "Respite timer for pve deaths (players become npk even from pve deaths)")),
                 ("arena_corpse_rot_seconds", new Property<double>(900, "the number of seconds a corpse that is generated in an arena landblock takes to rot. Default 15 mins.")),
+                ("catchup_xp_modifier", new Property<double>(2.0, "Globally scales the amount of xp received by players who are below the previous_max_level threshold, note that this possibly multiplies the other xp_modifier options.")),
 
                 // Do not edit below this line
                 ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

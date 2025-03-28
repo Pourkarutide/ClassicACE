@@ -129,6 +129,10 @@ namespace ACE.Server.WorldObjects
             else if (GameplayMode == GameplayModes.HardcoreNPK)
                 modifier *= PropertyManager.GetDouble("hardcore_npk_xp_modifier").Item;
 
+            var previousMaxLevel = PropertyManager.GetLong("previous_max_level").Item;
+            if (Level < previousMaxLevel) 
+                modifier *= PropertyManager.GetDouble("catchup_xp_modifier").Item;
+
             if (xpType == XpType.Kill)
             {
                 if (xpSourceTier != null)
