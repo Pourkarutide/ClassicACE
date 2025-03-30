@@ -297,7 +297,8 @@ namespace ACE.Server.WorldObjects
                     wasPvP = topDamager.IsPlayer;
                 }
 
-                DatabaseManager.Shard.BaseDatabase.LogPlayerDeath(Account.AccountId, Guid.Full, Name, Level ?? 1, killerName, killerLevel, CurrentLandblock.Id.Raw >> 16, (int)GameplayMode, wasPvP, PlayerKillsPkl ?? 0, TotalExperience ?? 0, Age ?? 0, DateTime.Now, MonarchId);
+                var lb = CurrentLandblock != null ? CurrentLandblock.Id.Raw >> 16 : 0;
+                DatabaseManager.Shard.BaseDatabase.LogPlayerDeath(Account.AccountId, Guid.Full, Name, Level ?? 1, killerName, killerLevel, lb, (int)GameplayMode, wasPvP, PlayerKillsPkl ?? 0, TotalExperience ?? 0, Age ?? 0, DateTime.Now, MonarchId);
             }
 
             UpdateVital(Health, 0);
