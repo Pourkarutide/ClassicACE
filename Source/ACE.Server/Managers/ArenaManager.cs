@@ -482,13 +482,9 @@ namespace ACE.Server.Managers
                                 finalPlayerList.Add(firstArenaPlayer);
 
                                 //if we have 10 total players, start the match, or if we have at least 5 total players after having waited for 3 minutes, start the match
-                                //Don't allow more than 2 players from the same clan                                
                                 foreach (var player in otherPlayers)
                                 {
-                                    if (finalPlayerList.Count(x => x.MonarchId == player.MonarchId) <= 1)
-                                    {
-                                        finalPlayerList.Add(player);
-                                    }
+                                    finalPlayerList.Add(player);
 
                                     if (finalPlayerList.Count() >= 10)
                                         break;
@@ -497,7 +493,7 @@ namespace ACE.Server.Managers
                                 if (finalPlayerList.Count() >= 10 ||
                                     (finalPlayerList.Count() >= 7 && firstArenaPlayer.CreateDateTime < DateTime.Now.AddMinutes(-1)) ||
                                     (finalPlayerList.Count() >= 6 && firstArenaPlayer.CreateDateTime < DateTime.Now.AddMinutes(-2)) ||
-                                    (finalPlayerList.Count() >= 5 && firstArenaPlayer.CreateDateTime < DateTime.Now.AddMinutes(-3)))
+                                    (finalPlayerList.Count() >= 4 && firstArenaPlayer.CreateDateTime < DateTime.Now.AddMinutes(-3)))
                                 {
                                     weHaveEnoughPlayers = true;
                                     foreach (var player in finalPlayerList)
