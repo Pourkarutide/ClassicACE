@@ -921,7 +921,7 @@ namespace ACE.Server.Managers
 
                     if (SEASON4_PATCH_1_6)
                     {
-                        PropertyManager.ModifyLong("arenas_min_level", 5); 
+                        PropertyManager.ModifyLong("arenas_min_level", 5);
                         PropertyManager.ModifyLong("arenas_reward_min_level", 1);
                         PropertyManager.ModifyLong("arenas_reward_min_age", 1);
                         PropertyManager.ModifyDouble("arena_corpse_rot_seconds", 900);
@@ -974,13 +974,13 @@ namespace ACE.Server.Managers
                         // Reason: Reaching exploration contract location still uses this modifier and it needs to be increased
                         PropertyManager.ModifyDouble("exploration_bonus_xp", 0.5); // previously 0
                         // Reason: New property for exploration contract treasure
-                        PropertyManager.ModifyDouble("exploration_bonus_xp_treasure", 0.5); 
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_treasure", 0.5);
                     }
 
                     if (SEASON4_PATCH_1_17)
                     {
                         // Reason: New property for exploration contract location discovery
-                        PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 0.5); 
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 0.5);
                     }
 
                     if (SEASON4_PATCH_1_18)
@@ -992,10 +992,10 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyDouble("exploration_bonus_xp_treasure", 0.55);  // was 0.5
 
                         // Reason: Broadcast player life actions such as creation/deletion/restoration
-                        PropertyManager.ModifyBool("broadcast_player_life", true); 
-                        PropertyManager.ModifyBool("broadcast_player_delete", true); 
-                        PropertyManager.ModifyBool("broadcast_player_create", false); 
-                        PropertyManager.ModifyBool("broadcast_player_restore", true); 
+                        PropertyManager.ModifyBool("broadcast_player_life", true);
+                        PropertyManager.ModifyBool("broadcast_player_delete", true);
+                        PropertyManager.ModifyBool("broadcast_player_create", false);
+                        PropertyManager.ModifyBool("broadcast_player_restore", true);
                     }
 
                     if (SEASON4_PATCH_1_19)
@@ -1193,6 +1193,7 @@ namespace ACE.Server.Managers
                 ("broadcast_player_delete", new Property<bool>(false, "enable this to braodcast player deletion actions")),
                 ("broadcast_player_create", new Property<bool>(false, "enable this to braodcast player creation actions")),
                 ("broadcast_player_restore", new Property<bool>(false, "enable this to braodcast player restoration actions")),
+                ("bz_whispers_enabled", new Property<bool>(true, "CustomDM: Enables/Disables whispers from Bael'Zharon revealing the location of other PK players")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
@@ -1234,6 +1235,9 @@ namespace ACE.Server.Managers
                 ("arenas_reward_min_age", new Property<long>(864000, "the minimum in-game age in seconds required to get arena rewards")),
                 ("player_corpse_permissible_age", new Property<long>(7200, "the amount of time in milliseconds before a player's corpse becomes lootable by anyone. Default is 2 hours")),
                 ("previous_max_level", new Property<long>(0, "Set the previously set max character level.")),
+                ("bz_whispers_min_pop", new Property<long>(5, "CustomDM: Minimum required online PK players for bz whispers to be sent")),
+                ("bz_whispers_login_delay", new Property<long>(3600, "CustomDM: How long a player must remain online before being able to receive a bz whisper")),
+                ("bz_whispers_interval", new Property<long>(600, "CustomDM: How often a player can receive a bz whisper")),
 
 
                 // Do not edit below this line
@@ -1595,6 +1599,7 @@ namespace ACE.Server.Managers
                 ("pve_death_respite_timer", new Property<double>(60, "Respite timer for pve deaths (players become npk even from pve deaths)")),
                 ("arena_corpse_rot_seconds", new Property<double>(900, "the number of seconds a corpse that is generated in an arena landblock takes to rot. Default 15 mins.")),
                 ("catchup_xp_modifier", new Property<double>(2.0, "Globally scales the amount of xp received by players who are below the previous_max_level threshold, note that this possibly multiplies the other xp_modifier options.")),
+                ("bz_whispers_chance", new Property<double>(0.2, "CustomDM: The chance a player will receive a bz whisper every bz_whispers_interval")),
 
                 // Do not edit below this line
                 ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))

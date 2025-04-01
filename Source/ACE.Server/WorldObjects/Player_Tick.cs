@@ -43,8 +43,6 @@ namespace ACE.Server.WorldObjects
         private const double enchantmentTickInterval = 0.5;
 
         private double PvPInciteTickTimestamp;
-        private const double PvPInciteTickInterval = 600;
-        private const double PvPInciteInitialDelay = 900;
 
         public void Player_Tick(double currentUnixTime)
         {
@@ -137,11 +135,11 @@ namespace ACE.Server.WorldObjects
             }
 
             if (PvPInciteTickTimestamp == 0)
-                PvPInciteTickTimestamp = Time.GetFutureUnixTime(PvPInciteInitialDelay);
+                PvPInciteTickTimestamp = Time.GetFutureUnixTime(PropertyManager.GetLong("bz_whispers_login_delay").Item);
             else if (currentUnixTime > PvPInciteTickTimestamp)
             {
                 PvPInciteTick(currentUnixTime);
-                PvPInciteTickTimestamp = Time.GetFutureUnixTime(PvPInciteTickInterval);
+                PvPInciteTickTimestamp = Time.GetFutureUnixTime(PropertyManager.GetLong("bz_whispers_interval").Item);
             }
 
             if (enchantmentTickTimestamp == 0 || currentUnixTime > enchantmentTickTimestamp)
@@ -562,7 +560,7 @@ namespace ACE.Server.WorldObjects
                             PhysicsObj.set_request_pos(newPosition.Pos, newPosition.Rotation, curCell, Location.LandblockId.Raw);
 
                             if (FastTick)
-                                success = PhysicsObj.update_object_server_new(!EnforceMovement) ;
+                                success = PhysicsObj.update_object_server_new(!EnforceMovement);
                             else
                                 success = PhysicsObj.update_object_server();
 
@@ -824,7 +822,7 @@ namespace ACE.Server.WorldObjects
                 foreach (var item in list)
                 {
                     LeyLineAmulet amulet = item as LeyLineAmulet;
-                    if(amulet != null)
+                    if (amulet != null)
                         amulet.CheckAlignmentDecay(this, currentUnixTime);
                 }
             }
@@ -841,38 +839,26 @@ namespace ACE.Server.WorldObjects
             if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                 return;
 
-            var chance = PropertyManager.GetDouble("bz_snitch_chance", 0.3).Item;
-
-            if ((!IsPK && !IsPKL) || ThreadSafeRandom.Next(0.0f, 1.0f) > chance)
+            if (!PropertyManager.GetBool("bz_whispers_enabled").Item)
                 return;
+
+
+            if ((!IsPK && !IsPKL) || ThreadSafeRandom.Next(0.0f, 1.0f) > PropertyManager.GetDouble("bz_whispers_chance").Item)
+                return;
+
             if (!Level.HasValue)
                 return;
 
-            List<Player> possiblePlayers;
-            var levelDifference = PropertyManager.GetLong("bz_snitch_level_difference", 10).Item;
+            List<Player> validPlayers;
             if (GameplayMode == GameplayModes.HardcorePK)
-            {
-                if (PropertyManager.GetBool("bz_snitch_hcpk_top10").Item)
-                {
-                    possiblePlayers =
-                       PlayerManager
-                       .FindAllByGameplayMode(GameplayMode)
-                       .Where(x => x is Player) // Filter by online
-                       .Cast<Player>()
-                       .Where(p => !p.IsOvertlyPlussed)
-                       .OrderByDescending(x => x.GetProperty(PropertyInt64.TotalExperience) ?? 0)
-                       .Take(15)
-                       .ToList();
-                }
-                else
-                    possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid &&
-                    e.GameplayMode == GameplayModes.HardcorePK &&
-                    e.Level >= Level &&
-                    e.Level <= Level + 5 && e.Account.AccessLevel == 0).ToList();
-            }
+                validPlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.HardcorePK && !e.IsOvertlyPlussed).ToList();
             else
-                possiblePlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && e.Account.AccessLevel == 0 && e.Level.HasValue && Math.Abs(e.Level.Value - Level.Value) < levelDifference && !e.IsOvertlyPlussed).ToList();
+                validPlayers = PlayerManager.GetAllOnline().Where(e => e.Guid != Guid && e.GameplayMode == GameplayModes.Regular && e.IsPK && !e.IsOvertlyPlussed).ToList();
 
+            if (validPlayers.Count + 1 < PropertyManager.GetLong("bz_whispers_min_pop").Item)
+                return;
+
+            List<Player> possiblePlayers = validPlayers.Where(e => e.Level >= Level && e.Level <= Level + 5 && !e.IsOvertlyPlussed).ToList();
             if (possiblePlayers.Count() > 0)
             {
                 var validPossiblePlayers = new List<Player>();
@@ -894,7 +880,7 @@ namespace ACE.Server.WorldObjects
                     {
                         var message = PvPInciteMessages[ThreadSafeRandom.Next(0, PvPInciteMessages.Count() - 1)];
                         Session.Network.EnqueueSend(new GameMessageSound(Guid, Sound.HealthDownVoid));
-                        Session.Network.EnqueueSend(new GameMessageSystemChat($"Bael'zharon whispers in your ear, \"{rolledPlayer.Name} is currently{locationString}. {(Gender == 2 ? "She" : "He")} is level {rolledPlayer.Level}. {message}\"", ChatMessageType.Tell));
+                        Session.Network.EnqueueSend(new GameMessageSystemChat($"Bael'zharon whispers in your ear, \"{rolledPlayer.Name} is currently{locationString}. {(rolledPlayer.Gender == 2 ? "She" : "He")} is level {rolledPlayer.Level}. {message}\"", ChatMessageType.Tell));
                     }
                 }
             }
