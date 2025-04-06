@@ -47,12 +47,21 @@ namespace ACE.Server.WorldObjects
 
             var classNames = DatabaseManager.World.GetAllWeenieClassNames();
 
+            var t0classNames = classNames.Where(i => i.Value.StartsWith("t0-startertown")).ToList();
             var t1classNames = classNames.Where(i => i.Value.StartsWith("t1-")).ToList();
             var t2classNames = classNames.Where(i => i.Value.StartsWith("t2-")).ToList();
             var t3classNames = classNames.Where(i => i.Value.StartsWith("t3-")).ToList();
             var t4classNames = classNames.Where(i => i.Value.StartsWith("t4-")).ToList();
             var t5classNames = classNames.Where(i => i.Value.StartsWith("t5-")).ToList();
             var t6classNames = classNames.Where(i => i.Value.StartsWith("t6-")).ToList();
+
+            var t0 = new List<uint>();
+            foreach (var entry in t0classNames)
+            {
+                var weenie = DatabaseManager.World.GetCachedWeenie(entry.Key);
+                if (weenie.GetProperty(ACE.Entity.Enum.Properties.PropertyInt.MaxGeneratedObjects).HasValue)
+                    t0.Add(entry.Key);
+            }
 
             var t1 = new List<uint>();
             foreach (var entry in t1classNames)
@@ -102,6 +111,7 @@ namespace ACE.Server.WorldObjects
                     t6.Add(entry.Key);
             }
 
+            TreasureEncounters.Add(t0);
             TreasureEncounters.Add(t1);
             TreasureEncounters.Add(t2);
             TreasureEncounters.Add(t3);
@@ -110,6 +120,21 @@ namespace ACE.Server.WorldObjects
             TreasureEncounters.Add(t6);
         }
 
+        public static WorldObject TryCreateTreasureMap(Weenie creatureWeenie)
+        {
+            if (creatureWeenie.WeenieType != WeenieType.Creature)
+                return null;
+
+            var creature = WorldObjectFactory.CreateNewWorldObject(creatureWeenie) as Creature;
+
+            if (creature == null)
+                return null;
+
+            var treasure = TryCreateTreasureMap(creature);
+            creature.Destroy();
+
+            return treasure;
+        }
         public static WorldObject TryCreateTreasureMap(Creature creature)
         {
             if (creature == null)
@@ -118,10 +143,20 @@ namespace ACE.Server.WorldObjects
             if (TreasureEncounters == null)
                 InitializeTreasureMaps();
 
-            var landblockTier = (int)Math.Floor((float)(creature.Tier ?? 1));
-            var treatureTier = creature.RollTier();
-            var treasureEncounterIndex = landblockTier - 1;
+            int landblockTier;
+            int treasureTier;
+            if (creature.Level <= 10)
+            {
+                landblockTier = 0;
+                treasureTier = 1;
+            }
+            else
+            {
+                landblockTier = (int)Math.Floor((float)(creature.Tier ?? 1));
+                treasureTier = creature.RollTier();
+            }
 
+            var treasureEncounterIndex = landblockTier;
             if (treasureEncounterIndex < 0 || TreasureEncounters.Count < treasureEncounterIndex)
                 return null;
 
@@ -133,26 +168,16 @@ namespace ACE.Server.WorldObjects
             var encounterWcid = possibleEncounterWcids[rng];
 
             var possibleEncounters = DatabaseManager.World.GetEncountersByWcid(encounterWcid);
-            if (possibleEncounters.Count == 0)
-                return null;
 
-            rng = ThreadSafeRandom.Next(0, possibleEncounters.Count() - 1);
-            var encounter = possibleEncounters[rng];
+            Vector2? coords = null;
+            for (int retries = 0; retries < 10; retries++)
+            {
+                coords = RollEncounter(possibleEncounters);
 
-            var xPos = Math.Clamp((encounter.CellX * 24.0f) + 12.0f, 0.5f, 191.5f);
-            var yPos = Math.Clamp((encounter.CellY * 24.0f) + 12.0f, 0.5f, 191.5f);
+                if (coords != null)
+                    break;
+            }
 
-            var pos = new Physics.Common.Position();
-            pos.ObjCellID = (uint)(encounter.Landblock << 16) | 1;
-            pos.Frame = new Physics.Animation.AFrame(new Vector3(xPos, yPos, 0), Quaternion.Identity);
-            pos.adjust_to_outside();
-
-            var sortCell = LScape.get_landcell(pos.ObjCellID) as SortCell;
-            if (sortCell != null && sortCell.has_building())
-                return null;
-
-            var location = new Position(pos.ObjCellID, pos.Frame.Origin, pos.Frame.Orientation);
-            var coords = location.GetMapCoords();
             if (coords == null)
                 return null;
 
@@ -166,11 +191,40 @@ namespace ACE.Server.WorldObjects
             wo.Name = $"{creature.Name}'s Treasure Map";
             wo.LongDesc = $"{wo.LongDesc}\n\nThe map was found in the corpse of a level {creature.Level} {creature.Name}.{(wo.DefaultLocked ? "\n\nThe map indicates that the treasure chest is locked." : "")}";
             wo.Level = creature.Level;
-            wo.Tier = treatureTier;
+            wo.Tier = treasureTier;
             wo.EWCoordinates = coords.Value.X;
             wo.NSCoordinates = coords.Value.Y;
 
             return wo;
+        }
+
+        public static Vector2? RollEncounter(List<Database.Models.World.Encounter> possibleEncounters)
+        {
+            if (possibleEncounters == null || possibleEncounters.Count == 0)
+                return null;
+
+            var rng = ThreadSafeRandom.Next(0, possibleEncounters.Count() - 1);
+            var encounter = possibleEncounters[rng];
+
+            var xPos = Math.Clamp((encounter.CellX * 24.0f) + 12.0f, 0.5f, 191.5f);
+            var yPos = Math.Clamp((encounter.CellY * 24.0f) + 12.0f, 0.5f, 191.5f);
+
+            var pos = new Physics.Common.Position();
+            pos.ObjCellID = (uint)(encounter.Landblock << 16) | 1;
+            pos.Frame = new Physics.Animation.AFrame(new Vector3(xPos, yPos, 0), Quaternion.Identity);
+            pos.adjust_to_outside();
+
+            var sortCell = LScape.get_landcell(pos.ObjCellID) as SortCell;
+            if (sortCell == null || sortCell.has_building() || sortCell.CurLandblock.WaterType == LandDefs.WaterType.EntirelyWater)
+                return null;
+
+            var location = pos.ACEPosition();
+
+            if (!location.IsWalkable())
+                return null;
+
+            var coords = location.GetMapCoords();
+            return coords;
         }
 
         public override void ActOnUse(WorldObject activator)
@@ -274,6 +328,8 @@ namespace ACE.Server.WorldObjects
                     if (!Damage.HasValue)
                         Damage = 0;
 
+                    var bonusMod = (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * PropertyManager.GetDouble("exploration_bonus_xp_treasure").Item;
+
                     if (Damage < 7)
                     {
                         string msg;
@@ -294,7 +350,7 @@ namespace ACE.Server.WorldObjects
                             player.EnqueueBroadcastMotion(new Motion(player.CurrentMotionState.Stance));
 
                             var level = Math.Min(player.Level ?? 1, Level ?? 1);
-                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, msg, PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5);
+                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, msg, bonusMod);
 
                             var visibleCreatures = player.PhysicsObj.ObjMaint.GetVisibleObjectsValuesOfTypeCreature();
                             foreach (var creature in visibleCreatures)
@@ -317,7 +373,7 @@ namespace ACE.Server.WorldObjects
                             player.EnqueueBroadcastMotion(new Motion(player.CurrentMotionState.Stance));
 
                             var level = Math.Min(player.Level ?? 1, Level ?? 1);
-                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, "You unearth a treasure chest!", (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * 3);
+                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, "You unearth a treasure chest!", bonusMod * 3);
 
                             var tier = RollTier(Tier ?? 1);
                             var treasureChest = WorldObjectFactory.CreateNewWorldObject(TreasureChests[tier - 1]);
@@ -331,6 +387,8 @@ namespace ACE.Server.WorldObjects
 
                             if (DefaultLocked)
                                 treasureChest.IsLocked = true;
+
+                            treasureChest.Generator = player;
 
                             if (treasureChest.EnterWorld())
                             {

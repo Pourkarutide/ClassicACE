@@ -306,9 +306,11 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Returns the weapon speed, with enchantments factored in
         /// </summary>
-        public static uint GetWeaponSpeed(Creature wielder)
+        public static uint GetWeaponSpeed(Creature wielder, WorldObject weaponOverride = null)
         {
-            WorldObject weapon = GetWeapon(wielder as Player);
+            WorldObject weapon = null;
+            if (weaponOverride != wielder) // weaponOverride == wielder means override as unarmed.
+                weapon = weaponOverride ?? GetWeapon(wielder as Player);
 
             var baseSpeed = weapon?.WeaponTime ?? (int)defaultSpeed;
 
@@ -547,13 +549,15 @@ namespace ACE.Server.WorldObjects
 
                 if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                     critDamageMod = Math.Max(critDamageMod, cripplingBlowMod);
-                else if(critDamageMod > defaultCritDamageMultiplier)
+                else if (critDamageMod > defaultCritDamageMultiplier)
                 {
                     if (GetImbuedSkillType(skill) == ImbuedSkillType.Magic)
                         critDamageMod = 2.5f;
                     else
                         critDamageMod = 3.0f;
                 }
+                else
+                    critDamageMod = Math.Max(critDamageMod, cripplingBlowMod);
             }
             return critDamageMod;
         }

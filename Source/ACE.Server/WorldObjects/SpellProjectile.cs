@@ -81,9 +81,9 @@ namespace ACE.Server.WorldObjects
             PathClipped = true;
             IgnoreCollisions = false;
 
-            //// FIXME: use data here
-            //if (!Spell.Name.Equals("Rolling Death"))
-            //    Ethereal = false;
+            // FIXME: use data here
+            if (!Spell.Name.Equals("Rolling Death"))
+                Ethereal = false;
 
             if (SpellType == ProjectileSpellType.Bolt || SpellType == ProjectileSpellType.Streak
                 || SpellType == ProjectileSpellType.Arc || SpellType == ProjectileSpellType.Volley || SpellType == ProjectileSpellType.Blast
@@ -279,6 +279,9 @@ namespace ACE.Server.WorldObjects
             // ensure valid creature target
             var creatureTarget = target as Creature;
             if (creatureTarget == null || target == ProjectileSource)
+                return;
+
+            if (Spell.IsDudProjectile)
                 return;
 
             if (player != null)
@@ -517,6 +520,9 @@ namespace ACE.Server.WorldObjects
                 if (!creature.Attackable && creature.TargetingTactic == TargetingTactic.None || creature.Teleporting)
                     continue;
 
+                if (!aroundCreature.IsDirectVisible(creature, 1))
+                    continue;
+
                 var cylDist = GetCylinderDistance(creature);
                 if (cylDist > 10)
                     return targets;
@@ -547,6 +553,20 @@ namespace ACE.Server.WorldObjects
 
                 targetPlayer.HandleLifestoneProtection();
                 return null;
+            }
+
+            //Arenas - If this is an arena landblock
+            //don't allow any dmg except while the event is in a started status and between non-eliminated players            
+            if (targetPlayer != null && ArenaLocation.IsArenaLandblock(targetPlayer.Location.Landblock))
+            {
+                var arenaEvent = ArenaManager.GetArenaEventByLandblock(targetPlayer.Location.Landblock);
+                if (arenaEvent == null || arenaEvent.Status != 4)
+                {
+                    return 0.0f;
+                }
+
+                if (sourcePlayer != null && sourcePlayer.IsArenaObserver)
+                    return 0.0f;
             }
 
             var critDamageBonus = 0.0f;
@@ -599,15 +619,23 @@ namespace ACE.Server.WorldObjects
                         if (perfectBlockChance > ThreadSafeRandom.Next(0.0f, 1.0f))
                         {
                             isPerfectBlock = true;
-                            shieldMod = 0.0f;
+                            if (weapon != null)
+                            {
+                                if (weapon.HasImbuedEffect(ImbuedEffectType.IgnoreAllArmor))
+                                    shieldMod = 1.0f;
+                                else
+                                    shieldMod = sourceCreature.GetIgnoreShieldMod(sourceCreature, weapon, isPvP);
+                            }
+                            else
+                                shieldMod = 0.0f;
                         }
                         else
-                            shieldMod = target.GetShieldMod(source, Spell.DamageType, weapon, isPvP);
+                            shieldMod = target.GetShieldMod(source, Spell.DamageType, weapon, isPvP, 0.25f);
                     }
                     else
                     {
                         blocked = false;
-                        shieldMod = target.GetShieldMod(source, Spell.DamageType, weapon, isPvP, 0.1f);
+                        shieldMod = target.GetShieldMod(source, Spell.DamageType, weapon, isPvP, 0.025f);
                     }
                 }
                 else
@@ -847,6 +875,25 @@ namespace ACE.Server.WorldObjects
             {
                 ShowInfo(target, Spell, attackSkill, criticalChance, criticalHit, critDefended, overpower, weaponCritDamageMod, skillBonus, baseDamage, critDamageBonus, elementalDamageMod, slayerMod, weaponResistanceMod, resistanceMod, absorbMod, LifeProjectileDamage, lifeMagicDamage, finalDamage);
             }
+
+            //Arenas - If this is an arena landblock
+            //track dmg dealt and received
+            if (targetPlayer != null && ArenaLocation.IsArenaLandblock(targetPlayer.Location.Landblock))
+            {
+                var arenaEvent = ArenaManager.GetArenaEventByLandblock(targetPlayer.Location.Landblock);
+                if (arenaEvent != null && arenaEvent.Status == 4 && sourcePlayer != null)
+                {
+                    var attackerArenaPlayer = arenaEvent.Players.FirstOrDefault(x => x.CharacterId == sourcePlayer.Character.Id);
+                    var defenderArenaPlayer = arenaEvent.Players.FirstOrDefault(x => x.CharacterId == targetPlayer.Character.Id);
+
+                    if (attackerArenaPlayer != null && defenderArenaPlayer != null)
+                    {
+                        attackerArenaPlayer.TotalDmgDealt += (uint)Math.Round(finalDamage);
+                        defenderArenaPlayer.TotalDmgReceived += (uint)Math.Round(finalDamage);
+                    }
+                }
+            }
+
             return finalDamage;
         }
 

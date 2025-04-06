@@ -688,7 +688,9 @@ namespace ACE.Server.Factories
             else if (ClothingWcids.Contains(roll.Wcid))
             {
                 roll.ItemType = TreasureItemType_Orig.Clothing;
-                MutateArmor(item, profile, isMagical, TreasureArmorType.Cloth, roll);
+                if (item.IsClothArmor)
+                    roll.ArmorType = TreasureArmorType.Cloth;
+                MutateArmor(item, profile, isMagical, roll.ArmorType, roll);
             }
             // scrolls don't really get mutated, even though they are in the main mutation method still
             else if (CloakWcids.Contains(roll.Wcid))
@@ -1695,6 +1697,9 @@ namespace ACE.Server.Factories
             var mult = PropertyManager.GetDouble("coin_stack_multiplier", 1.0).Item;
             if (mult != 1.0)
                 rng = Math.Clamp((int)(rng * mult), 1, wo.MaxStackSize ?? 25000);
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                rng = (int)(rng * (1 + profile.LootQualityMod));
 
             wo.SetStackSize(rng);
         }

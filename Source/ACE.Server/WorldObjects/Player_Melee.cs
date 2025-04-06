@@ -338,7 +338,7 @@ namespace ACE.Server.WorldObjects
                     EndSneaking(null, true);
             }
 
-            if (subsequent)
+            if (subsequent && Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
             {
                 // client shows hourglass, until attack done is received
                 // retail only did this for subsequent attacks w/ repeat attacks on
@@ -526,6 +526,8 @@ namespace ACE.Server.WorldObjects
                 NextDualWieldAlternateReset = Time.GetFutureUnixTime(4);
             }
 
+            var swingAnimation = GetSwingAnimation();
+
             // get the proper animation speed for this attack,
             // based on weapon speed and player quickness
             var baseSpeed = GetAnimSpeed();
@@ -534,35 +536,40 @@ namespace ACE.Server.WorldObjects
                 animSpeedMod = IsDualWieldAttack ? 1.2f : 1.0f;     // dual wield swing animation 20% faster
             else
             {
-                var weapon = GetEquippedMeleeWeapon();
-                if (weapon != null && weapon.WeaponSkill == Skill.Dagger && weapon.W_AttackType.IsMultiStrike())
-                {
-                    if (GetEquippedOffHand() == null)
-                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_1h").Item;
-                    else if (IsDualWieldAttack)
-                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_dualwield").Item;
-                    else
-                        animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_shielded").Item;
-                }
+                if (GetEquippedOffHand() == null && !TwoHandedCombat)
+                    animSpeedMod = 1.2f;
                 else
+                    animSpeedMod = 1.0f;
+
+                var weapon = GetEquippedMeleeWeapon();
+                if (weapon != null && swingAnimation.IsMultiStrike())
                 {
-                    if (PropertyManager.GetBool("dekaru_dual_wield_speed_mod").Item)
+                    if (weapon.WeaponSkill == Skill.Dagger)
                     {
-                        if (GetEquippedOffHand() == null && !TwoHandedCombat)
-                            animSpeedMod = 1.2f;
+                        if (GetEquippedOffHand() == null)
+                            animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_1h").Item;
+                        else if (IsDualWieldAttack)
+                            animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_dualwield").Item;
                         else
-                            animSpeedMod = 1.0f;
+                            animSpeedMod = (float)PropertyManager.GetDouble("dekaru_dagger_ms_animation_speed_shielded").Item;
+                    } else if (weapon.WeaponSkill == Skill.Sword) 
+                    {
+                        if (GetEquippedOffHand() == null)
+                            animSpeedMod = (float)PropertyManager.GetDouble("dekaru_sword_ms_animation_speed_1h").Item;
+                        else if (IsDualWieldAttack)
+                            animSpeedMod = (float)PropertyManager.GetDouble("dekaru_sword_ms_animation_speed_dualwield").Item;
+                        else
+                            animSpeedMod = (float)PropertyManager.GetDouble("dekaru_sword_ms_animation_speed_shielded").Item;
                     }
                     else
                     {
-                        animSpeedMod = IsDualWieldAttack ? 1.2f : 1.0f;     // dual wield swing animation 20% faster
+                        animSpeedMod += 0.8f;
                     }
                 }
             }
 
             var animSpeed = baseSpeed * animSpeedMod;
 
-            var swingAnimation = GetSwingAnimation();
             var animLength = MotionTable.GetAnimationLength(MotionTableId, CurrentMotionState.Stance, swingAnimation, animSpeed);
             //Console.WriteLine($"AnimSpeed: {animSpeed}, AnimLength: {animLength}");
 

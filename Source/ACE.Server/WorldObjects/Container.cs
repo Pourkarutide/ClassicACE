@@ -619,7 +619,7 @@ namespace ACE.Server.WorldObjects
 
             container = this;
 
-            ExtraItemChecks(worldObject);
+            worldObject.ExtraItemChecks();
 
             OnAddItem();
 
@@ -917,7 +917,7 @@ namespace ACE.Server.WorldObjects
                 player.Session.Network.EnqueueSend(itemsToSend.ToArray());*/
             }
 
-            if (!(this is Chest) && Generator != null && GeneratorId != null) // Chests will handle this themselves.
+            if (!(this is Chest) && (Generator != null || GeneratorId != null)) // Chests will handle this themselves.
                 StartContainerDecay(); // If we're a generated container start our decay timer once we've been opened and closed.
 
         }
@@ -1017,12 +1017,17 @@ namespace ACE.Server.WorldObjects
             }
         }
 
+        public override void BeforeEnterWorld()
+        {
+            // Override base method to delay calling ExtraItemChecks() until OnInitialInventoryLoadCompleted();
+        }
+
         /// <summary>
         /// This event is raised after the containers items have been completely loaded from the database
         /// </summary>
         protected virtual void OnInitialInventoryLoadCompleted()
         {
-            // empty base
+            ExtraItemChecks();
         }
 
         /// <summary>
@@ -1070,149 +1075,6 @@ namespace ACE.Server.WorldObjects
             {
                 if (IsOpen)
                     player.Session.Network.EnqueueSend(new GameMessageSystemChat(ActivationTalk, ChatMessageType.Broadcast));
-            }
-        }
-
-        static readonly HashSet<uint> TrophiesWithStackableRewards = new HashSet<uint>()
-        {
-            266,  // Auroch Horn
-            3669, // Drudge Charm
-            3670, // Copper Heart
-            3671, // Granite Heart
-            3672, // Iron Heart
-            3673, // Wood Heart
-            3675, // Ivory Gromnie Tooth
-            3676, // Jade Gromnie Tooth
-            3677, // Swamp Gromnie Tooth
-            3681, // Black Rat Tail
-            3682, // Brown Rat Tail
-            3683, // Grey Rat Tail
-            3684, // Red Rat Tail
-            3685, // White Rat Tail
-            3686, // Black Rock
-            3687, // Skeleton's Skull
-            3688, // Bronze Armoredillo Spine
-            3689, // Grey Spine
-            3690, // Sandy Armoredillo Spine
-            3691, // Shore Armoredillo Spine
-            3692, // Black Stone
-            3693, // Banderling Scalp
-            3694, // Swamp Stone
-            3695, // Gold Tumerok Insignia
-            3696, // Blue Gem
-            3697, // Red Jewel
-            3699, // Blue Phyntos Wasp Wing
-            3700, // Gold Phyntos Wasp Wing
-            3701, // Green Phyntos Wasp Wing
-            3702, // Mire Phyntos Wasp Wing
-            3703, // Red Phyntos Wasp Wing
-            4133, // Tan Rat Tail
-            4134, // Russet Rat Tail
-            5873, // Seal
-            7039, // Fire Auroch Horn
-            7040, // Ravener Guts
-            7041, // Undead Thighbone
-            7042, // Small Lugian Sinew
-            7043, // Large Lugian Sinew
-            7044, // Great Mattekar Horn
-            7046, // Sclavus Tongue
-            7338, // Diamond Heart
-            7603, // White Phyntos Wasp Wing
-            7604, // Yellow jewel
-            8019, // Caulnalain Key
-            8020, // Fenmalain Key
-            8223, // Xarabydun Swamp Rat Tail
-            8424, // Island Armoredillo Spine
-            8426, // Jungle Phyntos Wasp Wing
-            8701, // Lucky Gold Letter
-            8702, // Scarlet Red Letter
-            9310, // A Large Mnemosyne
-            9312, // A Small Mnemosyne
-            9314, // A Tiny Mnemosyne
-            9324, // Obsidian Heart
-            10705, // Niffis Pearl
-            10759, // Muddy Towel
-            10760, // Wet Towel
-            11339, // Carenzi Burrower Pelt
-            11342, // Carenzi Sentry Pelt
-            11351, // Mud Golem Heart
-            11352, // Sand Golem Heart
-            11354, // Water Golem Heart
-            11366, // Littoral Siraluun Claw
-            11369, // Tidal Siraluun Claw
-            12215, // Flaming Pumpkin Head
-            12689, // Diamond Powder
-            19476, // Grievver Tibia
-            19477, // Undead Femur Bone
-            22950, // Hoary Armoredillo Spine
-            22951, // Plate Armoredillo Spine
-            23201, // Glacial Golem Heart
-            25798, // Scold's Heart
-            28209, // Rust Gromnie Tooth
-            28205, // Azure Gromnie Tooth
-            28520, // Gold Golem Heart
-        };
-        public virtual void ExtraItemChecks(WorldObject worldObject)
-        {
-            worldObject.UpdateGameplayMode(this);
-
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
-            {
-                if (!worldObject.ItemWorkmanship.HasValue)
-                {
-                    //Add bonded to quest items
-                    if (!worldObject.Bonded.HasValue || worldObject.Bonded == BondedStatus.Normal)
-                    {
-                        if (worldObject.ItemType == ItemType.Clothing ||
-                            worldObject.ItemType == ItemType.Armor ||
-                            worldObject.ItemType == ItemType.Caster ||
-                            worldObject.ItemType == ItemType.Jewelry ||
-                            worldObject.ItemType == ItemType.MissileWeapon ||
-                            worldObject.ItemType == ItemType.MeleeWeapon)
-                        {
-                            worldObject.Bonded = BondedStatus.Bonded;   
-                        }
-                    }
-                }
-
-                if (PropertyManager.GetBool("stackable_trophy_rewards_use_tar").Item && TrophiesWithStackableRewards.Contains(worldObject.WeenieClassId))
-                {
-                    worldObject.Bonded = BondedStatus.Destroy;
-                    worldObject.Attuned = AttunedStatus.Attuned;
-                }
-                
-                // Add default ExtraSpellsMaxOverride value to quest items.
-                if (worldObject.ExtraSpellsMaxOverride == null && worldObject.ItemWorkmanship == null && worldObject.ResistMagic == null && (worldObject.ItemType & (ItemType.WeaponOrCaster | ItemType.Vestements | ItemType.Jewelry)) != 0 && worldObject.WeenieType != WeenieType.Missile && worldObject.WeenieType != WeenieType.Ammunition)
-                {
-                    bool isRobe = false;
-
-                    if ((worldObject.ItemType == ItemType.Clothing || worldObject.ItemType == ItemType.Armor) && worldObject.ClothingPriority.HasValue)
-                    {
-                        var clothingPriority = worldObject.ClothingPriority.Value;
-                        if (clothingPriority.HasFlag(CoverageMask.OuterwearChest) && clothingPriority.HasFlag(CoverageMask.OuterwearLowerArms) && clothingPriority.HasFlag(CoverageMask.OuterwearLowerLegs))
-                            isRobe = true;
-                    }
-
-                    // Quest robes get 6
-                    if (isRobe)
-                        worldObject.ExtraSpellsMaxOverride = 6;
-                    else
-                        worldObject.ExtraSpellsMaxOverride = 2;
-
-                    worldObject.BaseItemDifficultyOverride = worldObject.ItemDifficulty ?? 0;
-                    worldObject.BaseSpellcraftOverride = worldObject.ItemSpellcraft ?? 0;
-                }
-
-                // The following code makes sure the item fits into CustomDM's ruleset as not all database entries have been updated.
-                // Convert weapon skills to merged ones
-                if (worldObject.WieldSkillType.HasValue)
-                    worldObject.WieldSkillType = (int)worldObject.ConvertToMoASkill((Skill)worldObject.WieldSkillType);
-                if (worldObject.WieldSkillType2.HasValue)
-                    worldObject.WieldSkillType2 = (int)worldObject.ConvertToMoASkill((Skill)worldObject.WieldSkillType2);
-                if (worldObject.WieldSkillType3.HasValue)
-                    worldObject.WieldSkillType3 = (int)worldObject.ConvertToMoASkill((Skill)worldObject.WieldSkillType3);
-                if (worldObject.WieldSkillType4.HasValue)
-                    worldObject.WieldSkillType4 = (int)worldObject.ConvertToMoASkill((Skill)worldObject.WieldSkillType4);
             }
         }
     }

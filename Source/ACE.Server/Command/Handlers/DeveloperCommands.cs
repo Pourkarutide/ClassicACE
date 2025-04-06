@@ -1596,6 +1596,15 @@ namespace ACE.Server.Command.Handlers
             session.Network.EnqueueSend(new GameMessageSystemChat($"2D Dist: {dist2d}", ChatMessageType.Broadcast));
 
             session.Network.EnqueueSend(new GameMessageSystemChat($"CylDist: {cylDist}", ChatMessageType.Broadcast));
+
+            if (Pathfinder.PathfindingEnabled && session.Player.Location.Landblock == obj.Location.Landblock && session.Player.Location.Indoors)
+            {
+                bool narrowDist = Pathfinder.GetRouteDistance(session.Player.Location, obj.Location, AgentWidth.Narrow, out var narrowDistance);
+                bool wideDist = Pathfinder.GetRouteDistance(session.Player.Location, obj.Location, AgentWidth.Wide, out var wideDistance);
+
+                session.Network.EnqueueSend(new GameMessageSystemChat($"Narrow Pathfinding Dist: {(narrowDist ? narrowDistance : "N/A")}", ChatMessageType.Broadcast));
+                session.Network.EnqueueSend(new GameMessageSystemChat($"Wide Pathfinding Dist: {(wideDist ? wideDistance : "N/A")}", ChatMessageType.Broadcast));
+            }
         }
 
         /// <summary>
@@ -4288,6 +4297,19 @@ namespace ACE.Server.Command.Handlers
                 CommandHandlerHelper.WriteOutputInfo(session, "Null route.");
             else
                 creature.TryRoute(route);
+        }
+
+        [CommandHandler("RebuildPathfinding", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Rebuilds pathfinding meshes for the currecnt landblock")]
+        public static void HandleRebuildPathfinding(Session session, params string[] parameters)
+        {
+            if (session.Player.Location != null)
+            {
+                var landblock = session.Player.CurrentLandblock;
+                var landblockId = landblock.Id.Raw | 0xFFFF;
+                session.Network.EnqueueSend(new GameMessageSystemChat($"Rebuilding pathfinding meshes for 0x{landblockId:X8}", ChatMessageType.Broadcast));
+
+                Pathfinder.TryLoadMesh(session.Player.Location, true);
+            }
         }
     }
 }

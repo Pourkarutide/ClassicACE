@@ -39,7 +39,7 @@ namespace ACE.Server.WorldObjects
             var targetPet = AttackTarget as CombatPet;
             var combatPet = this as CombatPet;
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && IsBlockedByDoor(targetCreature))
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && IsBlockedByDoor(AttackTarget))
             {
                 EndAttack();
                 return;
@@ -166,7 +166,11 @@ namespace ACE.Server.WorldObjects
             PrevAttackTime = Timers.RunningTime;
             NextMoveTime = PrevAttackTime + animLength + 0.5f;
 
-            var meleeDelay = ThreadSafeRandom.Next(0.0f, (float)(PowerupTime ?? 1.0f));
+            double meleeDelay;
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                meleeDelay = ThreadSafeRandom.Next(0.0f, (float)(PowerupTime ?? 1.0f));
+            else
+                meleeDelay = PowerupTime ?? 1.0f;
 
             NextAttackTime = PrevAttackTime + animLength + meleeDelay;
 
@@ -377,7 +381,7 @@ namespace ACE.Server.WorldObjects
                     animSpeedMod = 1.0f;
 
                 var weapon = GetEquippedMeleeWeapon();
-                if (weapon != null && weapon.WeaponSkill == Skill.Dagger && weapon.W_AttackType.IsMultiStrike())
+                if (weapon != null && motionCommand.IsMultiStrike())
                     animSpeedMod += 0.8f;
             }
 
@@ -443,14 +447,14 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Returns the creature armor for a body part
         /// </summary>
-        public List<WorldObject> GetArmorLayers(Player target, BodyPart bodyPart)
+        public List<WorldObject> GetArmorLayers(BodyPart bodyPart)
         {
             //Console.WriteLine("BodyPart: " + bodyPart);
             //Console.WriteLine("===");
 
             var coverageMask = BodyParts.GetCoverageMask(bodyPart);
 
-            var equipped = target.EquippedObjects.Values.Where(e => e is Clothing && (e.ClothingPriority & coverageMask) != 0).ToList();
+            var equipped = EquippedObjects.Values.Where(e => e is Clothing && (e.ClothingPriority & coverageMask) != 0).ToList();
 
             return equipped;
         }

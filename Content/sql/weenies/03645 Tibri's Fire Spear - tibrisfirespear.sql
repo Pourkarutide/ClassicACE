@@ -12,6 +12,7 @@ VALUES (3645,   1,          1) /* ItemType - MeleeWeapon */
      , (3645,  16,          1) /* ItemUseable - No */
      , (3645,  18,         32) /* UiEffects - Fire */
      , (3645,  19,       2500) /* Value */
+     , (3645,  33,          1) /* Bonded - Bonded */
      , (3645,  44,         16) /* Damage */
      , (3645,  45,         16) /* DamageType - Fire */
      , (3645,  46,          2) /* DefaultCombatStyle - OneHanded */

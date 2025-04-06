@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Linq;
 
 using ACE.Common.Extensions;
+using ACE.Database.Models.Auth;
 using ACE.DatLoader;
 using ACE.DatLoader.Entity;
 using ACE.Entity.Enum;
@@ -127,6 +128,10 @@ namespace ACE.Server.WorldObjects
                 modifier *= PropertyManager.GetDouble("hardcore_pk_xp_modifier").Item;
             else if (GameplayMode == GameplayModes.HardcoreNPK)
                 modifier *= PropertyManager.GetDouble("hardcore_npk_xp_modifier").Item;
+
+            var previousMaxLevel = PropertyManager.GetLong("previous_max_level").Item;
+            if (Level < previousMaxLevel) 
+                modifier *= PropertyManager.GetDouble("catchup_xp_modifier").Item;
 
             if (xpType == XpType.Kill)
             {
@@ -305,10 +310,11 @@ namespace ACE.Server.WorldObjects
 
             if (xpType == XpType.Kill && CurrentLandblock != null)
             {
+                var bonusMod = (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * PropertyManager.GetDouble("exploration_bonus_xp_kills").Item;
                 if (Exploration1LandblockId == CurrentLandblock.Id.Raw >> 16 && Exploration1KillProgressTracker > 0)
                 {
                     Exploration1KillProgressTracker--;
-                    long explorationXP = (long)(m_amount_before_extra * (float)PropertyManager.GetDouble("exploration_bonus_xp_kills").Item);
+                    long explorationXP = (long)(m_amount_before_extra * bonusMod);
                     xpMessage = $"{Exploration1KillProgressTracker:N0} kill{(Exploration1KillProgressTracker != 1 ? "s" : "")} remaining.";
                     GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
 
@@ -322,7 +328,7 @@ namespace ACE.Server.WorldObjects
                 else if (Exploration2LandblockId == CurrentLandblock.Id.Raw >> 16 && Exploration2KillProgressTracker > 0)
                 {
                     Exploration2KillProgressTracker--;
-                    long explorationXP = (long)(m_amount_before_extra * (float)PropertyManager.GetDouble("exploration_bonus_xp_kills").Item);
+                    long explorationXP = (long)(m_amount_before_extra * bonusMod);
                     xpMessage = $"{Exploration2KillProgressTracker:N0} kill{(Exploration2KillProgressTracker != 1 ? "s" : "")} remaining.";
                     GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
 
@@ -336,7 +342,7 @@ namespace ACE.Server.WorldObjects
                 else if (Exploration3LandblockId == CurrentLandblock.Id.Raw >> 16 && Exploration3KillProgressTracker > 0)
                 {
                     Exploration3KillProgressTracker--;
-                    long explorationXP = (long)(m_amount_before_extra * (float)PropertyManager.GetDouble("exploration_bonus_xp_kills").Item);
+                    long explorationXP = (long)(m_amount_before_extra * bonusMod);
                     xpMessage = $"{Exploration3KillProgressTracker:N0} kill{(Exploration3KillProgressTracker != 1 ? "s" : "")} remaining.";
                     GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
 
@@ -485,9 +491,9 @@ namespace ACE.Server.WorldObjects
                     Session.Network.EnqueueSend(new GameMessageSystemChat($"Your fellow {sourceString} shared {amount:N0} experience with you!{xpMessage}", ChatMessageType.Broadcast));
                 else if (xpType == XpType.Kill && xpMessage != "")
                     Session.Network.EnqueueSend(new GameMessageSystemChat($"You've earned {amount:N0} experience!{xpMessage}", ChatMessageType.Broadcast));
-                else if (amount > 0 && xpType == XpType.Proficiency && xpMessage != "")
+                else if (xpType == XpType.Proficiency && xpMessage != "")
                     Session.Network.EnqueueSend(new GameMessageSystemChat($"You've earned {amount:N0}{xpMessage} experience!", ChatMessageType.Broadcast));
-                else if (amount > 0 && xpType == XpType.Exploration)
+                else if (xpType == XpType.Exploration)
                 {
                     if (xpMessage != "")
                         Session.Network.EnqueueSend(new GameMessageSystemChat($"You've earned {amount:N0} exploration experience!{xpMessage}", ChatMessageType.Broadcast));
@@ -599,9 +605,6 @@ namespace ACE.Server.WorldObjects
         {
             var vitae = EnchantmentManager.GetVitae();
 
-            var isDecay = amount < 0;
-            amount = Math.Abs(amount);
-
             long xpLeft = amount;
 
             if (vitae == null)
@@ -610,6 +613,9 @@ namespace ACE.Server.WorldObjects
                 log.Error(Environment.StackTrace);
                 return xpLeft;
             }
+
+            if (vitae.StatModValue.EpsilonEquals(1.0f) || vitae.StatModValue > 1.0f)
+                return xpLeft;
 
             var vitaePenalty = vitae.StatModValue;
             var startPenalty = vitaePenalty;
@@ -622,7 +628,7 @@ namespace ACE.Server.WorldObjects
             {
                 curPool -= maxPool;
                 vitaePenalty = EnchantmentManager.ReduceVitae();
-                if (vitaePenalty == 1.0f)
+                if (vitaePenalty.EpsilonEquals(1.0f) || vitaePenalty > 1.0f)
                     break;
                 maxPool = (int)VitaeCPPoolThreshold(vitaePenalty, DeathLevel.Value);
 
@@ -632,8 +638,11 @@ namespace ACE.Server.WorldObjects
 
             xpLeft = Math.Max(xpLeft, 0);
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && !isDecay)
-                Session.Network.EnqueueSend(new GameMessageSystemChat($"Your Vitae penalty consumes {amount - xpLeft} experience!", ChatMessageType.Magic));
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                var xpConsumed = amount - xpLeft;
+                Session.Network.EnqueueSend(new GameMessageSystemChat($"Your Vitae penalty consumes {xpConsumed:N0} experience!", ChatMessageType.Magic));
+            }
 
             Session.Network.EnqueueSend(new GameMessagePrivateUpdatePropertyInt(this, PropertyInt.VitaeCpPool, VitaeCpPool.Value));
 
@@ -641,10 +650,8 @@ namespace ACE.Server.WorldObjects
             {
                 if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
                 {
-                    if(isDecay)
-                        Session.Network.EnqueueSend(new GameMessageSystemChat($"Your Vitae recovers! Your Vitae penalty is now {(int)(100 - (vitaePenalty * 100))}%.", ChatMessageType.Magic));
-                    else
-                        Session.Network.EnqueueSend(new GameMessageSystemChat($"Your experience has reduced your Vitae penalty! It is now {(int)(100 - (vitaePenalty * 100))}%.", ChatMessageType.Magic));
+                    var newVitaePenaltyPercent = (int)(100 - (vitaePenalty * 100));
+                    Session.Network.EnqueueSend(new GameMessageSystemChat($"Your experience has reduced your Vitae penalty! It is now {newVitaePenaltyPercent:N0}%.", ChatMessageType.Magic));
                 }
                 else
                     Session.Network.EnqueueSend(new GameMessageSystemChat("Your experience has reduced your Vitae penalty!", ChatMessageType.Magic));
@@ -953,6 +960,64 @@ namespace ACE.Server.WorldObjects
                 return Math.Min((Math.Pow(level, 2) * 5 + 20) * Math.Pow(vitae, 5.0) + 0.5, 12500);
             }
         }
+
+        
+
+        public void GrantLevelProportionalXpForArena(double percent, long min, long max)
+        {
+            // temporarily give no xp
+            return;
+
+            var nextLevelXP = GetXPBetweenLevels(Level.Value, Level.Value + 1);
+
+            var scaledXP = (long)Math.Round(nextLevelXP * percent);
+
+            if (max > 0)
+                scaledXP = Math.Min(scaledXP, max);
+
+            if (min > 0)
+                scaledXP = Math.Max(scaledXP, min);
+
+            EarnXpForArena(scaledXP, XpType.Quest, ShareType.Allegiance);
+        }
+
+        private void EarnXpForArena(long amount, XpType xpType, ShareType shareType = ShareType.All)
+        {
+
+            //Console.WriteLine($"{Name}.EarnXP({amount}, {sharable}, {fixedAmount})");
+
+            // apply xp modifiers.  Quest XP is multiplicative with general XP modification
+            var questModifier = PropertyManager.GetDouble("quest_xp_modifier").Item;
+            var modifier = PropertyManager.GetDouble("xp_modifier").Item;
+            if (xpType == XpType.Quest)
+                modifier *= questModifier;
+
+            // should this be passed upstream to fellowship / allegiance?
+            var enchantment = GetXPAndLuminanceModifier(xpType);
+
+            var m_amount = (long)Math.Round(amount * enchantment * modifier);
+
+            if (m_amount < 0)
+            {
+                log.Warn($"{Name}.EarnXP({amount}, {shareType})");
+                log.Warn($"modifier: {modifier}, enchantment: {enchantment}, m_amount: {m_amount}");
+                return;
+            }
+
+            GrantXPForArena(m_amount, xpType, shareType);
+
+        }
+
+        public void GrantXPForArena(long amount, XpType xpType, ShareType shareType = ShareType.All)
+        {
+            // Make sure UpdateXpAndLevel is done on this players thread
+            EnqueueAction(new ActionEventDelegate(() => UpdateXpAndLevel(amount, xpType)));
+
+            // only certain types of XP are granted to items
+            if (xpType == XpType.Kill || xpType == XpType.Quest)
+                GrantItemXP(amount);
+        }
+
 
         /// <summary>
         /// Raise the available XP by a percentage of the current level XP or a maximum

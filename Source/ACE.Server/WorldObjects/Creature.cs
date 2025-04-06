@@ -354,7 +354,7 @@ namespace ACE.Server.WorldObjects
             new List<uint>{ 50258 },
             new List<uint>{ 50259 },
             new List<uint>{ 50260 },
-            new List<uint>{ 50261 }
+            new List<uint>{ 50308 }
         };
 
         private List<List<uint>> VirindiChests = new List<List<uint>>
@@ -865,10 +865,12 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Sends the network commands to move a player towards a position
         /// </summary>
-        public void MoveToPosition(Position position)
+        public void MoveToPosition(Position position, float? radius = null)
         {
+            var distanceToObject = radius ?? 0.6f;
+
             var moveToPosition = new Motion(this, position);
-            moveToPosition.MoveToParameters.DistanceToObject = 0.0f;
+            moveToPosition.MoveToParameters.DistanceToObject = distanceToObject;
 
             SetWalkRunThreshold(moveToPosition, position);
 

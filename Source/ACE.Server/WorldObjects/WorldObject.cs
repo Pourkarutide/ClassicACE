@@ -31,6 +31,7 @@ using ACE.Server.WorldObjects.Managers;
 using Landblock = ACE.Server.Entity.Landblock;
 using Position = ACE.Entity.Position;
 using ACE.Server.Factories;
+using ACE.Server.Factories.Tables;
 
 namespace ACE.Server.WorldObjects
 {
@@ -108,7 +109,8 @@ namespace ACE.Server.WorldObjects
         public bool IsThrownWeapon { get => DefaultCombatStyle != null && DefaultCombatStyle == CombatStyle.ThrownWeapon; }
         public bool IsRanged { get => IsAmmoLauncher || IsThrownWeapon; }
         public bool IsCaster { get => DefaultCombatStyle != null && (DefaultCombatStyle == CombatStyle.Magic); }
-        public bool IsClothArmor { get => ItemType == ItemType.Clothing && ClothingPriority.HasValue && ClothingPriority.Value.HasFlag(CoverageMask.OuterwearChest); } // Robes and Dresses
+        public bool IsClothArmor { get => ItemType == ItemType.Clothing && ClothingPriority.HasValue && (ClothingPriority.Value.HasFlag(CoverageMask.OuterwearChest) || ClothingPriority.Value.HasFlag(CoverageMask.Feet) || ClothingPriority.Value.HasFlag(CoverageMask.Hands) || ClothingPriority.Value.HasFlag(CoverageMask.Head)); } // Robes, Dresses, Cloth Caps, Cloth Gloves and Cloth Shoes.
+        public bool IsRobe { get => ItemType == ItemType.Clothing && ClothingPriority.HasValue && ClothingPriority.Value.HasFlag(CoverageMask.OuterwearChest); } // Robes and Dresses
 
         public bool IsCreature
         {
@@ -887,7 +889,7 @@ namespace ACE.Server.WorldObjects
 
         public virtual void BeforeEnterWorld()
         {
-            // empty base
+            ExtraItemChecks();
         }
 
         public virtual bool EnterWorld()
@@ -1309,17 +1311,6 @@ namespace ACE.Server.WorldObjects
             }
         }
 
-        public int GetMaxExtraSpellsCount()
-        {
-            if (ExtraSpellsMaxOverride != null)
-                return Math.Max(ExtraSpellsMaxOverride ?? 0, 0);
-
-            var baseSlots = (int)Math.Floor((ItemWorkmanship ?? 0) / 2f);
-            if(IsClothArmor)
-                return baseSlots == 0 ? 1 : (baseSlots * 2);
-            return baseSlots;
-        }
-
         public bool CanHaveExtraSpells()
         {
             if (ExtraSpellsMaxOverride != null && ExtraSpellsMaxOverride > 0)
@@ -1328,17 +1319,36 @@ namespace ACE.Server.WorldObjects
                 return ItemWorkmanship > 0 && (ItemType & (ItemType.WeaponOrCaster | ItemType.Vestements | ItemType.Jewelry)) != 0;
         }
 
+        public int GetMaxExtraSpellsCount()
+        {
+            if (ExtraSpellsMaxOverride != null)
+                return Math.Max(ExtraSpellsMaxOverride ?? 0, 0);
+
+            var baseSlots = (int)Math.Floor((ItemWorkmanship ?? 0) / 2f);
+            if(IsRobe)
+                return baseSlots == 0 ? 1 : (baseSlots * 2);
+            return baseSlots;
+        }
+
         public int GetMaxTinkerCount()
         {
-            if (ItemWorkmanship > 0 && (ItemType & (ItemType.WeaponOrCaster | ItemType.Vestements | ItemType.Jewelry)) != 0)
-                return (int)Math.Floor((ItemWorkmanship ?? 0) / 3.1f) + 1;
+            if (TinkerMaxCountOverride != null && TinkerMaxCountOverride > 0)
+                return TinkerMaxCountOverride.Value;
+            else if (ItemWorkmanship > 0 && (ItemType & (ItemType.WeaponOrCaster | ItemType.Vestements | ItemType.Jewelry)) != 0)
+            {
+                var workmanship = ItemWorkmanship ?? 0;
+                var maxTinkerCount = (int)Math.Floor(workmanship / 3.1f) + 1;
+                if (HasArmorLevel())
+                    maxTinkerCount += Math.Min(workmanship - 1, 2);
+                return maxTinkerCount;
+            }
             else
                 return 0;
         }
 
         public int GetMinSalvageQualityForTinkering()
         {
-            return (int)Math.Floor((ItemWorkmanship ?? 0) / 3.5f) * 4;
+            return (int)Math.Floor((TinkerWorkmanshipOverride ?? ItemWorkmanship ?? 0) / 3.5f) * 4;
         }
 
         public double GetHighestTierAroundObject(float maxDistance)
@@ -1569,5 +1579,692 @@ namespace ACE.Server.WorldObjects
                 return Location.PositionZ + Height < terrainZ;
             }
         }
+
+        private int EstimateItemTierFromRequirements(WieldRequirement wieldRequirements, int? wieldSkillType, int? wieldDifficulty)
+        {
+            var requirementEstimatedTier = 1;
+            if (wieldDifficulty != null)
+            {
+                if (wieldRequirements == WieldRequirement.Level)
+                    requirementEstimatedTier = (int)Creature.CalculateExtendedTier(wieldDifficulty ?? 0);
+                else if (wieldRequirements == WieldRequirement.RawSkill)
+                {
+                    if (wieldSkillType == (int)Skill.Axe || wieldSkillType == (int)Skill.Dagger || wieldSkillType == (int)Skill.Spear || wieldSkillType == (int)Skill.Sword || wieldSkillType == (int)Skill.ThrownWeapon || wieldSkillType == (int)Skill.UnarmedCombat)
+                    {
+                        if (wieldDifficulty < 250)
+                            requirementEstimatedTier = 1;
+                        else if (wieldDifficulty < 300)
+                            requirementEstimatedTier = 2;
+                        else if (wieldDifficulty < 325)
+                            requirementEstimatedTier = 3;
+                        else if (wieldDifficulty < 350)
+                            requirementEstimatedTier = 4;
+                        else if (wieldDifficulty < 370)
+                            requirementEstimatedTier = 5;
+                        else
+                            requirementEstimatedTier = 6;
+                    }
+                    else if (wieldSkillType == (int)Skill.Bow)
+                    {
+                        if (wieldDifficulty < 250)
+                            requirementEstimatedTier = 1;
+                        else if (wieldDifficulty < 270)
+                            requirementEstimatedTier = 2;
+                        else if (wieldDifficulty < 290)
+                            requirementEstimatedTier = 3;
+                        else if (wieldDifficulty < 315)
+                            requirementEstimatedTier = 4;
+                        else if (wieldDifficulty < 335)
+                            requirementEstimatedTier = 5;
+                        else
+                            requirementEstimatedTier = 6;
+                    }
+                    else if (wieldSkillType == (int)Skill.WarMagic || wieldSkillType == (int)Skill.LifeMagic)
+                    {
+                        if (wieldDifficulty < 225)
+                            requirementEstimatedTier = 1;
+                        else if (wieldDifficulty < 245)
+                            requirementEstimatedTier = 2;
+                        else if (wieldDifficulty < 265)
+                            requirementEstimatedTier = 3;
+                        else if (wieldDifficulty < 290)
+                            requirementEstimatedTier = 4;
+                        else if (wieldDifficulty < 310)
+                            requirementEstimatedTier = 5;
+                        else
+                            requirementEstimatedTier = 6;
+                    }
+                    else
+                    {
+                        if (wieldDifficulty < 180)
+                            requirementEstimatedTier = 1;
+                        else if (wieldDifficulty < 230)
+                            requirementEstimatedTier = 2;
+                        else if (wieldDifficulty < 255)
+                            requirementEstimatedTier = 3;
+                        else if (wieldDifficulty < 280)
+                            requirementEstimatedTier = 4;
+                        else if (wieldDifficulty < 300)
+                            requirementEstimatedTier = 5;
+                        else
+                            requirementEstimatedTier = 6;
+                    }
+                }
+            }
+
+            return requirementEstimatedTier;
+        }
+
+        private int EstimateItemTier()
+        {
+            var estimatedTier = 1;
+            var requirementEstimatedTier = 1;
+            var arcaneEstimatedTier = 1;
+
+            if (WieldRequirements != WieldRequirement.Invalid)
+                requirementEstimatedTier = EstimateItemTierFromRequirements(WieldRequirements, WieldSkillType, WieldDifficulty);
+            if (WieldRequirements2 != WieldRequirement.Invalid)
+                requirementEstimatedTier = Math.Max(requirementEstimatedTier, EstimateItemTierFromRequirements(WieldRequirements2, WieldSkillType2, WieldDifficulty2));
+            if (WieldRequirements3 != WieldRequirement.Invalid)
+                requirementEstimatedTier = Math.Max(requirementEstimatedTier, EstimateItemTierFromRequirements(WieldRequirements3, WieldSkillType3, WieldDifficulty3));
+            if (WieldRequirements4 != WieldRequirement.Invalid)
+                requirementEstimatedTier = Math.Max(requirementEstimatedTier, EstimateItemTierFromRequirements(WieldRequirements4, WieldSkillType4, WieldDifficulty4));
+
+            if (ItemSkillLimit.HasValue && ItemSkillLevelLimit.HasValue)
+                requirementEstimatedTier = Math.Max(requirementEstimatedTier, EstimateItemTierFromRequirements(WieldRequirement.RawSkill, (int)ItemSkillLimit, ItemSkillLevelLimit));
+
+            if (ItemDifficulty.HasValue)
+            {
+                if (ItemDifficulty <= 30)
+                    arcaneEstimatedTier = 1;
+                else if (ItemDifficulty <= 90)
+                    arcaneEstimatedTier = 2;
+                else if (ItemDifficulty <= 150)
+                    arcaneEstimatedTier = 3;
+                else if (ItemDifficulty <= 185)
+                    arcaneEstimatedTier = 4;
+                else if (ItemDifficulty <= 220)
+                    arcaneEstimatedTier = 5;
+                else
+                    arcaneEstimatedTier = 6;
+            }
+
+            estimatedTier = Math.Max(requirementEstimatedTier, arcaneEstimatedTier);
+
+            return estimatedTier;
+        }
+
+        static readonly HashSet<uint> TrophiesWithStackableRewards = new HashSet<uint>()
+        {
+            266,  // Auroch Horn
+            3669, // Drudge Charm
+            3670, // Copper Heart
+            3671, // Granite Heart
+            3672, // Iron Heart
+            3673, // Wood Heart
+            3675, // Ivory Gromnie Tooth
+            3676, // Jade Gromnie Tooth
+            3677, // Swamp Gromnie Tooth
+            3681, // Black Rat Tail
+            3682, // Brown Rat Tail
+            3683, // Grey Rat Tail
+            3684, // Red Rat Tail
+            3685, // White Rat Tail
+            3686, // Black Rock
+            3687, // Skeleton's Skull
+            3688, // Bronze Armoredillo Spine
+            3689, // Grey Spine
+            3690, // Sandy Armoredillo Spine
+            3691, // Shore Armoredillo Spine
+            3692, // Black Stone
+            3693, // Banderling Scalp
+            3694, // Swamp Stone
+            3695, // Gold Tumerok Insignia
+            3696, // Blue Gem
+            3697, // Red Jewel
+            3699, // Blue Phyntos Wasp Wing
+            3700, // Gold Phyntos Wasp Wing
+            3701, // Green Phyntos Wasp Wing
+            3702, // Mire Phyntos Wasp Wing
+            3703, // Red Phyntos Wasp Wing
+            4133, // Tan Rat Tail
+            4134, // Russet Rat Tail
+            5873, // Seal
+            7039, // Fire Auroch Horn
+            7040, // Ravener Guts
+            7041, // Undead Thighbone
+            7042, // Small Lugian Sinew
+            7043, // Large Lugian Sinew
+            7044, // Great Mattekar Horn
+            7046, // Sclavus Tongue
+            7338, // Diamond Heart
+            7603, // White Phyntos Wasp Wing
+            7604, // Yellow jewel
+            8019, // Caulnalain Key
+            8020, // Fenmalain Key
+            8223, // Xarabydun Swamp Rat Tail
+            8424, // Island Armoredillo Spine
+            8426, // Jungle Phyntos Wasp Wing
+            8701, // Lucky Gold Letter
+            8702, // Scarlet Red Letter
+            9310, // A Large Mnemosyne
+            9312, // A Small Mnemosyne
+            9314, // A Tiny Mnemosyne
+            9324, // Obsidian Heart
+            10705, // Niffis Pearl
+            10759, // Muddy Towel
+            10760, // Wet Towel
+            11339, // Carenzi Burrower Pelt
+            11342, // Carenzi Sentry Pelt
+            11351, // Mud Golem Heart
+            11352, // Sand Golem Heart
+            11354, // Water Golem Heart
+            11366, // Littoral Siraluun Claw
+            11369, // Tidal Siraluun Claw
+            12215, // Flaming Pumpkin Head
+            12689, // Diamond Powder
+            19476, // Grievver Tibia
+            19477, // Undead Femur Bone
+            22950, // Hoary Armoredillo Spine
+            22951, // Plate Armoredillo Spine
+            23201, // Glacial Golem Heart
+            25798, // Scold's Heart
+            28209, // Rust Gromnie Tooth
+            28205, // Azure Gromnie Tooth
+            28520, // Gold Golem Heart
+        };
+
+        public void ExtraItemChecks()
+        {
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                if (this is Creature creature)
+                {
+                    // Skip checking subcontainers here as they will be checked independently when their Container.OnInitialInventoryLoadCompleted() triggers.
+
+                    foreach (var equippedItem in creature.EquippedObjects.Values)
+                    {
+                        if (!(equippedItem is Container)) 
+                            equippedItem.ExtraItemChecks();
+                    }
+
+                    foreach (var containedItem in creature.Inventory.Values)
+                    {
+                        if(!(containedItem is Container))
+                            containedItem.ExtraItemChecks();
+                    }
+                    return;
+                }
+
+                if (this is not Creature && !ItemWorkmanship.HasValue)
+                {
+                    //Add bonded to quest items
+                    if (!Bonded.HasValue || Bonded == BondedStatus.Normal)
+                    {
+                        if (ItemType == ItemType.Clothing ||
+                            ItemType == ItemType.Armor ||
+                            ItemType == ItemType.Caster ||
+                            ItemType == ItemType.Jewelry ||
+                            ItemType == ItemType.MissileWeapon ||
+                            ItemType == ItemType.MeleeWeapon)
+                        {
+                            Bonded = BondedStatus.Bonded;
+                        }
+                    }
+                }
+
+                if (PropertyManager.GetBool("stackable_trophy_rewards_use_tar").Item && TrophiesWithStackableRewards.Contains(WeenieClassId))
+                {
+                    Bonded = BondedStatus.Normal;
+                    Attuned = AttunedStatus.Attuned;
+                }
+
+                var currentVersion = 1;
+
+                // The following code makes sure the item fits into CustomDM's ruleset as not all database entries have been updated.
+                if (Version == null || Version < currentVersion)
+                {
+                    // These changes are applied even to items owned by monsters, do not update item version here as that would prevent the full changes from being applied later.
+
+                    // Convert weapon skills to merged ones
+                    if (WieldSkillType.HasValue)
+                        WieldSkillType = (int)ConvertToMoASkill((Skill)WieldSkillType);
+                    if (WieldSkillType2.HasValue)
+                        WieldSkillType2 = (int)ConvertToMoASkill((Skill)WieldSkillType2);
+                    if (WieldSkillType3.HasValue)
+                        WieldSkillType3 = (int)ConvertToMoASkill((Skill)WieldSkillType3);
+                    if (WieldSkillType4.HasValue)
+                        WieldSkillType4 = (int)ConvertToMoASkill((Skill)WieldSkillType4);
+                }
+
+                var owner = Wielder ?? Container;
+                bool ownerIsMonster = owner != null && owner is Creature creatureOwner && !creatureOwner.Guid.IsPlayer() && (creatureOwner.Attackable || creatureOwner.TargetingTactic != TargetingTactic.None);
+                if (ownerIsMonster)
+                    return;
+
+                if (owner is Container containerOwner)
+                    UpdateGameplayMode(containerOwner);
+
+                if (this is Container container)
+                {
+                    foreach (var containedItem in container.Inventory.Values)
+                    {
+                        containedItem.ExtraItemChecks();
+                    }
+                }
+
+                if (Version == null || Version < currentVersion) // Monsters can keep unmodified items for now due to balance reasons.
+                {
+                    Version = currentVersion; // Bring item version up to current.
+
+                    if (ItemWorkmanship == null && (ItemType & (ItemType.WeaponOrCaster | ItemType.Vestements | ItemType.Jewelry)) != 0 && WeenieType != WeenieType.Missile && WeenieType != WeenieType.Ammunition)
+                    {
+                        var estimatedTier = EstimateItemTier();
+
+                        // Add default ExtraSpellsMaxOverride value to quest items.
+                        if (ExtraSpellsMaxOverride == null && ResistMagic == null)
+                        {
+                            switch (estimatedTier)
+                            {
+                                default:
+                                case 1: ExtraSpellsMaxOverride = 1; break;
+                                case 2: ExtraSpellsMaxOverride = 2; break;
+                                case 3: ExtraSpellsMaxOverride = 2; break;
+                                case 4: ExtraSpellsMaxOverride = 2; break;
+                                case 5: ExtraSpellsMaxOverride = 3; break;
+                                case 6: ExtraSpellsMaxOverride = 3; break;
+                            }
+
+                            if (IsRobe)
+                                ExtraSpellsMaxOverride *= 2;
+
+                            BaseItemDifficultyOverride = ItemDifficulty;
+                            BaseSpellcraftOverride = ItemSpellcraft;
+                        }
+
+                        // Add default TinkerMaxCountOverride value to quest items.
+                        if (TinkerMaxCountOverride == null)
+                        {
+                            switch (estimatedTier)
+                            {
+                                default:
+                                case 1: TinkerWorkmanshipOverride = 1; break;
+                                case 2: TinkerWorkmanshipOverride = 4; break;
+                                case 3: TinkerWorkmanshipOverride = 5; break;
+                                case 4: TinkerWorkmanshipOverride = 6; break;
+                                case 5: TinkerWorkmanshipOverride = 8; break;
+                                case 6: TinkerWorkmanshipOverride = 10; break;
+                            }
+
+                            TinkerMaxCountOverride = 2;
+                        }
+
+                        // Remove invalid properties from items accessible by players, keep them on monster's items.
+                        if (CriticalMultiplier.HasValue)
+                        {
+                            log.Warn($"Removed invalid CriticalMultiplier {CriticalMultiplier:0.00} from {Name}.");
+                            CriticalMultiplier = null;
+                        }
+
+                        if (CriticalFrequency.HasValue)
+                        {
+                            log.Warn($"Removed invalid CriticalFrequency {CriticalFrequency:0.00} from {Name}.");
+                            CriticalFrequency = null;
+                        }
+
+                        if (IgnoreArmor.HasValue)
+                        {
+                            log.Warn($"Removed invalid IgnoreArmor {IgnoreArmor:0.00} from {Name}.");
+                            IgnoreArmor = null;
+                        }
+
+                        if (IgnoreShield.HasValue)
+                        {
+                            log.Warn($"Removed invalid IgnoreShield {IgnoreShield:0.00} from {Name}.");
+                            IgnoreShield = null;
+                        }
+
+                        if (ResistanceModifier.HasValue)
+                        {
+                            log.Warn($"Removed invalid ResistanceModifier {ResistanceModifier:0.00} from {Name}.");
+                            ResistanceModifier = null;
+                        }
+                        if (ResistanceModifierType.HasValue)
+                        {
+                            log.Warn($"Removed invalid ResistanceModifierType {ResistanceModifierType} from {Name}.");
+                            ResistanceModifierType = null;
+                        }
+                    }
+
+                    // Remove invalid spells from items accessible by players, keep the spells on monster's items.
+                    if (SpellDID.HasValue)
+                    {
+                        if (SpellsToReplace.TryGetValue((SpellId)SpellDID, out var replacementId))
+                        {
+                            if (replacementId < 0)
+                            {
+                                var originalSpellId = (SpellId)SpellDID;
+                                Spell originalSpell = new Spell(originalSpellId);
+
+                                int level = Math.Clamp(Math.Abs(replacementId), 1, 8);
+
+                                SpellId spellLevel1Id = SpellId.Undef;
+                                if (this is Caster)
+                                    spellLevel1Id = CasterSlotSpells.PseudoRandomRoll(this, (int)WeenieClassId);
+                                else if (this is Gem)
+                                    spellLevel1Id = SpellSelectionTable.PseudoRandomRoll(1, (int)WeenieClassId);
+
+                                if (spellLevel1Id != SpellId.Undef)
+                                {
+                                    var spellId = SpellLevelProgression.GetSpellAtLevel(spellLevel1Id, level);
+
+                                    SpellDID = (uint)spellId;
+
+                                    log.Warn($"Replaced invalid spell {originalSpellId} with {spellId} as a DID spell on {Name}.");
+                                }
+                                else
+                                    log.Warn($"Failed to replace invalid spell {originalSpellId} as a DID spell on {Name}. Unhandled item type.");
+                            }
+                            else if (replacementId > 0)
+                            {
+                                var originalSpellId = (SpellId)SpellDID;
+
+                                SpellDID = (uint)replacementId;
+
+                                log.Warn($"Replaced invalid spell {originalSpellId} with {(SpellId)replacementId} as a DID spell on {Name}.");
+                            }
+                            else
+                            {
+                                var originalSpellId = (SpellId)SpellDID;
+
+                                RemoveProperty(PropertyDataId.Spell);
+
+                                log.Warn($"Removed invalid spell {originalSpellId} as a DID spell on {Name}.");
+                            }
+                        }
+                    }
+
+                    if (ProcSpell.HasValue)
+                    {
+                        if (SpellsToReplace.TryGetValue((SpellId)ProcSpell, out var replacementId))
+                        {
+                            if (replacementId < 0)
+                            {
+                                var originalSpellId = (SpellId)ProcSpell;
+
+                                int level = Math.Clamp(Math.Abs(replacementId), 1, 8);
+
+                                SpellId procSpellLevel1Id = SpellId.Undef;
+                                if (this is MeleeWeapon)
+                                    procSpellLevel1Id = MeleeSpells.PseudoRandomRollProc((int)WeenieClassId);
+                                else if (this is MissileLauncher || this is Missile)
+                                    procSpellLevel1Id = MissileSpells.PseudoRandomRollProc((int)WeenieClassId);
+
+                                if (procSpellLevel1Id != SpellId.Undef)
+                                {
+                                    var procSpellId = SpellLevelProgression.GetSpellAtLevel(procSpellLevel1Id, level);
+
+                                    Spell spell = new Spell(procSpellId);
+                                    ProcSpellRate = 0.15f;
+                                    ProcSpell = (uint)procSpellId;
+                                    ProcSpellSelfTargeted = spell.IsSelfTargeted;
+
+                                    log.Warn($"Replaced invalid spell {originalSpellId} with {procSpellId} as a proc on {Name}.");
+                                }
+                                else
+                                    log.Warn($"Failed to replace invalid spell {originalSpellId} as a proc spell on {Name}. Unhandled item type.");
+                            }
+                            else if (replacementId > 0)
+                            {
+                                var originalSpellId = (SpellId)ProcSpell;
+
+                                Spell spell = new Spell(replacementId);
+
+                                ProcSpellRate = 0.15f;
+                                ProcSpell = (uint)replacementId;
+                                ProcSpellSelfTargeted = spell.IsSelfTargeted;
+
+                                log.Warn($"Replaced invalid spell {originalSpellId} with {(SpellId)replacementId} as a proc on {Name}.");
+                            }
+                            else
+                            {
+                                var originalSpellId = (SpellId)ProcSpell;
+
+                                RemoveProperty(PropertyFloat.ProcSpellRate);
+                                RemoveProperty(PropertyDataId.ProcSpell);
+                                RemoveProperty(PropertyBool.ProcSpellSelfTargeted);
+
+                                log.Warn($"Removed invalid spell {originalSpellId} as a proc on {Name}.");
+                            }
+                        }
+                    }
+
+                    var list = Biota.GetKnownSpellsIds(BiotaDatabaseLock);
+                    foreach (var entry in list)
+                    {
+                        if (SpellsToReplace.TryGetValue((SpellId)entry, out var replacementId))
+                        {
+                            if (Biota.TryRemoveKnownSpell(entry, BiotaDatabaseLock))
+                            {
+                                if (replacementId < 0)
+                                {
+                                    log.Warn($"Failed to replace invalid spell {(SpellId)entry} as a proc spell on {Name}. Unhandled item type.");
+                                }
+                                else if (replacementId > 0)
+                                {
+                                    Biota.GetOrAddKnownSpell(replacementId, BiotaDatabaseLock, out _);
+                                    log.Warn($"Replaced invalid spell {(SpellId)entry} with {(SpellId)replacementId} on {Name}.");
+                                }
+                                else
+                                    log.Warn($"Removed invalid spell {(SpellId)entry} from {Name}.");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private Dictionary<SpellId, int> SpellsToReplace = new Dictionary<SpellId, int>()
+        {
+            // -1 means replace with a pseudorandom(based on wcid) level 1 proc and so on.
+            // 0 means remove, positive values mean the spellId of the replacement spell.
+            { SpellId.BloodDrinkerSelf1, 0 },
+            { SpellId.BloodDrinkerSelf2, 0 },
+            { SpellId.BloodDrinkerSelf3, 0 },
+            { SpellId.BloodDrinkerSelf4, 0 },
+            { SpellId.BloodDrinkerSelf5, 0 },
+            { SpellId.BloodDrinkerSelf6, 0 },
+            { SpellId.BloodDrinkerSelf7, 0 },
+            { SpellId.BloodDrinkerSelf8, 0 },
+            { SpellId.LightbringersWay, 0 },
+
+            { SpellId.Discipline, 0 },
+            { SpellId.WoundTwister, 0 },
+            { SpellId.MurderousThirst, 0 },
+
+            { SpellId.BloodDrinkerOther1, 0 },
+            { SpellId.BloodDrinkerOther2, 0 },
+            { SpellId.BloodDrinkerOther3, 0 },
+            { SpellId.BloodDrinkerOther4, 0 },
+            { SpellId.BloodDrinkerOther5, 0 },
+            { SpellId.BloodDrinkerOther6, 0 },
+            { SpellId.BloodDrinkerOther7, 0 },
+            { SpellId.BloodDrinkerOther8, 0 },
+
+            { SpellId.SwiftKillerSelf1, 0 },
+            { SpellId.SwiftKillerSelf2, 0 },
+            { SpellId.SwiftKillerSelf3, 0 },
+            { SpellId.SwiftKillerSelf4, 0 },
+            { SpellId.SwiftKillerSelf5, 0 },
+            { SpellId.SwiftKillerSelf6, 0 },
+            { SpellId.SwiftKillerSelf7, 0 },
+            { SpellId.SwiftKillerSelf8, 0 },
+
+            { SpellId.Alacrity, 0 },
+            { SpellId.SpeedHunter, 0 },
+
+            { SpellId.SwiftKillerOther1, 0 },
+            { SpellId.SwiftKillerOther2, 0 },
+            { SpellId.SwiftKillerOther3, 0 },
+            { SpellId.SwiftKillerOther4, 0 },
+            { SpellId.SwiftKillerOther5, 0 },
+            { SpellId.SwiftKillerOther6, 0 },
+            { SpellId.SwiftKillerOther7, 0 },
+            { SpellId.SwiftKillerOther8, 0 },
+
+            //{ SpellId.HeartSeekerSelf1, 0 },
+            //{ SpellId.HeartSeekerSelf2, 0 },
+            //{ SpellId.HeartSeekerSelf3, 0 },
+            //{ SpellId.HeartSeekerSelf4, 0 },
+            //{ SpellId.HeartSeekerSelf5, 0 },
+            //{ SpellId.HeartSeekerSelf6, 0 },
+            //{ SpellId.HeartSeekerSelf7, 0 },
+            //{ SpellId.HeartSeekerSelf8, 0 },
+
+            //{ SpellId.HeartSeekerOther1, 0 },
+            //{ SpellId.HeartSeekerOther2, 0 },
+            //{ SpellId.HeartSeekerOther3, 0 },
+            //{ SpellId.HeartSeekerOther4, 0 },
+            //{ SpellId.HeartSeekerOther5, 0 },
+            //{ SpellId.HeartSeekerOther6, 0 },
+            //{ SpellId.HeartSeekerOther7, 0 },
+            //{ SpellId.HeartSeekerOther8, 0 },
+
+            //{ SpellId.DefenderSelf1, 0 },
+            //{ SpellId.DefenderSelf2, 0 },
+            //{ SpellId.DefenderSelf3, 0 },
+            //{ SpellId.DefenderSelf4, 0 },
+            //{ SpellId.DefenderSelf5, 0 },
+            //{ SpellId.DefenderSelf6, 0 },
+            //{ SpellId.DefenderSelf7, 0 },
+            //{ SpellId.DefenderSelf8, 0 },
+
+            //{ SpellId.DefenderOther1, 0 },
+            //{ SpellId.DefenderOther2, 0 },
+            //{ SpellId.DefenderOther3, 0 },
+            //{ SpellId.DefenderOther4, 0 },
+            //{ SpellId.DefenderOther5, 0 },
+            //{ SpellId.DefenderOther6, 0 },
+            //{ SpellId.DefenderOther7, 0 },
+            //{ SpellId.DefenderOther8, 0 },
+
+            { SpellId.SpiritDrinkerSelf1, 0 },
+            { SpellId.SpiritDrinkerSelf2, 0 },
+            { SpellId.SpiritDrinkerSelf3, 0 },
+            { SpellId.SpiritDrinkerSelf4, 0 },
+            { SpellId.SpiritDrinkerSelf5, 0 },
+            { SpellId.SpiritDrinkerSelf6, 0 },
+            { SpellId.SpiritDrinkerSelf7, 0 },
+            { SpellId.SpiritDrinkerSelf8, 0 },
+
+            { SpellId.SpiritDrinkerOther1, 0 },
+            { SpellId.SpiritDrinkerOther2, 0 },
+            { SpellId.SpiritDrinkerOther3, 0 },
+            { SpellId.SpiritDrinkerOther4, 0 },
+            { SpellId.SpiritDrinkerOther5, 0 },
+            { SpellId.SpiritDrinkerOther6, 0 },
+            { SpellId.SpiritDrinkerOther7, 0 },
+            { SpellId.SpiritDrinkerOther8, 0 },
+
+            { SpellId.Impenetrability1, 0 },
+            { SpellId.Impenetrability2, 0 },
+            { SpellId.Impenetrability3, 0 },
+            { SpellId.Impenetrability4, 0 },
+            { SpellId.Impenetrability5, 0 },
+            { SpellId.Impenetrability6, 0 },
+            { SpellId.Impenetrability7, 0 },
+            { SpellId.Impenetrability8, 0 },
+
+            { SpellId.AerfallesWard, 0 },
+            { SpellId.LesserSkinFiazhat, 0 },
+            { SpellId.MinorSkinFiazhat, 0 },
+            { SpellId.SkinFiazhat, 0 },
+
+            { SpellId.ItemEnchantmentMasterySelf1, 0 },
+            { SpellId.ItemEnchantmentMasterySelf2, 0 },
+            { SpellId.ItemEnchantmentMasterySelf3, 0 },
+            { SpellId.ItemEnchantmentMasterySelf4, 0 },
+            { SpellId.ItemEnchantmentMasterySelf5, 0 },
+            { SpellId.ItemEnchantmentMasterySelf6, 0 },
+            { SpellId.ItemEnchantmentMasterySelf7, 0 },
+            { SpellId.ItemEnchantmentMasterySelf8, 0 },
+
+            { SpellId.ItemEnchantmentMasteryOther1, 0 },
+            { SpellId.ItemEnchantmentMasteryOther2, 0 },
+            { SpellId.ItemEnchantmentMasteryOther3, 0 },
+            { SpellId.ItemEnchantmentMasteryOther4, 0 },
+            { SpellId.ItemEnchantmentMasteryOther5, 0 },
+            { SpellId.ItemEnchantmentMasteryOther6, 0 },
+            { SpellId.ItemEnchantmentMasteryOther7, 0 },
+            { SpellId.ItemEnchantmentMasteryOther8, 0 },
+
+            { SpellId.CreatureEnchantmentMasterySelf1, 0 },
+            { SpellId.CreatureEnchantmentMasterySelf2, 0 },
+            { SpellId.CreatureEnchantmentMasterySelf3, 0 },
+            { SpellId.CreatureEnchantmentMasterySelf4, 0 },
+            { SpellId.CreatureEnchantmentMasterySelf5, 0 },
+            { SpellId.CreatureEnchantmentMasterySelf6, 0 },
+            { SpellId.CreatureEnchantmentMasterySelf7, 0 },
+            { SpellId.CreatureEnchantmentMasterySelf8, 0 },
+
+            { SpellId.CreatureEnchantmentMasteryOther1, 0 },
+            { SpellId.CreatureEnchantmentMasteryOther2, 0 },
+            { SpellId.CreatureEnchantmentMasteryOther3, 0 },
+            { SpellId.CreatureEnchantmentMasteryOther4, 0 },
+            { SpellId.CreatureEnchantmentMasteryOther5, 0 },
+            { SpellId.CreatureEnchantmentMasteryOther6, 0 },
+            { SpellId.CreatureEnchantmentMasteryOther7, 0 },
+            { SpellId.CreatureEnchantmentMasteryOther8, 0 },
+
+            { SpellId.ArmorSelf1, 0 },
+            { SpellId.ArmorSelf2, 0 },
+            { SpellId.ArmorSelf3, 0 },
+            { SpellId.ArmorSelf4, 0 },
+            { SpellId.ArmorSelf5, 0 },
+            { SpellId.ArmorSelf6, 0 },
+            { SpellId.ArmorSelf7, 0 },
+            { SpellId.ArmorSelf8, 0 },
+
+            { SpellId.ArmorOther1, (int)SpellId.ArmorMasteryOther1 },
+            { SpellId.ArmorOther2, (int)SpellId.ArmorMasteryOther2 },
+            { SpellId.ArmorOther3, (int)SpellId.ArmorMasteryOther3 },
+            { SpellId.ArmorOther4, (int)SpellId.ArmorMasteryOther4 },
+            { SpellId.ArmorOther5, (int)SpellId.ArmorMasteryOther5 },
+            { SpellId.ArmorOther6, (int)SpellId.ArmorMasteryOther6 },
+            { SpellId.ArmorOther7, (int)SpellId.ArmorMasteryOther7 },
+            { SpellId.ArmorOther8, (int)SpellId.ArmorMasteryOther8 },
+
+            { SpellId.ImperilOther1, 0 },
+            { SpellId.ImperilOther2, 0 },
+            { SpellId.ImperilOther3, 0 },
+            { SpellId.ImperilOther4, 0 },
+            { SpellId.ImperilOther5, 0 },
+            { SpellId.ImperilOther6, 0 },
+            { SpellId.ImperilOther7, 0 },
+            { SpellId.ImperilOther8, 0 },
+
+            { SpellId.ImperilSelf1, 0 },
+            { SpellId.ImperilSelf2, 0 },
+            { SpellId.ImperilSelf3, 0 },
+            { SpellId.ImperilSelf4, 0 },
+            { SpellId.ImperilSelf5, 0 },
+            { SpellId.ImperilSelf6, 0 },
+            { SpellId.ImperilSelf7, 0 },
+            { SpellId.ImperilSelf8, 0 },
+
+            { SpellId.ForceArmor, 0 },
+            { SpellId.PanoplyQueenslayer, 0 },
+            { SpellId.TuskerHideLesser, 0 },
+            { SpellId.TuskerHide, 0 },
+            { SpellId.LesserMistsBur, 0 },
+            { SpellId.MinorMistsBur, 0 },
+            { SpellId.MistsBur, 0 },
+            { SpellId.ArmorSelfAegisGoldenFlame, 0 },
+            { SpellId.KukuurHide, 0 },
+            { SpellId.DrudgeArmor, 0 },
+            { SpellId.FrozenArmor, 0 },
+            { SpellId.ArmorProdigalHarbinger, 0 },
+            { SpellId.BaelzharonArmorOther, 0 },
+        };
     }
 }

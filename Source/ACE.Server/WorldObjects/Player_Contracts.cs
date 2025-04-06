@@ -84,6 +84,11 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            // Avoid giving the same contracts the player already has active.
+            var nonRepeatList = explorationList.Where(c => c.Landblock != Exploration1LandblockId && c.Landblock != Exploration2LandblockId && c.Landblock != Exploration3LandblockId).ToList();
+            if (nonRepeatList.Count >= 3) // Only remove repeated contracts if there are enough different ones to fill a new contract.
+                explorationList = nonRepeatList;
+
             var roll = ThreadSafeRandom.Next(0, explorationList.Count - 1);
             var entry = explorationList[roll];
             explorationList.RemoveAt(roll);
@@ -327,6 +332,7 @@ namespace ACE.Server.WorldObjects
             if (landblock == null || Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                 return;
 
+            var bonusMod = ((PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * PropertyManager.GetDouble("exploration_bonus_xp_contract_location").Item) * 3;
             var landblockId = landblock.Id.Raw >> 16;
             if (!Exploration1LandblockReached && Exploration1LandblockId != 0 && Exploration1LandblockId == landblockId)
             {
@@ -335,7 +341,7 @@ namespace ACE.Server.WorldObjects
 
                 var explorationSite = DatabaseManager.World.GetExplorationSitesByLandblock((ushort)landblockId).FirstOrDefault();
                 var level = explorationSite != null ? Math.Min(explorationSite.Level, Level ?? 1) : Level;
-                EarnXP((-level ?? -1) - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, msg, (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * 3);
+                EarnXP((-level ?? -1) - 1000, XpType.Exploration, null, null, 0, null, ShareType.Fellowship, msg, bonusMod);
                 PlayParticleEffect(PlayScript.AugmentationUseAttribute, Guid);
                 if (Exploration1KillProgressTracker == 0 && Exploration1MarkerProgressTracker == 0)
                     Session.Network.EnqueueSend(new GameMessageSystemChat("Your exploration assignment is now fulfilled!", ChatMessageType.Broadcast));
@@ -348,7 +354,7 @@ namespace ACE.Server.WorldObjects
 
                 var explorationSite = DatabaseManager.World.GetExplorationSitesByLandblock((ushort)landblockId).FirstOrDefault();
                 var level = explorationSite != null ? Math.Min(explorationSite.Level, Level ?? 1) : Level;
-                EarnXP((-level ?? -1) - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, msg, (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * 3);
+                EarnXP((-level ?? -1) - 1000, XpType.Exploration, null, null, 0, null, ShareType.Fellowship, msg, bonusMod);
                 PlayParticleEffect(PlayScript.AugmentationUseAttribute, Guid);
                 if (Exploration2KillProgressTracker == 0 && Exploration2MarkerProgressTracker == 0)
                     Session.Network.EnqueueSend(new GameMessageSystemChat("Your exploration assignment is now fulfilled!", ChatMessageType.Broadcast));
@@ -361,7 +367,7 @@ namespace ACE.Server.WorldObjects
 
                 var explorationSite = DatabaseManager.World.GetExplorationSitesByLandblock((ushort)landblockId).FirstOrDefault();
                 var level = explorationSite != null ? Math.Min(explorationSite.Level, Level ?? 1) : Level;
-                EarnXP((-level ?? -1) - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, msg, (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5) * 3);
+                EarnXP((-level ?? -1) - 1000, XpType.Exploration, null, null, 0, null, ShareType.Fellowship, msg, bonusMod);
                 PlayParticleEffect(PlayScript.AugmentationUseAttribute, Guid);
                 if (Exploration3KillProgressTracker == 0 && Exploration3MarkerProgressTracker == 0)
                     Session.Network.EnqueueSend(new GameMessageSystemChat("Your exploration assignment is now fulfilled!", ChatMessageType.Broadcast));
@@ -387,39 +393,6 @@ namespace ACE.Server.WorldObjects
                 item.Destroy();
 
             return success;
-        }
-
-        public void CheckExplorationLandblock()
-        {
-            var currentLandblock = CurrentLandblock;
-            if (currentLandblock == null)
-                return; // TODO: Fix this - Players may not be getting credit for exploration
-
-            var currentLandblockId = currentLandblock.Id.Raw >> 16;
-
-            if (!Exploration1LandblockReached && Exploration1LandblockId != 0 && Exploration1LandblockId == currentLandblockId)
-            {
-                Exploration1LandblockReached = true;
-                var msg = $"You've reached {GetCurrentLandblockName() ?? "your exploration contract's location"}! {Exploration1KillProgressTracker:N0} kill{(Exploration1KillProgressTracker != 1 ? "s" : "")} remaining and {Exploration1MarkerProgressTracker:N0} marker{(Exploration1MarkerProgressTracker != 1 ? "s" : "")} remaining.";
-                EarnXP((int)(((-Level ?? -1) - 1000) * (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5)), XpType.Exploration, null, null, 0, null, ShareType.None, msg);
-                PlayParticleEffect(PlayScript.AugmentationUseAttribute, Guid);
-            }
-
-            if (!Exploration2LandblockReached && Exploration2LandblockId != 0 && Exploration2LandblockId == currentLandblockId)
-            {
-                Exploration2LandblockReached = true;
-                var msg = $"You've reached {GetCurrentLandblockName() ?? "your exploration contract's location"}! {Exploration2KillProgressTracker:N0} kill{(Exploration2KillProgressTracker != 1 ? "s" : "")} remaining and {Exploration2MarkerProgressTracker:N0} marker{(Exploration2MarkerProgressTracker != 1 ? "s" : "")} remaining.";
-                EarnXP((int)(((-Level ?? -1) - 1000) * (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5)), XpType.Exploration, null, null, 0, null, ShareType.None, msg);
-                PlayParticleEffect(PlayScript.AugmentationUseAttribute, Guid);
-            }
-
-            if (!Exploration3LandblockReached && Exploration3LandblockId != 0 && Exploration3LandblockId == currentLandblockId)
-            {
-                Exploration3LandblockReached = true;
-                var msg = $"You've reached {GetCurrentLandblockName() ?? "your exploration contract's location"}! {Exploration3KillProgressTracker:N0} kill{(Exploration3KillProgressTracker != 1 ? "s" : "")} remaining and {Exploration3MarkerProgressTracker:N0} marker{(Exploration3MarkerProgressTracker != 1 ? "s" : "")} remaining.";
-                EarnXP((int)(((-Level ?? -1) - 1000) * (PropertyManager.GetDouble("exploration_bonus_xp").Item + 0.5)), XpType.Exploration, null, null, 0, null, ShareType.None, msg);
-                PlayParticleEffect(PlayScript.AugmentationUseAttribute, Guid);
-            }
         }
 
         public bool TryGiveRandomSalvage(WorldObject giver = null, int tier = 1, float qualityMod = 0.0f)

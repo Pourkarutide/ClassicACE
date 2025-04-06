@@ -8,6 +8,7 @@ using ACE.Entity.Models;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
 using ACE.Server.Factories.Tables;
+using ACE.Server.Managers;
 using ACE.Server.Network.GameEvent.Events;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Physics;
@@ -261,6 +262,10 @@ namespace ACE.Server.WorldObjects
         {
             if (target.IsDead || target.Teleporting) return;
 
+            //dont allow arena observers to heal anyone
+            if (healer != null && (healer.IsArenaObserver || healer.IsPendingArenaObserver))
+                return;
+
             var remainingMsg = "";
 
             if (!UnlimitedUse)
@@ -296,6 +301,16 @@ namespace ACE.Server.WorldObjects
 
             // heal up
             var healAmount = GetHealAmount(healer, target, missingVital, out var critical, out var staminaCost);
+
+            if (ArenaLocation.IsArenaLandblock(target.Location.Landblock))
+            {
+                var arenaEvent = ArenaManager.GetArenaEventByLandblock(target.Location.Landblock);
+                if (arenaEvent != null && arenaEvent.IsOvertime)
+                {
+                    healAmount = Convert.ToUInt32(Math.Round(healAmount * arenaEvent.OvertimeHealingModifier));
+                    staminaCost = Convert.ToUInt32(Math.Round(staminaCost * arenaEvent.OvertimeHealingModifier));
+                }
+            }
 
             healer.UpdateVitalDelta(healer.Stamina, (int)-staminaCost);
             // Amount displayed to player can exceed actual amount healed due to heal boost ratings, but we only want to record the actual amount healed
@@ -352,6 +367,14 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public uint GetHealAmount(Player healer, Player target, uint missingVital, out bool criticalHeal, out uint staminaCost)
         {
+            //dont allow arena observers to heal
+            if (healer != null && (healer.IsArenaObserver || healer.IsPendingArenaObserver))
+            {
+                criticalHeal = false;
+                staminaCost = 0;
+                return 0;
+            }
+
             // factors: healing skill, healing kit bonus, stamina, critical chance
             var healingSkill = healer.GetCreatureSkill(Skill.Healing).Current;
             var healBase = healingSkill * (float)HealkitMod.Value;
@@ -364,6 +387,16 @@ namespace ACE.Server.WorldObjects
             // chance for critical healing
             criticalHeal = ThreadSafeRandom.Next(0.0f, 1.0f) < 0.1f;
             if (criticalHeal) healAmount *= 2;
+
+            //Reduce healing in arena overtime
+            if (target != null && ArenaLocation.IsArenaLandblock(target.Location.Landblock))
+            {
+                var arenaEvent = ArenaManager.GetArenaEventByLandblock(target.Location.Landblock);
+                if (arenaEvent != null && arenaEvent.IsOvertime)
+                {
+                    healAmount = Math.Round(healAmount * arenaEvent.OvertimeHealingModifier);
+                }
+            }
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM || target.PKTimerActive)
             {

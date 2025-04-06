@@ -355,7 +355,7 @@ namespace ACE.Server.WorldObjects
                 case SpellType.FellowBoost:
 
                     if (spell.IsResurrectionSpell)
-                        HandleCastSpell_Ress(spell, targetCorpse, showMsg);
+                        HandleCastSpell_Ress(spell, targetCorpse, new Position(Location), showMsg);
                     else
                         HandleCastSpell_Boost(spell, targetCreature, showMsg);
                     break;
@@ -604,6 +604,16 @@ namespace ACE.Server.WorldObjects
                     srcVital = "stamina";
                     break;
                 default:   // Health
+                    var targetP = targetCreature as Player;
+
+                    if (targetP != null && ArenaLocation.IsArenaLandblock(targetP.Location.Landblock))
+                    {
+                        var arenaEvent = ArenaManager.GetArenaEventByLandblock(targetP.Location.Landblock);
+                        if (arenaEvent != null && arenaEvent.IsOvertime)
+                        {
+                            tryBoost = boost = (int)Math.Round((boost * arenaEvent.OvertimeHealingModifier));
+                        }
+                    }
                     boost = targetCreature.UpdateVitalDelta(targetCreature.Health, tryBoost);
                     srcVital = "health";
 
@@ -684,7 +694,7 @@ namespace ACE.Server.WorldObjects
             HandleBoostTransferDeath(creature, targetCreature);
         }
 
-        private void HandleCastSpell_Ress(Spell spell, Corpse targetCorpse, bool showMsg = true, bool confirmed = false)
+        private void HandleCastSpell_Ress(Spell spell, Corpse targetCorpse, Position castFromPosition, bool showMsg = true, bool confirmed = false)
         {
             if (targetCorpse == null)
                 return;
@@ -724,7 +734,7 @@ namespace ACE.Server.WorldObjects
                         player.SendChatMessage(player, $"{targetPlayer.Name} is considering your resurrection attempt.", ChatMessageType.Magic);
 
                     var msg = $"{Name} is attempting to resurrect one of your corpses, accept?";
-                    var confirm = new Confirmation_Resurrect(targetPlayer.Guid, Guid, () => HandleCastSpell_Ress(spell, targetCorpse, showMsg, true));
+                    var confirm = new Confirmation_Resurrect(targetPlayer.Guid, Guid, () => HandleCastSpell_Ress(spell, targetCorpse, castFromPosition, showMsg, true));
                     if (!targetPlayer.ConfirmationManager.EnqueueSend(confirm, msg))
                         targetPlayer.SendWeenieError(WeenieError.ConfirmationInProgress);
                     return;
@@ -736,10 +746,32 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
-            var currentPos = new Position(creature.Location);
-            targetPlayer.Teleport(creature.Location);
-            targetPlayer.SetPosition(PositionType.TeleportedCharacter, currentPos);
+            targetPlayer.IsBusy = true;
+            var actionChain = new ActionChain();
+            if (targetPlayer.CurrentMotionState.Stance != MotionStance.NonCombat)
+                targetPlayer.EnqueueMotion_Force(actionChain, MotionStance.NonCombat, MotionCommand.Ready, (MotionCommand)targetPlayer.CurrentMotionState.Stance);
+            targetPlayer.EnqueueMotion_Force(actionChain, MotionStance.NonCombat, MotionCommand.EnterPortal);
+            actionChain.AddAction(targetPlayer, () =>
+            {
+                targetPlayer.IsBusy = false;
+                targetPlayer.Teleport(castFromPosition);
+                targetPlayer.SetPosition(PositionType.TeleportedCharacter, castFromPosition);
+            });
+            actionChain.EnqueueChain();
+
             targetCorpse.HasBeenResurrected = true;
+
+            // Attempt to move corpse to caster's location when the spell was cast.
+            var prevCorpseLoc = targetCorpse.Location;
+            var newCorpseLoc = new Position(castFromPosition);
+            var setPos = new Physics.Common.SetPosition(newCorpseLoc.PhysPosition(), Physics.Common.SetPositionFlags.Teleport | Physics.Common.SetPositionFlags.Slide);
+            if (targetCorpse.PhysicsObj.SetPosition(setPos) == Physics.Common.SetPositionError.OK)
+            {
+                targetCorpse.Location = targetCorpse.PhysicsObj.Position.ACEPosition();
+                if (prevCorpseLoc.Landblock != targetCorpse.Location.Landblock)
+                    LandblockManager.RelocateObjectForPhysics(targetCorpse, true);
+                targetCorpse.SendUpdatePosition(true);
+            }
 
             int minBoostValue = Math.Min(spell.Boost, spell.MaxBoost);
             int maxBoostValue = Math.Max(spell.Boost, spell.MaxBoost);
@@ -963,6 +995,17 @@ namespace ACE.Server.WorldObjects
                     break;
                 case PropertyAttribute2nd.Stamina:
                     srcVital = "stamina";
+                    if (targetPlayer != null &&
+                      spell.Destination == PropertyAttribute2nd.Health &&
+                      srcVitalChange < 0 &&
+                      ArenaLocation.IsArenaLandblock(targetPlayer.Location.Landblock))
+                    {
+                        var arenaEvent = ArenaManager.GetArenaEventByLandblock(targetPlayer.Location.Landblock);
+                        if (arenaEvent != null && arenaEvent.IsOvertime)
+                        {
+                            srcVitalChange = Convert.ToUInt32(Math.Round(srcVitalChange * arenaEvent.OvertimeHealingModifier));
+                        }
+                    }
                     srcVitalChange = (uint)-transferSource.UpdateVitalDelta(transferSource.Stamina, -(int)srcVitalChange);
                     break;
                 default:   // Health
@@ -991,6 +1034,16 @@ namespace ACE.Server.WorldObjects
                     break;
                 default:   // Health
                     destVital = "health";
+
+                    if (targetPlayer != null && ArenaLocation.IsArenaLandblock(targetPlayer.Location.Landblock))
+                    {
+                        var arenaEvent = ArenaManager.GetArenaEventByLandblock(targetPlayer.Location.Landblock);
+                        if (arenaEvent != null && arenaEvent.IsOvertime)
+                        {
+                            destVitalChange = Convert.ToUInt32(Math.Round(destVitalChange * arenaEvent.OvertimeHealingModifier));
+                        }
+                    }
+
                     destVitalChange = (uint)destination.UpdateVitalDelta(destination.Health, destVitalChange);
 
                     destination.DamageHistory.OnHeal(destVitalChange);
@@ -2113,15 +2166,6 @@ namespace ACE.Server.WorldObjects
             //var result = (float)(setup.Spheres[0].Radius * scale);
 
             var setupRadius = setup.Radius;
-
-            // Fix projectiles spawning behind the caster.
-            if (weenie.PropertiesDID.TryGetValue(PropertyDataId.PhysicsEffectTable, out var physicsEffectTable))
-            {
-                if (physicsEffectTable == 0x34000005)
-                    setupRadius += 1.5f;
-                else if (physicsEffectTable == 0x34000007)
-                    setupRadius += 0.5f;
-            }
 
             var result = (float)(setupRadius * scale);
 

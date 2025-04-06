@@ -47,7 +47,24 @@ namespace ACE.Server.WorldObjects
 
             EquippedObjectsLoaded = true;
 
+            OnInitialEquipmentLoadCompleted();
+
             SetChildren();
+        }
+
+        /// <summary>
+        /// This event is raised after the containers items have been completely loaded from the database
+        /// </summary>
+        protected void OnInitialEquipmentLoadCompleted()
+        {
+            if(InventoryLoaded && EquippedObjectsLoaded)
+                ExtraItemChecks();
+        }
+
+        protected override void OnInitialInventoryLoadCompleted()
+        {
+            if (InventoryLoaded && EquippedObjectsLoaded)
+                ExtraItemChecks();
         }
 
         public bool WieldedLocationIsAvailable(WorldObject item, EquipMask wieldedLocation)
@@ -348,7 +365,7 @@ namespace ACE.Server.WorldObjects
 
             TrySetChild(worldObject);
 
-            ExtraItemChecks(worldObject);
+            worldObject.ExtraItemChecks();
 
             // enqueue to ensure parent object has spawned,
             // and spell fx are visible
@@ -828,7 +845,7 @@ namespace ACE.Server.WorldObjects
                 // add this flag so item can move over to corpse upon death
                 // (ACE logic: it is likely all inventory of a creature was moved over without reservation (bonded rules enforced), but ACE is slightly different in how it handles it for net same result)
 
-                if (!TryAddToInventory(item))
+                if (!TryAddToInventory(item, allowStacking: Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM))
                     item.Destroy();
             }
         }

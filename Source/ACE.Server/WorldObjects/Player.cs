@@ -566,6 +566,9 @@ namespace ACE.Server.WorldObjects
         {
             get
             {
+                if (!PropertyManager.GetBool("recall_warden").Item)
+                    return true;
+
                 if (Account.AccessLevel > 0)
                     return true;
                 if (ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
@@ -637,7 +640,7 @@ namespace ACE.Server.WorldObjects
                 OfflineInstances = null;
             }
 
-            if (!PKRecallAllowed && !forceImmediate)
+            if ((!PKRecallAllowed || PKLogoutActive) && !forceImmediate)
             {
                 var timer = PropertyManager.GetLong("pk_timer").Item;
                 Session.Network.EnqueueSend(new GameMessageSystemChat($"You will logout in {timer} seconds...", ChatMessageType.Broadcast));
@@ -682,6 +685,7 @@ namespace ACE.Server.WorldObjects
             IsLoggingOut = true;
 
             EndSneaking();
+            RemoveRoadSpeedBuff();
 
             PlayerManager.AddPlayerToFinalLogoffQueue(this);
 

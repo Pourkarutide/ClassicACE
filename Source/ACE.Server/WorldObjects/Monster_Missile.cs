@@ -28,7 +28,7 @@ namespace ACE.Server.WorldObjects
         {
             var targetCreature = AttackTarget as Creature;
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && IsBlockedByDoor(targetCreature))
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && IsBlockedByDoor(AttackTarget))
             {
                 EndAttack();
                 return;
@@ -156,7 +156,13 @@ namespace ACE.Server.WorldObjects
 
             var timeOffset = launchTime + reloadTime + linkTime;
 
-            NextMoveTime = NextAttackTime = PrevAttackTime + timeOffset + MissileDelay;
+            double missileDelay;
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+                missileDelay = MissileDelay;
+            else
+                missileDelay = PowerupTime ?? 1.0f;
+
+            NextMoveTime = NextAttackTime = PrevAttackTime + timeOffset + missileDelay;
         }
 
         /// <summary>

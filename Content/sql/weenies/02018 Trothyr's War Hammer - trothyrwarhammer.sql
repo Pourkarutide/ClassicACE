@@ -6,12 +6,13 @@ VALUES (2018, 'trothyrwarhammer', 6, '2019-04-19 00:00:00') /* MeleeWeapon */;
 INSERT INTO `weenie_properties_int` (`object_Id`, `type`, `value`)
 VALUES (2018,   1,          1) /* ItemType - MeleeWeapon */
      , (2018,   3,         14) /* PaletteTemplate - Red */
-     , (2018,   5,        500) /* EncumbranceVal */
+     , (2018,   5,        800) /* EncumbranceVal */
      , (2018,   8,        200) /* Mass */
      , (2018,   9,    1048576) /* ValidLocations - MeleeWeapon */
      , (2018,  16,          1) /* ItemUseable - No */
      , (2018,  18,          1) /* UiEffects - Magical */
      , (2018,  19,       1000) /* Value */
+     , (2018,  33,          1) /* Bonded - Bonded */
      , (2018,  44,         18) /* Damage */
      , (2018,  45,          4) /* DamageType - Bludgeon */
      , (2018,  46,          2) /* DefaultCombatStyle - OneHanded */

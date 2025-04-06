@@ -493,6 +493,8 @@ namespace ACE.Server.WorldObjects.Managers
 
             if (!HasVitae)
             {
+                Player.VitaeDecayTimestamp = Time.GetUnixTime();
+
                 // TODO refactor this so it uses the existing Add() method.
 
                 // add entry for new vitae
@@ -1508,6 +1510,16 @@ namespace ACE.Server.WorldObjects.Managers
 
             var targetPlayer = WorldObject as Player;
 
+            //Arenas - If this is an arena landblock, don't allow any dmg except while the event is in a started status and between non-eliminated players
+            if (targetPlayer != null && ArenaLocation.IsArenaLandblock(targetPlayer.Location.Landblock))
+            {
+                var arenaEvent = ArenaManager.GetArenaEventByLandblock(targetPlayer.Location.Landblock);
+                if (arenaEvent == null || arenaEvent.Status != 4)
+                {
+                    return;
+                }
+            }
+
             // get the total tick amount
             var tickAmountTotal = 0.0f;
             foreach (var enchantment in enchantments)
@@ -1515,6 +1527,7 @@ namespace ACE.Server.WorldObjects.Managers
                 //var totalAmount = enchantment.StatModValue;
                 //var totalTicks = GetNumTicks(enchantment);
                 var tickAmount = enchantment.StatModValue;
+                Player sourcePlayer = null;
 
                 WorldObject damager = enchantment.CachedCasterObject as WorldObject;
                 if (enchantment.CachedModifiedStatModValue != null)
@@ -1539,7 +1552,7 @@ namespace ACE.Server.WorldObjects.Managers
 
                     var resistanceMod = creature.GetResistanceMod(damageType, damager, null);
 
-                    var sourcePlayer = damager as Player;
+                    sourcePlayer = damager as Player;
 
                     bool isPvP = sourcePlayer != null && targetPlayer != null;
 
@@ -1594,6 +1607,15 @@ namespace ACE.Server.WorldObjects.Managers
 
                     tickAmount *= resistanceMod * damageResistRatingMod * dotResistRatingMod * additionalMod;
 
+
+                    //Arena overtime reduces DOT dmg
+                    if (targetPlayer != null && ArenaLocation.IsArenaLandblock(targetPlayer.Location.Landblock))
+                    {
+                        var arenaEvent = ArenaManager.GetArenaEventByLandblock(targetPlayer.Location.Landblock);
+                        if (arenaEvent != null && arenaEvent.IsOvertime)
+                            tickAmount = tickAmount * arenaEvent.OvertimeHealingModifier * 0.25f;
+                    }
+
                     enchantment.CachedModifiedStatModValue = tickAmount;
                 }
 
@@ -1615,6 +1637,23 @@ namespace ACE.Server.WorldObjects.Managers
                 }
 
                 tickAmountTotal += tickAmount;
+
+                //Arenas - track total dmg dealt and received
+                if (sourcePlayer != null && targetPlayer != null && ArenaLocation.IsArenaLandblock(targetPlayer.Location.Landblock))
+                {
+                    var arenaEvent = ArenaManager.GetArenaEventByLandblock(targetPlayer.Location.Landblock);
+                    if (arenaEvent != null || arenaEvent.Status == 4)
+                    {
+                        var attackerArenaPlayer = arenaEvent.Players.FirstOrDefault(x => x.CharacterId == sourcePlayer.Character.Id);
+                        var defenderArenaPlayer = arenaEvent.Players.FirstOrDefault(x => x.CharacterId == targetPlayer.Character.Id);
+
+                        if (attackerArenaPlayer != null && defenderArenaPlayer != null)
+                        {
+                            attackerArenaPlayer.TotalDmgDealt += (uint)Math.Round(tickAmount);
+                            defenderArenaPlayer.TotalDmgReceived += (uint)Math.Round(tickAmount);
+                        }
+                    }
+                }
 
                 if (isDead) break;
             }

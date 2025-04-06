@@ -294,6 +294,16 @@ namespace ACE.Server.WorldObjects
                         HandleActionChangeCombatMode(CombatMode.Magic);
                         break;
 
+                    case EquipMask.Shield:
+
+                        var weapon = GetEquippedWeapon(true);
+
+                        if (weapon != null && weapon.DefaultCombatStyle == CombatStyle.ThrownWeapon)
+                            HandleActionChangeCombatMode(CombatMode.Missile);
+                        else
+                            HandleActionChangeCombatMode(CombatMode.Melee);
+                        break;
+
                     default:
                         HandleActionChangeCombatMode(CombatMode.Melee);
                         break;
@@ -488,6 +498,11 @@ namespace ACE.Server.WorldObjects
 
                     if (CombatMode == CombatMode.Missile && wieldedLocation == EquipMask.MissileAmmo)
                         newCombatMode = CombatMode.NonCombat;
+
+                    var weapon = GetEquippedWeapon(true);
+
+                    if (weapon != null && weapon.DefaultCombatStyle == CombatStyle.ThrownWeapon)
+                        newCombatMode = CombatMode.Missile;
 
                     HandleActionChangeCombatMode(newCombatMode);
                 }
@@ -1334,7 +1349,9 @@ namespace ACE.Server.WorldObjects
                 var itemFoundOnMyCorpse = itemFoundOnCorpse && (itemRootOwner.VictimId == Guid.Full);
                 if (item.GeneratorId != null || (itemFoundOnCorpse && !itemFoundOnMyCorpse)) // item is controlled by a generator or is on a corpse that is not my own
                 {
-                    if ((GameplayMode == GameplayModes.Limbo || PropertyManager.GetBool("unlimited_respec").Item) && (item.Quest == "SkillForgetfulnessGemPickedUp" || item.Quest == "SkillEnlightenmentGemPickedUp" || item.Quest == "AttributeLoweringGemPickedUp" || item.Quest == "AttributeRaisingGemPickedUp" || item.Quest == "SkillPrimaryGemPickedUp" || item.Quest == "SkillSecondaryGemPickedUp"))
+                    var unlimitedRespec = PropertyManager.GetBool("unlimited_respec").Item;
+                    var unlimitedRespecLevelLimit = PropertyManager.GetLong("unlimited_respec_max_level").Item;
+                    if ((GameplayMode == GameplayModes.Limbo || (unlimitedRespec && Level <= unlimitedRespecLevelLimit)) && (item.Quest == "SkillForgetfulnessGemPickedUp" || item.Quest == "SkillEnlightenmentGemPickedUp" || item.Quest == "AttributeLoweringGemPickedUp" || item.Quest == "AttributeRaisingGemPickedUp" || item.Quest == "SkillPrimaryGemPickedUp" || item.Quest == "SkillSecondaryGemPickedUp"))
                     {
                         questSolve = false;
                     }
@@ -1468,7 +1485,7 @@ namespace ACE.Server.WorldObjects
         /// </summary>
         public void HandleActionDropItem(uint itemGuid)
         {
-            if (IsBusy || Teleporting || suicideInProgress)
+            if (IsBusy || Teleporting || suicideInProgress || IsArenaObserver)
             {
                 Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YoureTooBusy));
                 Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, itemGuid));
@@ -1534,6 +1551,8 @@ namespace ACE.Server.WorldObjects
 
                 if (TryDropItem(item))
                 {
+                    EndSneaking();
+
                     // drop success
                     Session.Network.EnqueueSend(
                         new GameMessagePublicUpdateInstanceID(item, PropertyInstanceId.Container, ObjectGuid.Invalid),
@@ -1612,6 +1631,94 @@ namespace ACE.Server.WorldObjects
             item.EnqueueBroadcastPhysicsState();
 
             return true;
+        }
+
+        private bool HasIncompatibleOffhand(WorldObject itemToEquip, EquipMask wieldedLocation)
+        {
+            // Only remove offhand for primary weapon equips
+            if (wieldedLocation != EquipMask.MeleeWeapon && wieldedLocation != EquipMask.TwoHanded && wieldedLocation != EquipMask.MissileWeapon && wieldedLocation != EquipMask.Held)
+                return false;
+
+            var offhand = GetEquippedOffHand();
+            if (offhand == null)
+                return false;
+
+            if (itemToEquip.IsTwoHanded || // Two-handed weapons always require removing offhand
+               (offhand.IsShield && offhand.Mass > 140 && (itemToEquip.IsCaster || itemToEquip.IsAmmoLauncher)) || // For missile/caster weapons, only remove heavy shields (mass > 140)
+               (!offhand.IsShield && (itemToEquip.IsCaster || itemToEquip.IsAmmoLauncher)) || // For non-shield offhands, remove if equipping missile/caster
+               (itemToEquip.IsThrownWeapon && !offhand.IsShield)) // For thrown weapons, remove anything but shields
+                return true;
+            else
+                return false;
+        }
+
+        private bool Unequip(EquipMask location)
+        {
+            var item = EquippedObjects.Values.FirstOrDefault(e => e.CurrentWieldedLocation == location);
+            if (item == null)
+                return false;
+
+            if (TryDequipObjectWithNetworking(item.Guid, out var dequippedItem, DequipObjectAction.DequipToPack))
+            {
+                if (!TryCreateInInventoryWithNetworking(dequippedItem))
+                {
+                    if (!TryEquipObjectWithNetworking(dequippedItem, location))
+                        log.Warn($"0x{dequippedItem.Guid}:{dequippedItem.Name} for player {Name} lost from Unequip failure.");
+                    return false;
+                }
+
+                if (!FixStuckEquippedItemIconPending)
+                {
+                    FixStuckEquippedItemIconPending = true;
+
+                    var actionChain = new ActionChain();
+                    actionChain.AddDelaySeconds(0.25);
+                    actionChain.AddAction(this, () => FixStuckEquippedItemIcon(location));
+                    actionChain.EnqueueChain();
+                }
+
+                return true;
+            }
+            else
+                return false;
+        }
+
+        private bool FixStuckEquippedItemIconPending;
+
+        /// <summary>
+        // There appears to be a bug possibly on the client that causes item icons to become stuck as wielded when the unwield is initiated by the server.
+        // This seems to happens more often when the client is under heavy load.
+        // This function will check for and fix the issue without the player having to relog.
+        /// <summary>
+        public void FixStuckEquippedItemIcon(EquipMask location)
+        {
+            if (EquippedObjects.Values.FirstOrDefault(e => e.CurrentWieldedLocation == location) == null)
+            {
+                WorldObject item = WorldObjectFactory.CreateNewWorldObject((int)ACE.Server.Factories.Enum.WeenieClassName.placeholder);
+                if (item != null)
+                {
+                    item.IconId = 0x000F6C; // Use the shield slot icon so it draws less attention when it briefly shows as wielded.
+                    Session.Network.EnqueueSend(new GameMessageCreateObject(item));
+
+                    var actionChain = new ActionChain();
+                    actionChain.AddDelaySeconds(0.25);
+                    actionChain.AddAction(this, () =>
+                    {
+                        if (EquippedObjects.Values.FirstOrDefault(e => e.CurrentWieldedLocation == location) == null)
+                            Session.Network.EnqueueSend(new GameEventWieldItem(Session, item.Guid.Full, location));
+                    });
+                    actionChain.AddDelaySeconds(0.1);
+                    actionChain.AddAction(this, () =>
+                    {
+                        Session.Network.EnqueueSend(new GameMessageDeleteObject(item));
+                        item.Destroy();
+                        FixStuckEquippedItemIconPending = false;
+                    });
+                    actionChain.EnqueueChain();
+                }
+            }
+            else
+                FixStuckEquippedItemIconPending = false;
         }
 
         /// <summary>
@@ -1717,27 +1824,52 @@ namespace ACE.Server.WorldObjects
                             return;
                         }
 
-                        if (DoHandleActionGetAndWieldItem(item, fromContainer, rootOwner, wasEquipped, wieldedLocation))
+                        var equipChain = new ActionChain();
+                        if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
                         {
-                            EndSneaking();
-
-                            Session.Network.EnqueueSend(new GameMessagePrivateUpdatePropertyInt(this, PropertyInt.EncumbranceVal, EncumbranceVal ?? 0));
-
-                            EnqueueBroadcast(new GameMessageSound(Guid, Sound.PickUpItem));
-
-                            item.EmoteManager.OnPickup(this);
-                            item.NotifyOfEvent(RegenerationType.PickUp);
-
-                            if (questSolve)
-                                item.EmoteManager.OnQuest(this);
-
-                            if (isFromAPlayerCorpse)
+                            if (HasIncompatibleOffhand(item, wieldedLocation))
                             {
-                                log.DebugFormat("[CORPSE] {0} (0x{1}) picked up and wielded {2} (0x{3}) from {4} (0x{5})", Name, Guid, item.Name, item.Guid, rootOwner.Name, rootOwner.Guid);
-                                item.SaveBiotaToDatabase();
+                                equipChain.AddAction(this, () => Unequip(EquipMask.Shield));
+                                equipChain.AddDelaySeconds(0.1);
+                            }
+                            else if (wieldedLocation == EquipMask.Cloak && GetEquippedLeyLineAmulet != null)
+                            {
+                                equipChain.AddAction(this, () => Unequip(EquipMask.Cloak));
+                                equipChain.AddDelaySeconds(0.1);
+                            }
+                            else if (wieldedLocation == EquipMask.TrinketOne && GetEquippedTrinket() != null)
+                            {
+                                equipChain.AddAction(this, () => Unequip(EquipMask.TrinketOne));
+                                equipChain.AddDelaySeconds(0.1);
                             }
                         }
-                        EnqueuePickupDone(pickupMotion);
+
+                        equipChain.AddAction(this, () =>
+                        {
+                            if (DoHandleActionGetAndWieldItem(item, fromContainer, rootOwner, wasEquipped, wieldedLocation))
+                            {
+                                EndSneaking();
+
+                                Session.Network.EnqueueSend(new GameMessagePrivateUpdatePropertyInt(this, PropertyInt.EncumbranceVal, EncumbranceVal ?? 0));
+
+                                EnqueueBroadcast(new GameMessageSound(Guid, Sound.PickUpItem));
+
+                                item.EmoteManager.OnPickup(this);
+                                item.NotifyOfEvent(RegenerationType.PickUp);
+
+                                if (questSolve)
+                                    item.EmoteManager.OnQuest(this);
+
+                                if (isFromAPlayerCorpse)
+                                {
+                                    log.DebugFormat("[CORPSE] {0} (0x{1}) picked up and wielded {2} (0x{3}) from {4} (0x{5})", Name, Guid, item.Name, item.Guid, rootOwner.Name, rootOwner.Guid);
+                                    item.SaveBiotaToDatabase();
+                                }
+                            }
+                            EnqueuePickupDone(pickupMotion);
+                        });
+
+                        equipChain.EnqueueChain();
                     });
 
                     pickupChain.EnqueueChain();
@@ -1746,7 +1878,28 @@ namespace ACE.Server.WorldObjects
             }
             else
             {
-                DoHandleActionGetAndWieldItem(item, fromContainer, rootOwner, wasEquipped, wieldedLocation);
+                var equipChain = new ActionChain();
+                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+                {
+                    if (HasIncompatibleOffhand(item, wieldedLocation))
+                    {
+                        equipChain.AddAction(this, () => Unequip(EquipMask.Shield));
+                        equipChain.AddDelaySeconds(0.1);
+                    }
+                    else if (wieldedLocation == EquipMask.Cloak && GetEquippedLeyLineAmulet != null)
+                    {
+                        equipChain.AddAction(this, () => Unequip(EquipMask.Cloak));
+                        equipChain.AddDelaySeconds(0.1);
+                    }
+                    else if (wieldedLocation == EquipMask.TrinketOne && GetEquippedTrinket() != null)
+                    {
+                        equipChain.AddAction(this, () => Unequip(EquipMask.TrinketOne));
+                        equipChain.AddDelaySeconds(0.1);
+                    }
+                }
+
+                equipChain.AddAction(this, () => DoHandleActionGetAndWieldItem(item, fromContainer, rootOwner, wasEquipped, wieldedLocation));
+                equipChain.EnqueueChain();
             }
         }
 
@@ -2832,7 +2985,10 @@ namespace ACE.Server.WorldObjects
 
                 if (TryDropItem(newStack))
                 {
+                    EndSneaking();
+
                     EnqueueBroadcast(new GameMessageSound(Guid, Sound.DropItem));
+                    stack.EmoteManager.OnDrop(this);
                 }
                 else
                 {
@@ -3365,8 +3521,19 @@ namespace ACE.Server.WorldObjects
                             return;
                         }
 
+                        var questSolve = false;
+                        var isFromAPlayerCorpse = false;
+                        if (sourceStackRootOwner != this && !VerifyQuest(sourceStack, sourceStackRootOwner, out questSolve, out isFromAPlayerCorpse))
+                        {
+                            // InventoryServerSaveFailed previously sent in QuestManager
+                            EnqueuePickupDone(pickupMotion);
+                            return;
+                        }
+
                         if (DoHandleActionStackableMerge(sourceStack, targetStack, amount))
                         {
+                            EndSneaking();
+
                             // If the client used the R key to merge a partial stack from the landscape, it also tries to add the "ghosted" item of the picked up stack to the inventory as well.
                             if (sourceStackRootOwner != this && sourceStack.StackSize > 0)
                                 Session.Network.EnqueueSend(new GameMessageCreateObject(sourceStack));
@@ -3380,9 +3547,28 @@ namespace ACE.Server.WorldObjects
                                 UpdateTradeNoteValue();
 
                             if (sourceStackRootOwner == this)
+                            {
                                 EnqueueBroadcast(new GameMessageSound(Guid, Sound.DropItem));
+                                sourceStack.EmoteManager.OnDrop(this);
+                            }
                             else if (targetStackRootOwner == this)
+                            {
                                 EnqueueBroadcast(new GameMessageSound(Guid, Sound.PickUpItem));
+                                sourceStack.EmoteManager.OnPickup(this);
+                                sourceStack.NotifyOfEvent(RegenerationType.PickUp);
+
+                                if (questSolve)
+                                    sourceStack.EmoteManager.OnQuest(this);
+
+                                if (isFromAPlayerCorpse)
+                                {
+                                    log.DebugFormat("[CORPSE] {0} (0x{1}) picked up {2} (0x{3}) from {4} (0x{5})", Name, Guid, sourceStack.Name, sourceStack.Guid, sourceStackRootOwner.Name, sourceStackRootOwner.Guid);
+                                    if (!sourceStack.IsDestroyed)
+                                        sourceStack.SaveBiotaToDatabase();
+                                    if (!targetStack.IsDestroyed)
+                                        targetStack.SaveBiotaToDatabase();
+                                }
+                            }
                         }
                         EnqueuePickupDone(pickupMotion);
                     });
@@ -3605,6 +3791,13 @@ namespace ACE.Server.WorldObjects
 
         private void GiveObjectToPlayer(Player target, WorldObject item, Container itemFoundInContainer, Container itemRootOwner, bool itemWasEquipped, int amount)
         {
+            if (IsArenaObserver)
+            {
+                Session.Network.EnqueueSend(new GameEventCommunicationTransientString(Session, "You cannot give items to players while you are an observer of an arena match!")); // Custom error message
+                Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, item.Guid.Full));
+                return;
+            }
+
             if (item.IsAttunedOrContainsAttuned)
             {
                 Session.Network.EnqueueSend(new GameEventInventoryServerSaveFailed(Session, item.Guid.Full, WeenieError.AttunedItem));
@@ -4364,326 +4557,6 @@ namespace ACE.Server.WorldObjects
         {
             return GetEquippedObjectsOfWCID(weenieClassId).Select(i => i.StackSize ?? 1).Sum();
         }
-
-        public override void ExtraItemChecks(WorldObject worldObject)
-        {
-            base.ExtraItemChecks(worldObject);
-
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
-            {
-                // The following code makes sure the item fits into CustomDM's ruleset as not all database entries have been updated.
-                // Remove invalid spells from items accessible by players, keep the spells on monster's items.
-
-                if (worldObject.SpellDID.HasValue)
-                {
-                    if (SpellsToReplace.TryGetValue((SpellId)worldObject.SpellDID, out var replacementId))
-                    {
-                        if (replacementId < 0)
-                        {
-                            var originalSpellId = (SpellId)worldObject.SpellDID;
-                            Spell originalSpell = new Spell(originalSpellId);
-
-                            int level = Math.Clamp(Math.Abs(replacementId), 1, 8);
-
-                            SpellId spellLevel1Id = SpellId.Undef;
-                            if (worldObject is Caster)
-                                spellLevel1Id = CasterSlotSpells.PseudoRandomRoll(worldObject, (int)worldObject.WeenieClassId);
-                            else if (worldObject is Gem)
-                                spellLevel1Id = SpellSelectionTable.PseudoRandomRoll(1, (int)worldObject.WeenieClassId);
-
-                            if (spellLevel1Id != SpellId.Undef)
-                            {
-                                var spellId = SpellLevelProgression.GetSpellAtLevel(spellLevel1Id, level);
-
-                                worldObject.SpellDID = (uint)spellId;
-
-                                log.Warn($"Replaced invalid spell {originalSpellId} with {spellId} as a DID spell on {worldObject.Name}.");
-                            }
-                            else
-                                log.Warn($"Failed to replace invalid spell {originalSpellId} as a DID spell on {worldObject.Name}. Unhandled item type.");
-                        }
-                        else if (replacementId > 0)
-                        {
-                            var originalSpellId = (SpellId)worldObject.SpellDID;
-
-                            worldObject.SpellDID = (uint)replacementId;
-
-                            log.Warn($"Replaced invalid spell {originalSpellId} with {(SpellId)replacementId} as a DID spell on {worldObject.Name}.");
-                        }
-                        else
-                        {
-                            var originalSpellId = (SpellId)worldObject.SpellDID;
-
-                            worldObject.RemoveProperty(PropertyDataId.Spell);
-
-                            log.Warn($"Removed invalid spell {originalSpellId} as a DID spell on {worldObject.Name}.");
-                        }
-                    }
-                }
-
-                if (worldObject.ProcSpell.HasValue)
-                {
-                    if (SpellsToReplace.TryGetValue((SpellId)worldObject.ProcSpell, out var replacementId))
-                    {
-                        if (replacementId < 0)
-                        {
-                            var originalSpellId = (SpellId)worldObject.ProcSpell;
-
-                            int level = Math.Clamp(Math.Abs(replacementId), 1, 8);
-
-                            SpellId procSpellLevel1Id = SpellId.Undef;
-                            if (worldObject is MeleeWeapon)
-                                procSpellLevel1Id = MeleeSpells.PseudoRandomRollProc((int)worldObject.WeenieClassId);
-                            else if (worldObject is MissileLauncher || worldObject is Missile)
-                                procSpellLevel1Id = MissileSpells.PseudoRandomRollProc((int)worldObject.WeenieClassId);
-
-                            if (procSpellLevel1Id != SpellId.Undef)
-                            {
-                                var procSpellId = SpellLevelProgression.GetSpellAtLevel(procSpellLevel1Id, level);
-
-                                Spell spell = new Spell(procSpellId);
-                                worldObject.ProcSpellRate = 0.15f;
-                                worldObject.ProcSpell = (uint)procSpellId;
-                                worldObject.ProcSpellSelfTargeted = spell.IsSelfTargeted;
-
-                                log.Warn($"Replaced invalid spell {originalSpellId} with {procSpellId} as a proc on {worldObject.Name}.");
-                            }
-                            else
-                                log.Warn($"Failed to replace invalid spell {originalSpellId} as a proc spell on {worldObject.Name}. Unhandled item type.");
-                        }
-                        else if (replacementId > 0)
-                        {
-                            var originalSpellId = (SpellId)worldObject.ProcSpell;
-
-                            Spell spell = new Spell(replacementId);
-
-                            worldObject.ProcSpellRate = 0.15f;
-                            worldObject.ProcSpell = (uint)replacementId;
-                            worldObject.ProcSpellSelfTargeted = spell.IsSelfTargeted;
-
-                            log.Warn($"Replaced invalid spell {originalSpellId} with {(SpellId)replacementId} as a proc on {worldObject.Name}.");
-                        }
-                        else
-                        {
-                            var originalSpellId = (SpellId)worldObject.ProcSpell;
-
-                            worldObject.RemoveProperty(PropertyFloat.ProcSpellRate);
-                            worldObject.RemoveProperty(PropertyDataId.ProcSpell);
-                            worldObject.RemoveProperty(PropertyBool.ProcSpellSelfTargeted);
-
-                            log.Warn($"Removed invalid spell {originalSpellId} as a proc on {worldObject.Name}.");
-                        }
-                    }
-                }
-
-                var list = worldObject.Biota.GetKnownSpellsIds(BiotaDatabaseLock);
-                foreach (var entry in list)
-                {
-                    if (SpellsToReplace.TryGetValue((SpellId)entry, out var replacementId))
-                    {
-                        if (worldObject.Biota.TryRemoveKnownSpell(entry, BiotaDatabaseLock))
-                        {
-                            if (replacementId < 0)
-                            {
-                                log.Warn($"Failed to replace invalid spell {(SpellId)entry} as a proc spell on {worldObject.Name}. Unhandled item type.");
-                            }
-                            else if (replacementId > 0)
-                            {
-                                worldObject.Biota.GetOrAddKnownSpell(replacementId, BiotaDatabaseLock, out _);
-                                log.Warn($"Replaced invalid spell {(SpellId)entry} with {(SpellId)replacementId} on {worldObject.Name}.");
-                            }
-                            else
-                                log.Warn($"Removed invalid spell {(SpellId)entry} from {worldObject.Name}.");
-                        }
-                    }
-                }
-            }
-        }
-
-        Dictionary<SpellId, int> SpellsToReplace = new Dictionary<SpellId, int>()
-        {
-            // -1 means replace with a pseudorandom(based on wcid) level 1 proc and so on.
-            // 0 means remove, positive values mean the spellId of the replacement spell.
-            { SpellId.BloodDrinkerSelf1, 0 },
-            { SpellId.BloodDrinkerSelf2, 0 },
-            { SpellId.BloodDrinkerSelf3, 0 },
-            { SpellId.BloodDrinkerSelf4, 0 },
-            { SpellId.BloodDrinkerSelf5, 0 },
-            { SpellId.BloodDrinkerSelf6, 0 },
-            { SpellId.BloodDrinkerSelf7, 0 },
-            { SpellId.BloodDrinkerSelf8, 0 },
-            { SpellId.LightbringersWay, 0 },
-
-            { SpellId.Discipline, 0 },
-            { SpellId.WoundTwister, 0 },
-            { SpellId.MurderousThirst, 0 },
-
-            { SpellId.BloodDrinkerOther1, 0 },
-            { SpellId.BloodDrinkerOther2, 0 },
-            { SpellId.BloodDrinkerOther3, 0 },
-            { SpellId.BloodDrinkerOther4, 0 },
-            { SpellId.BloodDrinkerOther5, 0 },
-            { SpellId.BloodDrinkerOther6, 0 },
-            { SpellId.BloodDrinkerOther7, 0 },
-            { SpellId.BloodDrinkerOther8, 0 },
-
-            { SpellId.SwiftKillerSelf1, 0 },
-            { SpellId.SwiftKillerSelf2, 0 },
-            { SpellId.SwiftKillerSelf3, 0 },
-            { SpellId.SwiftKillerSelf4, 0 },
-            { SpellId.SwiftKillerSelf5, 0 },
-            { SpellId.SwiftKillerSelf6, 0 },
-            { SpellId.SwiftKillerSelf7, 0 },
-            { SpellId.SwiftKillerSelf8, 0 },
-
-            { SpellId.Alacrity, 0 },
-            { SpellId.SpeedHunter, 0 },
-
-            { SpellId.SwiftKillerOther1, 0 },
-            { SpellId.SwiftKillerOther2, 0 },
-            { SpellId.SwiftKillerOther3, 0 },
-            { SpellId.SwiftKillerOther4, 0 },
-            { SpellId.SwiftKillerOther5, 0 },
-            { SpellId.SwiftKillerOther6, 0 },
-            { SpellId.SwiftKillerOther7, 0 },
-            { SpellId.SwiftKillerOther8, 0 },
-
-            //{ SpellId.HeartSeekerSelf1, 0 },
-            //{ SpellId.HeartSeekerSelf2, 0 },
-            //{ SpellId.HeartSeekerSelf3, 0 },
-            //{ SpellId.HeartSeekerSelf4, 0 },
-            //{ SpellId.HeartSeekerSelf5, 0 },
-            //{ SpellId.HeartSeekerSelf6, 0 },
-            //{ SpellId.HeartSeekerSelf7, 0 },
-            //{ SpellId.HeartSeekerSelf8, 0 },
-
-            //{ SpellId.HeartSeekerOther1, 0 },
-            //{ SpellId.HeartSeekerOther2, 0 },
-            //{ SpellId.HeartSeekerOther3, 0 },
-            //{ SpellId.HeartSeekerOther4, 0 },
-            //{ SpellId.HeartSeekerOther5, 0 },
-            //{ SpellId.HeartSeekerOther6, 0 },
-            //{ SpellId.HeartSeekerOther7, 0 },
-            //{ SpellId.HeartSeekerOther8, 0 },
-
-            //{ SpellId.DefenderSelf1, 0 },
-            //{ SpellId.DefenderSelf2, 0 },
-            //{ SpellId.DefenderSelf3, 0 },
-            //{ SpellId.DefenderSelf4, 0 },
-            //{ SpellId.DefenderSelf5, 0 },
-            //{ SpellId.DefenderSelf6, 0 },
-            //{ SpellId.DefenderSelf7, 0 },
-            //{ SpellId.DefenderSelf8, 0 },
-
-            //{ SpellId.DefenderOther1, 0 },
-            //{ SpellId.DefenderOther2, 0 },
-            //{ SpellId.DefenderOther3, 0 },
-            //{ SpellId.DefenderOther4, 0 },
-            //{ SpellId.DefenderOther5, 0 },
-            //{ SpellId.DefenderOther6, 0 },
-            //{ SpellId.DefenderOther7, 0 },
-            //{ SpellId.DefenderOther8, 0 },
-
-            { SpellId.SpiritDrinkerSelf1, 0 },
-            { SpellId.SpiritDrinkerSelf2, 0 },
-            { SpellId.SpiritDrinkerSelf3, 0 },
-            { SpellId.SpiritDrinkerSelf4, 0 },
-            { SpellId.SpiritDrinkerSelf5, 0 },
-            { SpellId.SpiritDrinkerSelf6, 0 },
-            { SpellId.SpiritDrinkerSelf7, 0 },
-            { SpellId.SpiritDrinkerSelf8, 0 },
-
-            { SpellId.SpiritDrinkerOther1, 0 },
-            { SpellId.SpiritDrinkerOther2, 0 },
-            { SpellId.SpiritDrinkerOther3, 0 },
-            { SpellId.SpiritDrinkerOther4, 0 },
-            { SpellId.SpiritDrinkerOther5, 0 },
-            { SpellId.SpiritDrinkerOther6, 0 },
-            { SpellId.SpiritDrinkerOther7, 0 },
-            { SpellId.SpiritDrinkerOther8, 0 },
-
-            { SpellId.Impenetrability1, 0 },
-            { SpellId.Impenetrability2, 0 },
-            { SpellId.Impenetrability3, 0 },
-            { SpellId.Impenetrability4, 0 },
-            { SpellId.Impenetrability5, 0 },
-            { SpellId.Impenetrability6, 0 },
-            { SpellId.Impenetrability7, 0 },
-            { SpellId.Impenetrability8, 0 },
-
-            { SpellId.AerfallesWard, 0 },
-            { SpellId.LesserSkinFiazhat, 0 },
-            { SpellId.MinorSkinFiazhat, 0 },
-            { SpellId.SkinFiazhat, 0 },
-
-            { SpellId.ItemEnchantmentMasterySelf1, 0 },
-            { SpellId.ItemEnchantmentMasterySelf2, 0 },
-            { SpellId.ItemEnchantmentMasterySelf3, 0 },
-            { SpellId.ItemEnchantmentMasterySelf4, 0 },
-            { SpellId.ItemEnchantmentMasterySelf5, 0 },
-            { SpellId.ItemEnchantmentMasterySelf6, 0 },
-            { SpellId.ItemEnchantmentMasterySelf7, 0 },
-            { SpellId.ItemEnchantmentMasterySelf8, 0 },
-
-            { SpellId.ItemEnchantmentMasteryOther1, 0 },
-            { SpellId.ItemEnchantmentMasteryOther2, 0 },
-            { SpellId.ItemEnchantmentMasteryOther3, 0 },
-            { SpellId.ItemEnchantmentMasteryOther4, 0 },
-            { SpellId.ItemEnchantmentMasteryOther5, 0 },
-            { SpellId.ItemEnchantmentMasteryOther6, 0 },
-            { SpellId.ItemEnchantmentMasteryOther7, 0 },
-            { SpellId.ItemEnchantmentMasteryOther8, 0 },
-
-            { SpellId.CreatureEnchantmentMasterySelf1, 0 },
-            { SpellId.CreatureEnchantmentMasterySelf2, 0 },
-            { SpellId.CreatureEnchantmentMasterySelf3, 0 },
-            { SpellId.CreatureEnchantmentMasterySelf4, 0 },
-            { SpellId.CreatureEnchantmentMasterySelf5, 0 },
-            { SpellId.CreatureEnchantmentMasterySelf6, 0 },
-            { SpellId.CreatureEnchantmentMasterySelf7, 0 },
-            { SpellId.CreatureEnchantmentMasterySelf8, 0 },
-
-            { SpellId.CreatureEnchantmentMasteryOther1, 0 },
-            { SpellId.CreatureEnchantmentMasteryOther2, 0 },
-            { SpellId.CreatureEnchantmentMasteryOther3, 0 },
-            { SpellId.CreatureEnchantmentMasteryOther4, 0 },
-            { SpellId.CreatureEnchantmentMasteryOther5, 0 },
-            { SpellId.CreatureEnchantmentMasteryOther6, 0 },
-            { SpellId.CreatureEnchantmentMasteryOther7, 0 },
-            { SpellId.CreatureEnchantmentMasteryOther8, 0 },
-
-            { SpellId.ArmorSelf1, 0 },
-            { SpellId.ArmorSelf2, 0 },
-            { SpellId.ArmorSelf3, 0 },
-            { SpellId.ArmorSelf4, 0 },
-            { SpellId.ArmorSelf5, 0 },
-            { SpellId.ArmorSelf6, 0 },
-            { SpellId.ArmorSelf7, 0 },
-            { SpellId.ArmorSelf8, 0 },
-
-            { SpellId.ArmorOther1, 0 },
-            { SpellId.ArmorOther2, 0 },
-            { SpellId.ArmorOther3, 0 },
-            { SpellId.ArmorOther4, 0 },
-            { SpellId.ArmorOther5, 0 },
-            { SpellId.ArmorOther6, 0 },
-            { SpellId.ArmorOther7, 0 },
-            { SpellId.ArmorOther8, 0 },
-
-            { SpellId.ForceArmor, 0 },
-            { SpellId.PanoplyQueenslayer, 0 },
-            { SpellId.TuskerHideLesser, 0 },
-            { SpellId.TuskerHide, 0 },
-            { SpellId.LesserMistsBur, 0 },
-            { SpellId.MinorMistsBur, 0 },
-            { SpellId.MistsBur, 0 },
-            { SpellId.ArmorSelfAegisGoldenFlame, 0 },
-            { SpellId.KukuurHide, 0 },
-            { SpellId.DrudgeArmor, 0 },
-            { SpellId.FrozenArmor, 0 },
-            { SpellId.ArmorProdigalHarbinger, 0 },
-            { SpellId.BaelzharonArmorOther, 0 },
-        };
     }
 }
 

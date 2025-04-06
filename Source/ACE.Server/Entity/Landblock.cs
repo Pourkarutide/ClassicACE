@@ -195,10 +195,7 @@ namespace ACE.Server.Entity
 
                 SpawnEncounters();
 
-                var actionChain = new ActionChain();
-                actionChain.AddDelaySeconds(5);
-                actionChain.AddAction(this, InitializeExplorationMarkers);
-                actionChain.EnqueueChain();
+                InitializeExplorationMarkers();
             });
 
             //LoadMeshes(objects);
@@ -207,7 +204,7 @@ namespace ACE.Server.Entity
 
         public double NextExplorationMarkerRefresh;
         private double ExplorationMarkerRefreshInterval = 300;
-        private List<Position> PositionsForExplorationMarkers = new List<Position>();
+        private List<Position> PositionsForExplorationMarkers;
         private int ExplorationMarkerCount;
         private int ExplorationMarkerCurrentIndex;
         public void InitializeExplorationMarkers()
@@ -215,42 +212,58 @@ namespace ACE.Server.Entity
             if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
                 return;
 
-            PositionsForExplorationMarkers = new List<Position>();
-            ExplorationMarkerCount = 0;
-            ExplorationMarkerCurrentIndex = 0;
-
             var explorationSites = DatabaseManager.World.GetExplorationSitesByLandblock(Id.Landblock);
             if (explorationSites.Count == 0)
                 return;
 
-            foreach (var obj in worldObjects)
+            var instances = GetLandblockInstances(false);
+            if (instances.Count > 0)
+                PositionsForExplorationMarkers = new List<Position>();
+            else
+                return;
+
+            foreach (var instance in instances)
             {
-                if(obj.Value is Creature creature && creature.IsMonster)
-                    PositionsForExplorationMarkers.Add(creature.Location);
+                var instanceWeenie = DatabaseManager.World.GetCachedWeenie(instance.WeenieClassId);
+                if (instanceWeenie.WeenieType == WeenieType.Portal)
+                    continue;
+
+                Position instancePos = new Position(instance.ObjCellId, instance.OriginX, instance.OriginY, instance.OriginZ, instance.AnglesX, instance.AnglesY, instance.AnglesZ, instance.AnglesW);
+                PositionsForExplorationMarkers.Add(instancePos);
             }
+
+            if (PositionsForExplorationMarkers.Count == 0)
+                return;
 
             PositionsForExplorationMarkers.Shuffle();
-            ExplorationMarkerCount = Math.Clamp(1 + PositionsForExplorationMarkers.Count / 50, 1, 5);
+            if (LandblockInfo != null && LandblockInfo.NumCells >= 30)
+                ExplorationMarkerCount = 1 + ((int)LandblockInfo.NumCells - 30) / 80;
+            else
+                ExplorationMarkerCount = 1 + PositionsForExplorationMarkers.Count / 50;
+            ExplorationMarkerCount = Math.Min(ExplorationMarkerCount, PositionsForExplorationMarkers.Count);
 
-            var actionChain = new ActionChain();
-            for (int i = 0; i < ExplorationMarkerCount; i++)
+            actionQueue.EnqueueAction(new ActionEventDelegate(() =>
             {
-                if (i > 0)
-                    actionChain.AddDelaySeconds(5);
-                actionChain.AddAction(this, () => SpawnExplorationMarker());
-            }
-            actionChain.EnqueueChain();
+                for (int i = 0; i < ExplorationMarkerCount; i++)
+                {
+                    SpawnExplorationMarker();
+                }
 
-            NextExplorationMarkerRefresh = Time.GetFutureUnixTime(ExplorationMarkerRefreshInterval);
+                NextExplorationMarkerRefresh = Time.GetFutureUnixTime(ExplorationMarkerRefreshInterval);
+            }));
         }
 
         public void RefreshExplorationMarkers(bool forceRefresh = false)
         {
-            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM)
+            if (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM || ExplorationMarkerCount == 0)
                 return;
 
+            var allMarkers = worldObjects.Where(i => i.Value.WeenieClassId == (uint)Factories.Enum.WeenieClassName.explorationMarker).ToList();
+            allMarkers.AddRange(pendingAdditions.Where(i => i.Value.WeenieClassId == (uint)Factories.Enum.WeenieClassName.explorationMarker).ToList());
+            allMarkers = allMarkers.Where(i => !pendingRemovals.Contains(i.Key)).ToList();
+
             var currentMarkerCount = 0;
-            foreach (var obj in worldObjects.Where(i => i.Value.WeenieClassId == (uint)Factories.Enum.WeenieClassName.explorationMarker).ToList())
+            foreach (var obj in allMarkers)
             {
                 var marker = obj.Value;
                 bool isInRange = false;
@@ -261,7 +274,16 @@ namespace ACE.Server.Entity
                         if (player.IsOvertlyPlussed)
                             continue;
 
-                        if (marker.Location.DistanceTo(player.Location) < 50)
+                        float distance;
+                        if (Pathfinder.PathfindingEnabled && player.Location.Indoors)
+                        {
+                            if(!Pathfinder.GetRouteDistance(player.Location, marker.Location, AgentWidth.Narrow, out distance))
+                                distance = player.Location.DistanceTo(marker.Location);
+                        }
+                        else
+                            distance = player.Location.DistanceTo(marker.Location);
+
+                        if (distance < 50)
                         {
                             isInRange = true;
                             break;
@@ -278,15 +300,11 @@ namespace ACE.Server.Entity
             var spawnedCount = 0;
             if (currentMarkerCount < ExplorationMarkerCount)
             {
-                var actionChain = new ActionChain();
                 for (int i = currentMarkerCount; i < ExplorationMarkerCount; i++)
                 {
                     spawnedCount++;
-                    if (i > currentMarkerCount)
-                        actionChain.AddDelaySeconds(5);
-                    actionChain.AddAction(this, () => SpawnExplorationMarker());
+                    SpawnExplorationMarker();
                 }
-                actionChain.EnqueueChain();
             }
 
             NextExplorationMarkerRefresh = Time.GetFutureUnixTime(ExplorationMarkerRefreshInterval);
@@ -294,7 +312,7 @@ namespace ACE.Server.Entity
 
         public void SpawnExplorationMarker(int attempts = 0)
         {
-            if (PositionsForExplorationMarkers.Count > 0)
+            if (PositionsForExplorationMarkers != null && PositionsForExplorationMarkers.Count > 0)
             {
                 var entryPos = new Position(PositionsForExplorationMarkers[ExplorationMarkerCurrentIndex]);
 
@@ -309,17 +327,39 @@ namespace ACE.Server.Entity
                         entryPos = randomPos;
                 }
 
-                foreach (var obj in worldObjects.Where(i => i.Value.WeenieClassId == (uint)Factories.Enum.WeenieClassName.explorationMarker).ToList())
-                {
-                    var marker = obj.Value;
+                var allMarkersAndPortals = worldObjects.Where(i => i.Value.WeenieClassId == (uint)Factories.Enum.WeenieClassName.explorationMarker || i.Value.WeenieType == WeenieType.Portal).ToList();
+                allMarkersAndPortals.AddRange(pendingAdditions.Where(i => i.Value.WeenieClassId == (uint)Factories.Enum.WeenieClassName.explorationMarker || i.Value.WeenieType == WeenieType.Portal).ToList());
+                allMarkersAndPortals = allMarkersAndPortals.Where(i => !pendingRemovals.Contains(i.Key)).ToList();
 
-                    if (entryPos.DistanceTo(marker.Location) < 25)
+                foreach (var obj in allMarkersAndPortals)
+                {
+                    var markerOrPortal = obj.Value;
+                    var minDistance = markerOrPortal.WeenieType == WeenieType.Portal ? 10 : 50;
+
+                    float distance;
+                    if (Pathfinder.PathfindingEnabled && entryPos.Indoors)
+                    {
+                        if(!Pathfinder.GetRouteDistance(entryPos, markerOrPortal.Location, AgentWidth.Narrow, out distance))
+                            distance = entryPos.DistanceTo(markerOrPortal.Location);
+                    }
+                    else
+                        distance = entryPos.DistanceTo(markerOrPortal.Location);
+
+                    if (distance < minDistance)
                     {
                         attempts++;
                         if (attempts < 10)
                             SpawnExplorationMarker(attempts);
                         else
-                            log.Warn($"Landblock 0x{Id} failed to find position to spawn exploration marker that was not too close to another exploration marker.");
+                        {
+                            var msg = $"Landblock 0x{Id} failed to find position to spawn exploration marker that was not too close to another exploration marker.";
+                            if (ExplorationMarkerCount > 1)
+                            {
+                                ExplorationMarkerCount--;
+                                msg += $" Reducing ExplorationMarkerCount to {ExplorationMarkerCount}";
+                            }
+                            log.Warn(msg);
+                        }
                         return;
                     }
                 }
@@ -452,80 +492,94 @@ namespace ACE.Server.Entity
             // get the encounter spawns for this landblock
             var encounters = DatabaseManager.World.GetCachedEncountersByLandblock(Id.Landblock, out var wasCached);
 
-            var generatedEncounterIdList = new List<uint>();
-
-            if (PropertyManager.GetBool("increase_minimum_encounter_spawn_density").Item && !wasCached)
+            if (PropertyManager.GetBool("increase_minimum_encounter_spawn_density").Item)
             {
-                if (encounters.Count > 0)
+                if(!wasCached)
                 {
-                    // Landscape spawn density multiplier
-                    // The maximum amount of encounters that will fit in a landblock is 64.
-                    int newCount;
-                    if (encounters.Count < 8)
-                        newCount = 8;
-                    else
-                        newCount = encounters.Count;
-
-                    if (newCount != encounters.Count)
+                    if (encounters.Count > 0)
                     {
-                        Dictionary<int, EncounterInfo> encountersToDuplicate = new Dictionary<int, EncounterInfo>();
-                        Dictionary<ushort, List<AvailableCell>> terrainTypeMap = new Dictionary<ushort, List<AvailableCell>>();
+                        // Landscape spawn density multiplier
+                        // The maximum amount of encounters that will fit in a landblock is 64.
+                        int newCount;
+                        if (encounters.Count < 8)
+                            newCount = 8;
+                        else
+                            newCount = encounters.Count;
 
-                        foreach (var encounter in encounters)
+                        if (newCount != encounters.Count)
                         {
-                            int coords = encounter.CellX << 16 | encounter.CellY;
-                            encountersToDuplicate.Add(coords, new EncounterInfo(coords, encounter, getTerrainType(encounter.CellX, encounter.CellY)));
-                        }
+                            Dictionary<int, EncounterInfo> encountersToDuplicate = new Dictionary<int, EncounterInfo>();
+                            Dictionary<ushort, List<AvailableCell>> terrainTypeMap = new Dictionary<ushort, List<AvailableCell>>();
 
-                        for (int cellX = 0; cellX < LandDefs.BlockSide; cellX++)
-                        {
-                            for (int cellY = 0; cellY < LandDefs.BlockSide; cellY++)
+                            foreach (var encounter in encounters)
                             {
-                                int coords = cellX << 16 | cellY;
+                                int coords = encounter.CellX << 16 | encounter.CellY;
+                                encountersToDuplicate.Add(coords, new EncounterInfo(coords, encounter, getTerrainType(encounter.CellX, encounter.CellY)));
+                            }
 
-                                if (!encountersToDuplicate.ContainsKey(coords)) // Only add cells that do not yet contain encounters.
+                            for (int cellX = 0; cellX < LandDefs.BlockSide; cellX++)
+                            {
+                                for (int cellY = 0; cellY < LandDefs.BlockSide; cellY++)
                                 {
-                                    ushort terrainType = getTerrainType(cellX,cellY);
+                                    int coords = cellX << 16 | cellY;
 
-                                    if (terrainTypeMap.TryGetValue(terrainType, out var entry))
-                                        entry.Add(new AvailableCell(cellX, cellY, terrainType));
-                                    else
-                                        terrainTypeMap.Add(terrainType, new List<AvailableCell>() { new AvailableCell(cellX, cellY, terrainType) });
+                                    if (!encountersToDuplicate.ContainsKey(coords)) // Only add cells that do not yet contain encounters.
+                                    {
+                                        ushort terrainType = getTerrainType(cellX, cellY);
+
+                                        if (terrainTypeMap.TryGetValue(terrainType, out var entry))
+                                            entry.Add(new AvailableCell(cellX, cellY, terrainType));
+                                        else
+                                            terrainTypeMap.Add(terrainType, new List<AvailableCell>() { new AvailableCell(cellX, cellY, terrainType) });
+                                    }
                                 }
                             }
-                        }
 
-                        while (encounters.Count < newCount && encountersToDuplicate.Count > 0)
-                        {
-                            var sourceEncounter = encountersToDuplicate.ElementAt(ThreadSafeRandom.Next(0, encountersToDuplicate.Count - 1)).Value;
-                            if (terrainTypeMap.TryGetValue(sourceEncounter.TerrainType, out var availableCells))
+                            while (encounters.Count < newCount && encountersToDuplicate.Count > 0)
                             {
-                                var newEncounterCell = availableCells[ThreadSafeRandom.Next(0, availableCells.Count - 1)];
-
-                                Encounter newEncounter = new Encounter();
-                                newEncounter.WeenieClassId = sourceEncounter.Encounter.WeenieClassId;
-                                newEncounter.Landblock = sourceEncounter.Encounter.Landblock;
-                                newEncounter.LastModified = sourceEncounter.Encounter.LastModified;
-                                newEncounter.CellX = newEncounterCell.CellX;
-                                newEncounter.CellY = newEncounterCell.CellY;
-
-                                generatedEncounterIdList.Add(newEncounter.Id);
-                                encounters.Add(newEncounter);
-                                availableCells.Remove(newEncounterCell);
-                                if (availableCells.Count == 0)
+                                var sourceEncounter = encountersToDuplicate.ElementAt(ThreadSafeRandom.Next(0, encountersToDuplicate.Count - 1)).Value;
+                                if (terrainTypeMap.TryGetValue(sourceEncounter.TerrainType, out var availableCells))
                                 {
+                                    var newEncounterCell = availableCells[ThreadSafeRandom.Next(0, availableCells.Count - 1)];
+
+                                    Encounter newEncounter = new Encounter();
+                                    newEncounter.WeenieClassId = sourceEncounter.Encounter.WeenieClassId;
+                                    newEncounter.Landblock = sourceEncounter.Encounter.Landblock;
+                                    newEncounter.LastModified = sourceEncounter.Encounter.LastModified;
+                                    newEncounter.CellX = newEncounterCell.CellX;
+                                    newEncounter.CellY = newEncounterCell.CellY;
+
+                                    encounters.Add(newEncounter);
+                                    availableCells.Remove(newEncounterCell);
+                                    if (availableCells.Count == 0)
+                                    {
+                                        terrainTypeMap.Remove(sourceEncounter.TerrainType);
+                                        encountersToDuplicate = encountersToDuplicate.Where(i => i.Value.TerrainType != sourceEncounter.TerrainType).ToDictionary(i => i.Key, i => i.Value);
+                                    }
+                                }
+                                else
+                                {
+                                    // This should never happen.
                                     terrainTypeMap.Remove(sourceEncounter.TerrainType);
                                     encountersToDuplicate = encountersToDuplicate.Where(i => i.Value.TerrainType != sourceEncounter.TerrainType).ToDictionary(i => i.Key, i => i.Value);
                                 }
                             }
-                            else
-                            {
-                                // This should never happen.
-                                terrainTypeMap.Remove(sourceEncounter.TerrainType);
-                                encountersToDuplicate = encountersToDuplicate.Where(i => i.Value.TerrainType != sourceEncounter.TerrainType).ToDictionary(i => i.Key, i => i.Value);
-                            }
                         }
                     }
+                }
+            }
+
+            List<LandblockInstance> landblockInstances = null;
+            List<(uint Wcid, Position Location)> portalDrops = null;
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM || PropertyManager.GetBool("increase_minimum_encounter_spawn_density").Item)
+            {
+                landblockInstances = GetLandblockInstances(true);
+                portalDrops = DatabaseManager.World.GetPortalDestinationsByLandblock(GetAdjacents());
+
+                foreach(var destination in portalDrops)
+                {
+                    if (!destination.Location.Indoors)
+                        destination.Location.AdjustMapCoords();
                 }
             }
 
@@ -537,18 +591,18 @@ namespace ACE.Server.Entity
 
                 wo.SetProperty(PropertyBool.IsEncounterGenerator, true);
 
-                if (generatedEncounterIdList.Contains(encounter.Id))
+                if (encounter.Id == 0)
                 {
                     wo.SetProperty(PropertyFloat.DefaultScale, 0.5f);
-                    wo.SetProperty(PropertyString.ShortDesc, "Not a permanent encounter.\nAutomatically generated by the increase_minimum_encounter_spawn_density setting.\nDisabling the setting will remove this.");
+                    wo.SetProperty(PropertyString.LongDesc, "Not a permanent encounter.\nAutomatically generated by the increase_minimum_encounter_spawn_density setting.\nDisabling the setting will remove this.");
                 }
                 else
                     wo.SetProperty(PropertyFloat.DefaultScale, 1.5f);
 
                 actionQueue.EnqueueAction(new ActionEventDelegate(() =>
                 {
-                    var xPos = Math.Clamp((encounter.CellX * 24.0f) + 12.0f, 0.5f, 191.5f);
-                    var yPos = Math.Clamp((encounter.CellY * 24.0f) + 12.0f, 0.5f, 191.5f);
+                    var xPos = Math.Clamp((encounter.CellX * LandDefs.CellLength) + LandDefs.CellLength / 2, 0.5f, LandDefs.BlockLength - 0.5f);
+                    var yPos = Math.Clamp((encounter.CellY * LandDefs.CellLength) + LandDefs.CellLength / 2, 0.5f, LandDefs.BlockLength - 0.5f);
 
                     var pos = new Physics.Common.Position();
                     pos.ObjCellID = (uint)(Id.Landblock << 16) | 1;
@@ -569,7 +623,7 @@ namespace ACE.Server.Entity
                     if (PropertyManager.GetBool("increase_minimum_encounter_spawn_density").Item)
                     {
                         // Avoid some less than ideal locations
-                        if (!wo.Location.IsWalkable() || PhysicsLandblock.OnRoad(new Vector3(xPos, yPos, pos.Frame.Origin.Z)))
+                        if (!wo.Location.IsWalkable() || PhysicsLandblock.IsRoad(null, xPos, yPos))
                         {
                             wo.Destroy();
                             return;
@@ -602,7 +656,62 @@ namespace ACE.Server.Entity
                     }
 
                     if (!AddWorldObject(wo))
+                    {
                         wo.Destroy();
+                        return;
+                    }
+
+                    if (!wo.GeneratorDisabled)
+                    {
+                        if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM || PropertyManager.GetBool("increase_minimum_encounter_spawn_density").Item)
+                        {
+                            // Disable the landscape encounter generators that are too close to lifestones or portals
+                            var awarenessMod = PropertyManager.GetDouble("mob_awareness_range").Item;
+
+                            if (!wo.Name.ToLower().Contains("harmless")) // Harmless generators can stay enabled
+                            {
+                                foreach (var landblockInstance in landblockInstances)
+                                {
+                                    var weenie = DatabaseManager.World.GetCachedWeenie(landblockInstance.WeenieClassId);
+                                    if (weenie == null)
+                                        continue;
+
+                                    var itemType = weenie.GetItemType();
+                                    var pkStatus = (PlayerKillerStatus)(weenie.GetProperty(PropertyInt.PlayerKillerStatus) ?? 0);
+                                    var location = new Position(landblockInstance.ObjCellId, landblockInstance.OriginX, landblockInstance.OriginY, landblockInstance.OriginZ, landblockInstance.AnglesX, landblockInstance.AnglesY, landblockInstance.AnglesZ, landblockInstance.AnglesW);
+
+                                    if ((itemType == ItemType.LifeStone || itemType == ItemType.Portal || pkStatus == PlayerKillerStatus.Vendor || pkStatus == PlayerKillerStatus.RubberGlue) && wo.Location.DistanceTo(location) < 60 * awarenessMod)
+                                    {
+                                        wo.GeneratorDisabled = true;
+                                        wo.LongDesc = $"{(wo.LongDesc != null && wo.LongDesc.Length > 0 ? $"{wo.LongDesc}\n\n" : "")}Disabled due to proximity to {weenie.GetName()}";
+                                        break;
+                                    }
+                                }
+
+                                foreach (var portalDest in portalDrops)
+                                {
+                                    if (wo.Location.DistanceTo(portalDest.Location) < 60 * awarenessMod)
+                                    {
+                                        wo.GeneratorDisabled = true;
+
+                                        var weenie = DatabaseManager.World.GetCachedWeenie(portalDest.Wcid);
+                                        if (weenie == null)
+                                            continue;
+
+                                        wo.LongDesc = $"{(wo.LongDesc != null && wo.LongDesc.Length > 0 ? $"{wo.LongDesc}\n\n" : "")}Disabled due to proximity to portal drop: {weenie.GetName()}";
+                                        break;
+                                    }
+                                }
+
+                                if (GetDistanceToNearestRoad(wo.Location, out _) < 60 * awarenessMod)
+                                {
+                                    wo.GeneratorDisabled = true;
+
+                                    wo.LongDesc = $"{(wo.LongDesc != null && wo.LongDesc.Length > 0 ? $"{wo.LongDesc}\n\n" : "")}Disabled due to proximity to a road.";
+                                }
+                            }
+                        }
+                    }
                 }));
             }
         }
@@ -1187,6 +1296,12 @@ namespace ACE.Server.Entity
 
             if (wo is Corpse && wo.Level.HasValue)
             {
+                //Set corpse rot time in arena landblocks based on config
+                if (IsArenaLandblock)
+                {
+                    wo.TimeToRot = PropertyManager.GetDouble("arena_corpse_rot_seconds", 300).Item;
+                }
+
                 var corpseLimit = PropertyManager.GetLong("corpse_spam_limit").Item;
                 var corpseList = worldObjects.Values.Union(pendingAdditions.Values).Where(w => w is Corpse && w.Level.HasValue && w.VictimId == wo.VictimId).OrderBy(w => w.CreationTimestamp);
 
@@ -1315,6 +1430,117 @@ namespace ACE.Server.Entity
             return worldObjects.Values.ToList();
         }
 
+        public List<ushort> GetAdjacents(bool includeSelf = true)
+        {
+            List<ushort> list = new List<ushort>();
+
+            if (includeSelf)
+                list.Add(Id.Landblock);
+
+            var adjacentLandblocks = LandblockManager.GetAdjacentIDs(this);
+            foreach (var adjacent in adjacentLandblocks)
+            {
+                list.Add(adjacent.Landblock);
+            }
+
+            return list;
+        }
+
+        public List<LandblockInstance> GetLandblockInstances(bool includeAdjacents)
+        {
+            var list = DatabaseManager.World.GetCachedInstancesByLandblock(Id.Landblock).ToList();
+
+            if (includeAdjacents)
+            {
+                var adjacentLandblocks = LandblockManager.GetAdjacentIDs(this);
+                foreach (var adjacent in adjacentLandblocks)
+                {
+                    list.AddRange(DatabaseManager.World.GetCachedInstancesByLandblock(adjacent.Landblock));
+                }
+            }
+
+            return list;
+        }
+
+        private List<Position> RoadList;
+
+        private static List<Position> BuildRoadList(LandblockId landblockId)
+        {
+            var roadList = new List<Position>();
+
+            var cellLandblock = DatManager.CellDat.ReadFromDat<CellLandblock>(landblockId.Raw | 0xFFFF);
+            var landblockInfo = DatManager.CellDat.ReadFromDat<LandblockInfo>((uint)landblockId.Landblock << 16 | 0xFFFE);
+
+            if (cellLandblock != null)
+            {
+                for (int cellX = 0; cellX < LandDefs.BlockSide; cellX++)
+                {
+                    for (int cellY = 0; cellY < LandDefs.BlockSide; cellY++)
+                    {
+                        var terrain = cellLandblock.Terrain[cellX * (LandDefs.BlockSide + 1) + cellY];
+                        if ((terrain & 0x3) != 0) // road cell
+                        {
+                            var xPos = Math.Clamp(cellX * LandDefs.CellLength, 0, LandDefs.BlockLength);
+                            var yPos = Math.Clamp(cellY * LandDefs.CellLength, 0, LandDefs.BlockLength);
+
+                            var pos = new Position((uint)(landblockId.Landblock << 16) | 1, xPos, yPos, 0, 0, 0, 0, 1);
+                            pos.AdjustMapCoords();
+
+                            roadList.Add(pos);
+                        }
+                    }
+                }
+            }
+
+            if (landblockInfo != null)
+            {
+                foreach (var obj in landblockInfo.Objects)
+                {
+                    if (obj.Id == 0x02000451) // Desert path marker
+                    {
+                        var pos = new Position((uint)(landblockId.Landblock << 16) | 1, obj.Frame.Origin.X, obj.Frame.Origin.Y, obj.Frame.Origin.Z, obj.Frame.Orientation.X, obj.Frame.Orientation.Y, obj.Frame.Orientation.Z, obj.Frame.Orientation.W);
+                        pos.AdjustMapCoords();
+                        roadList.Add(pos);
+                    }
+                }
+            }
+
+            return roadList;
+        }
+        public float GetDistanceToNearestRoad(Position position, out Position roadPosition, Position avoidPosition = null)
+        {
+            roadPosition = null;
+
+            if (IsDungeon)
+                return float.MaxValue;
+
+            if (RoadList == null)
+            {
+                RoadList = BuildRoadList(Id);
+
+                var adjacentLandblocks = LandblockManager.GetAdjacentIDs(this);
+                foreach (var adjacent in adjacentLandblocks)
+                {
+                    RoadList.AddRange(BuildRoadList(adjacent));
+                }
+            }
+
+            var closest = float.MaxValue;
+            foreach(var entry in RoadList)
+            {
+                if (avoidPosition != null && entry.DistanceTo(avoidPosition) < 2)
+                    continue;
+
+                var distance = entry.DistanceTo(position);
+                if (distance < closest)
+                {
+                    closest = distance;
+                    roadPosition = new Position(entry);
+                }
+            }
+
+            return closest;
+        }
         public WorldObject GetObject(uint objectId)
         {
             return GetObject(new ObjectGuid(objectId));
@@ -1676,6 +1902,27 @@ namespace ACE.Server.Entity
             }
 
             return locationString;
+        }
+
+        public List<Player> GetCurrentLandblockPlayers()
+        {
+            var playerList = new List<Player>();
+            playerList.AddRange(players);
+            return playerList;
+        }
+
+        private bool? _isArenaLandblock = null;
+        public bool IsArenaLandblock
+        {
+            get
+            {
+                if (!_isArenaLandblock.HasValue)
+                {
+                    _isArenaLandblock = ArenaLocation.IsArenaLandblock(this.Id.Landblock);
+                }
+
+                return _isArenaLandblock.Value;
+            }
         }
     }
 }

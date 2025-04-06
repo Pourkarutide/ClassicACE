@@ -139,7 +139,7 @@ namespace ACE.Server.WorldObjects
                     return;
                 }
 
-                Teleport(house.SlumLord.Location);
+                Teleport(House.GetRecallDestination());
             });
 
             actionChain.EnqueueChain();
@@ -494,7 +494,7 @@ namespace ACE.Server.WorldObjects
                 if (allegianceHouse == null)
                     return;
 
-                Teleport(allegianceHouse.SlumLord.Location);
+                Teleport(allegianceHouse.GetRecallDestination());
             }); 
 
             actionChain.EnqueueChain();
@@ -776,6 +776,7 @@ namespace ACE.Server.WorldObjects
             LastTeleportStartTimestamp = Time.GetUnixTime();
 
             EndSneaking();
+            RemoveRoadSpeedBuff();
 
             if (fromPortal)
                 LastPortalTeleportTimestamp = LastTeleportStartTimestamp;
@@ -816,6 +817,12 @@ namespace ACE.Server.WorldObjects
             HandlePreTeleportVisibility(newPosition);
 
             UpdatePlayerPosition(new Position(newPosition), true);
+
+            //If you're an arena observer, or pending becoming an observer, and you're teleporting to somewhere that's not an arena landblock, exit observer mode
+            if ((IsArenaObserver || IsPendingArenaObserver) && !ArenaLocation.IsArenaLandblock(newPosition.Landblock))
+            {
+                ArenaManager.ExitArenaObserverMode(this);
+            }
         }
 
         public void DoPreTeleportHide()
@@ -878,7 +885,6 @@ namespace ACE.Server.WorldObjects
 
             CheckMonsters();
             CheckHouse();
-            CheckExplorationLandblock();
 
             EnqueueBroadcastPhysicsState();
 
@@ -978,6 +984,7 @@ namespace ACE.Server.WorldObjects
             LastTeleportStartTimestamp = Time.GetUnixTime();
 
             EndSneaking();
+            RemoveRoadSpeedBuff();
 
             if (fromPortal)
                 LastPortalTeleportTimestamp = LastTeleportStartTimestamp;

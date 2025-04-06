@@ -123,7 +123,7 @@ namespace ACE.Server.Entity
         // creature defender
         public Quadrant Quadrant;
 
-        public bool IgnoreMagicArmor =>  (Weapon?.IgnoreMagicArmor ?? false) || (Attacker?.IgnoreMagicArmor ?? false);      // ignores impen / banes
+        public bool IgnoreMagicArmor => (Weapon?.IgnoreMagicArmor ?? false) || (Attacker?.IgnoreMagicArmor ?? false);      // ignores impen / banes
 
         public bool IgnoreMagicResist => (Weapon?.IgnoreMagicResist ?? false) || (Attacker?.IgnoreMagicResist ?? false);    // ignores life armor / prots
 
@@ -180,6 +180,21 @@ namespace ACE.Server.Entity
             var playerDefender = defender as Player;
 
             var pkBattle = playerAttacker != null && playerDefender != null;
+
+            //Arenas - If this is an arena landblock
+            //don't allow any dmg except while the event is in a started status and between non-eliminated players            
+            if (playerDefender != null && ArenaLocation.IsArenaLandblock(playerDefender.Location.Landblock))
+            {
+                if (playerAttacker != null && playerAttacker.IsArenaObserver)
+                    return 0.0f;
+
+                var arenaEvent = ArenaManager.GetArenaEventByLandblock(playerDefender.Location.Landblock);
+                if (arenaEvent == null || arenaEvent.Status != 4)
+                {
+                    return 0.0f;
+                }
+            }
+
 
             Attacker = attacker;
             Defender = defender;
@@ -319,8 +334,7 @@ namespace ACE.Server.Entity
                         }
 
                         if (Weapon != null && Weapon.IsTwoHanded)
-                           /// CriticalChance += 0.05f + playerAttacker.ScaleWithPowerAccuracyBar(0.05f);
-                            CriticalChance += 0.10f + playerAttacker.ScaleWithPowerAccuracyBar(0.05f);
+                            CriticalChance += 0.05f + playerAttacker.ScaleWithPowerAccuracyBar(0.05f);
 
                         if (IsAttackFromSneaking)
                         {
@@ -328,7 +342,7 @@ namespace ACE.Server.Entity
                             if (playerDefender == null)
                             {
                                 SneakAttackMod = 3.0f;
-                                defender.StunFor(5, playerAttacker);
+                                DefenderStunned = true;
                             }
                         }
                         else if (attackerTechniqueId == TacticAndTechniqueType.Opportunist)
@@ -352,8 +366,7 @@ namespace ACE.Server.Entity
                     if (playerDefender != null)
                     {
                         if (defenderTechniqueId == TacticAndTechniqueType.Riposte)
-                           /// CriticalChance += 0.10f; // Extra chance of receiving critical hits while using the Riposte technique.
-                            CriticalChance += 0.05f; // Extra chance of receiving critical hits while using the Riposte technique.
+                            CriticalChance += 0.10f; // Extra chance of receiving critical hits while using the Riposte technique.
                     }
                 }
             }
@@ -362,9 +375,7 @@ namespace ACE.Server.Entity
             // It should be noted that any time a character is logging off, PK or not, all physical attacks against them become automatically critical.
             // (Note that spells do not share this behavior.) We hope this will stress the need to log off in a safe place.
 
-            if (playerDefender != null && (playerDefender.IsLoggingOut || playerDefender.PKLogout) && (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM || (!playerDefender.IsPK && !playerDefender.IsPKL)))
-                CriticalChance = 1.0f;
-            if (playerDefender != null && ConfigManager.Config.Server.WorldRuleset == Ruleset.CustomDM && (playerDefender.IsLoggingOut || playerDefender.PKLogout) && playerAttacker != null && playerDefender != null && playerDefender.IsPK)
+            if (playerDefender != null && (playerDefender.IsLoggingOut || playerDefender.PKLogout) && (Common.ConfigManager.Config.Server.WorldRuleset != Common.Ruleset.CustomDM || !playerDefender.IsHardcore))
                 CriticalChance = 1.0f;
 
             if (CriticalChance > ThreadSafeRandom.Next(0.0f, 1.0f))
@@ -385,13 +396,6 @@ namespace ACE.Server.Entity
                     // verify: CriticalMultiplier only applied to the additional crit damage,
                     // whereas CD/CDR applied to the total damage (base damage + additional crit damage)
                     CriticalDamageMod = 1.0f + WorldObject.GetWeaponCritDamageMod(Weapon, attacker, attackSkill, defender, pkBattle);
-
-                    // Axes and Crossbows have a respective passive increase to critical damage
-                    if (Weapon != null && Weapon.WeaponSkill == Skill.Axe)
-						CriticalDamageMod = 1.5f + WorldObject.GetWeaponCritDamageMod(Weapon, attacker, attackSkill, defender, pkBattle);
-
-					if (Weapon != null && Weapon.WeaponSkill == Skill.Crossbow)
-						CriticalDamageMod = 1.3f + WorldObject.GetWeaponCritDamageMod(Weapon, attacker, attackSkill, defender, pkBattle);
 
                     CriticalDamageRatingMod = Creature.GetPositiveRatingMod(attacker.GetCritDamageRating());
 
@@ -427,15 +431,8 @@ namespace ACE.Server.Entity
                 // select random body part @ current attack height
                 GetBodyPart(AttackHeight);
 
-
-                if (IsCritical && attackerTechniqueId == TacticAndTechniqueType.MasteryAxe && Weapon.WeaponSkill == Skill.Axe && (BodyPart == BodyPart.Hand || BodyPart == BodyPart.Head || BodyPart == BodyPart.Foot))
-                {
-                    CriticalDamageMod *= 1.5f;
-                    DamageBeforeMitigation *= 1.5f;
-                }
-
                 // get player armor pieces
-                Armor = playerDefender.GetArmorLayers(playerDefender, BodyPart);
+                Armor = playerDefender.GetArmorLayers(BodyPart);
 
                 // get armor modifiers
                 ArmorMod = playerDefender.GetArmorMod(attacker, DamageType, Armor, Weapon, ignoreArmorMod, pkBattle);
@@ -449,27 +446,6 @@ namespace ACE.Server.Entity
                 GetBodyPart(Defender, Quadrant);
                 if (Evaded)
                     return 0.0f;
-
-                if (IsCritical && attackerTechniqueId == TacticAndTechniqueType.MasteryAxe && Weapon.WeaponSkill == Skill.Axe)
-                {
-                    // No creature body parts, so approximate the same extremity chance as if it were a human
-                    // High = 1/4
-                    // Med = 1/6
-                    // Low = 1/2
-                    float axeMasteryProcChance = 0f;
-                    if (AttackHeight == AttackHeight.Low)
-                        axeMasteryProcChance = 0.5f;
-                    else if (AttackHeight == AttackHeight.Medium)
-                        axeMasteryProcChance = 0.167f;
-                    else if (AttackHeight == AttackHeight.High)
-                        axeMasteryProcChance = 0.25f;
-
-                    if (ThreadSafeRandom.Next(0f, 1f) < axeMasteryProcChance)
-                    {
-                        CriticalDamageMod *= 1.5f;
-                        DamageBeforeMitigation *= 1.5f;
-                    }
-                }
 
                 Armor = CreaturePart.GetArmorLayers(PropertiesBodyPart.Key);
 
@@ -527,7 +503,15 @@ namespace ACE.Server.Entity
                         if (PerfectBlockChance > ThreadSafeRandom.Next(0.0f, 1.0f))
                         {
                             IsPerfectBlock = true;
-                            ShieldMod = 0.0f;
+                            if (Weapon != null)
+                            {
+                                if(Weapon.HasImbuedEffect(ImbuedEffectType.IgnoreAllArmor))
+                                    ShieldMod = 1.0f;
+                                else
+                                    ShieldMod = attacker.GetIgnoreShieldMod(Attacker, Weapon, pkBattle);
+                            }
+                            else
+                                ShieldMod = 0.0f;
 
                             if (playerAttacker == null && playerDefender != null && CombatType == CombatType.Melee)
                                 AttackerStunned = true;
@@ -550,7 +534,13 @@ namespace ACE.Server.Entity
             else
                 ShieldMod = defender.GetShieldMod(attacker, DamageType, Weapon, pkBattle);
 
-            var pvpDamageCapPercentageMaxHealth = 1.0f;
+            var damageBeforeShieldMod = DamageBeforeMitigation * ArmorMod * ResistanceMod * DamageResistanceRatingMod;
+
+            // calculate final output damage
+            Damage = damageBeforeShieldMod * ShieldMod;
+
+            if (attacker == defender)
+                Damage *= 1.33f; // Self-damage does extra damage.
 
             if (pkBattle)
             {
@@ -563,49 +553,37 @@ namespace ACE.Server.Entity
                         case Skill.LightWeapons:
                         case Skill.Axe:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_axe", "pvp_dmg_mod_high_axe", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
-                            pvpDamageCapPercentageMaxHealth = 0.85f;
                             break;
                         case Skill.HeavyWeapons:
                         case Skill.Sword:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_sword", "pvp_dmg_mod_high_sword", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
-                            pvpDamageCapPercentageMaxHealth = 0.85f;
                             break;
                         case Skill.Mace:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_mace", "pvp_dmg_mod_high_mace", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
-                            pvpDamageCapPercentageMaxHealth = 0.85f;
                             break;
                         case Skill.Spear:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_spear", "pvp_dmg_mod_high_spear", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
-                            pvpDamageCapPercentageMaxHealth = 0.75f;
                             break;
                         case Skill.Staff:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_staff", "pvp_dmg_mod_high_staff", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
-                            pvpDamageCapPercentageMaxHealth = 0.75f;
                             break;
                         case Skill.UnarmedCombat:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_unarmed", "pvp_dmg_mod_high_unarmed", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
-                            pvpDamageCapPercentageMaxHealth = 0.65f;
                             break;
                         case Skill.FinesseWeapons:
                         case Skill.Dagger:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_dagger", "pvp_dmg_mod_high_dagger", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
-                            pvpDamageCapPercentageMaxHealth = 0.65f;
                             break;
-                        default:
-                            break;
-                        /*case Skill.MissileWeapons:
+                        case Skill.MissileWeapons:
                         case Skill.Bow:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_bow", "pvp_dmg_mod_high_bow", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
-                            pvpDamageCapPercentageMaxHealth = 0.85f;
                             break;
                         case Skill.Crossbow:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_crossbow", "pvp_dmg_mod_high_crossbow", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
-                            pvpDamageCapPercentageMaxHealth = 0.85f;
                             break;
                         case Skill.ThrownWeapon:
                             pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_thrown", "pvp_dmg_mod_high_thrown", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
-                            pvpDamageCapPercentageMaxHealth = 0.85f;
-                            break;*/
+                            break;
                     }
 
                     if (Weapon != null)
@@ -698,30 +676,13 @@ namespace ACE.Server.Entity
                     if (SneakAttackMod > 1.0)
                         pvpMod *= (float)PropertyManager.GetInterpolatedDouble(playerAttacker.Level ?? 1, "pvp_dmg_mod_low_sneak", "pvp_dmg_mod_high_sneak", "pvp_dmg_mod_low_level", "pvp_dmg_mod_high_level");
 
-                    DamageBeforeMitigation *= pvpMod;
+                    Damage = Damage * pvpMod;
                 }
                 catch (Exception ex)
                 {
                     log.Error($"Failed applying server configured pvp mods. Ex: {ex}");
                 }
             }
-
-            var maxDamage = float.MaxValue;
-            if (pvpDamageCapPercentageMaxHealth < 1.0f)
-            {
-                pvpDamageCapPercentageMaxHealth -= (float)ThreadSafeRandom.Next(0, 0.10f); //Randomize between 0 and 10% less than the actual cap
-                maxDamage = (float)Math.Ceiling(((double)defender.GetCreatureVital(ACE.Entity.Enum.Properties.PropertyAttribute2nd.Health).MaxValue) * pvpDamageCapPercentageMaxHealth) + 1f;
-            }
-
-            var damageBeforeShieldMod = DamageBeforeMitigation * ArmorMod * ResistanceMod * DamageResistanceRatingMod;
-
-            // calculate final output damage
-            Damage = damageBeforeShieldMod * ShieldMod;
-            if (Damage > maxDamage)
-                Damage = maxDamage;
-
-            if (attacker == defender)
-                Damage *= 1.33f; // Self-damage does extra damage.
 
             DamageMitigated = DamageBeforeMitigation - Damage;
             if (ShieldMod != 1.0f && Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
@@ -736,6 +697,25 @@ namespace ACE.Server.Entity
                 if (mobDamageGlobalScale != 1.0)
                     Damage *= (float)mobDamageGlobalScale;
             }
+
+            //Arenas - If this is an arena landblock
+            //track total dmg dealt and received            
+            if (playerDefender != null && ArenaLocation.IsArenaLandblock(playerDefender.Location.Landblock))
+            {
+                var arenaEvent = ArenaManager.GetArenaEventByLandblock(playerDefender.Location.Landblock);
+                if (arenaEvent != null && arenaEvent.Status == 4 && playerAttacker != null)
+                {
+                    var attackerArenaPlayer = arenaEvent.Players.FirstOrDefault(x => x.CharacterId == playerAttacker.Character.Id);
+                    var defenderArenaPlayer = arenaEvent.Players.FirstOrDefault(x => x.CharacterId == playerDefender.Character.Id);
+
+                    if (attackerArenaPlayer != null && defenderArenaPlayer != null)
+                    {
+                        attackerArenaPlayer.TotalDmgDealt += (uint)Math.Round(Damage);
+                        defenderArenaPlayer.TotalDmgReceived += (uint)Math.Round(Damage);
+                    }
+                }
+            }
+
             return Damage;
         }
 
@@ -765,7 +745,7 @@ namespace ACE.Server.Entity
 
             //var attackType = attacker.GetCombatType();
 
-            EffectiveDefenseSkill = defender.GetEffectiveDefenseSkill(CombatType);
+            EffectiveDefenseSkill = defender.GetEffectiveDefenseSkill(CombatType, isPvP);
 
             if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
             {
@@ -796,7 +776,7 @@ namespace ACE.Server.Entity
 
                 // Evasion penalty for receiving too many attacks per second.
                 if (defender.attacksReceivedPerSecond > 0.0f && Defender.AttackTarget != attacker) // But we still have full evasion chance against our attack target.
-                    EffectiveDefenseSkill = (uint)Math.Round(EffectiveDefenseSkill * (1.0f - Math.Min(1.0f, defender.attacksReceivedPerSecond / 40.0f)));
+                    EffectiveDefenseSkill = (uint)Math.Round(EffectiveDefenseSkill * (1.0f - Math.Min(1.0f, defender.attacksReceivedPerSecond / 20.0f)));
             }
 
             var evadeChance = 1.0f - SkillCheck.GetSkillChance(EffectiveAttackSkill, EffectiveDefenseSkill);
@@ -1081,8 +1061,6 @@ namespace ACE.Server.Entity
 
             info += $"IsAttackFromSneaking: {IsAttackFromSneaking}\n";
 
-            info += $"IsAttackFromSneaking: {IsAttackFromSneaking}\n";
-
             info += "----";
 
             targetInfo.Session.Network.EnqueueSend(new GameMessageSystemChat(info, ChatMessageType.Broadcast));
@@ -1120,3 +1098,4 @@ namespace ACE.Server.Entity
         }
     }
 }
+

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using ACE.Common;
+using ACE.DatLoader;
 using ACE.Entity;
 using ACE.Entity.Enum;
 using ACE.Entity.Enum.Properties;
@@ -199,6 +200,10 @@ namespace ACE.Server.WorldObjects
             ExecuteMotionPersist(motion);
 
             var player = this as Player;
+
+            if (player != null && player.IsArenaObserver)
+                return 0.0f;
+
             if (player != null)
             {
                 player.HandleActionTradeSwitchToCombatMode(player.Session);
@@ -357,8 +362,8 @@ namespace ACE.Server.WorldObjects
                     combatStance = MotionStance.SwordShieldCombat;
                     break;
                 case MotionStance.ThrownWeaponCombat:
-                    GetCombatTable();
-                    if (CombatTable.Stances.ContainsKey(MotionStance.ThrownShieldCombat))
+                    var motionTable = MotionTableId != 0 ? DatManager.PortalDat.ReadFromDat<DatLoader.FileTypes.MotionTable>(MotionTableId) : null;
+                    if (motionTable != null && motionTable.StyleDefaults.ContainsKey((uint)MotionStance.ThrownShieldCombat))
                         combatStance = MotionStance.ThrownShieldCombat;
                     else
                         combatStance = MotionStance.ThrownWeaponCombat;
@@ -608,28 +613,33 @@ namespace ACE.Server.WorldObjects
         /// Returns the effective defense skill for a player or creature,
         /// ie. with Defender bonus and imbues
         /// </summary>
-        public uint GetEffectiveDefenseSkill(CombatType combatType)
+        public uint GetEffectiveDefenseSkill(CombatType combatType, bool isPvP)
         {
             var defenseSkill = combatType == CombatType.Missile ? Skill.MissileDefense : Skill.MeleeDefense;
             var defenseMod = defenseSkill == Skill.MissileDefense ? GetWeaponMissileDefenseModifier(this) : GetWeaponMeleeDefenseModifier(this);
             var burdenMod = GetBurdenMod();
 
             var imbuedEffectType = defenseSkill == Skill.MissileDefense ? ImbuedEffectType.MissileDefense : ImbuedEffectType.MeleeDefense;
-            var defenseImbues = GetDefenseImbues(imbuedEffectType);
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
-            {
-                if (imbuedEffectType == ImbuedEffectType.MissileDefense)
-                    defenseImbues *= (int)PropertyManager.GetLong("dekaru_imbue_missile_defense_per_imbue").Item;
-                else if (imbuedEffectType == ImbuedEffectType.MeleeDefense)
-                    defenseImbues *= (int)PropertyManager.GetLong("dekaru_imbue_melee_defense_per_imbue").Item;
-            }
+            var defenseImbues = (uint)GetDefenseImbues(imbuedEffectType);
 
             var stanceMod = this is Player player ? player.GetDefenseStanceMod() : 1.0f;
 
             //if (this is Player)
             //Console.WriteLine($"StanceMod: {stanceMod}");
 
-            var effectiveDefense = (uint)Math.Round(GetCreatureSkill(defenseSkill).Current * defenseMod * burdenMod * stanceMod + defenseImbues);
+            var skill = GetCreatureSkill(defenseSkill);
+
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM)
+            {
+                defenseImbues *= 3;
+                defenseImbues = Math.Min(defenseImbues, skill.Base / 10);
+            }
+
+            var pveMod = 1.0f;
+            if (ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && !isPvP && this is Player)
+                pveMod = 1.1f;
+
+            var effectiveDefense = (uint)Math.Round(skill.Current * pveMod * defenseMod * burdenMod * stanceMod + defenseImbues);
 
             if (IsExhausted) effectiveDefense = 0;
 
@@ -704,12 +714,12 @@ namespace ACE.Server.WorldObjects
         /// Returns the animation speed for an attack,
         /// based on the current quickness and weapon speed
         /// </summary>
-        public float GetAnimSpeed()
+        public float GetAnimSpeed(WorldObject weaponOverride = null)
         {
             var quickness = Quickness.Current;
-            if (ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && IsHumanoid && GetCurrentWeaponSkill() == Skill.UnarmedCombat)
+            if (ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && IsHumanoid && (weaponOverride == this || GetCurrentWeaponSkill() == Skill.UnarmedCombat))
                 quickness = Focus.Current;
-            var weaponSpeed = GetWeaponSpeed(this);
+            var weaponSpeed = GetWeaponSpeed(this, weaponOverride);
 
             var divisor = 1.0 - (quickness / 300.0) + (weaponSpeed / 150.0);
             if (divisor <= 0)
@@ -928,7 +938,7 @@ namespace ACE.Server.WorldObjects
                 return 1.0f;
 
             bool bypassShieldAngleCheck = false;
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && (weapon == null || ((weapon.IgnoreShield ?? 0) == 0 && !weapon.IsTwoHanded)))
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && (attacker.IgnoreShield ?? 0) == 0 && (weapon == null || ((weapon.IgnoreShield ?? 0) == 0 && !weapon.IsTwoHanded)))
             {
                 var techniqueTrinket = GetEquippedTrinket();
                 if (techniqueTrinket != null && techniqueTrinket.TacticAndTechniqueId == (int)TacticAndTechniqueType.Defensive)

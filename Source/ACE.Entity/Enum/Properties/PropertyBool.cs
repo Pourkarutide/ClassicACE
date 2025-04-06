@@ -227,6 +227,13 @@ namespace ACE.Entity.Enum.Properties
         SupportMod = 9122,
         MirrorMod = 9123,
         MirrorMob = 9124,
+
+        /* Arena Props */
+        IsArenaObserver = 9300,
+        IsPendingArenaObserver = 9301,
+        HasArenaRareDmgBuff = 9302,
+        HasArenaRareDmgReductionBuff = 9303,
+
     }
 
     public static class PropertyBoolExtensions

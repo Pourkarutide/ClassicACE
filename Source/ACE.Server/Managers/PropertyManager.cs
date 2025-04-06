@@ -511,10 +511,20 @@ namespace ACE.Server.Managers
         }
 
         // For Dekarutide
-        public const bool SEASON3_DEFAULTS = true;
-        public const bool SEASON3_PATCH_1 = true;
-        public const bool SEASON3_PATCH_2 = true;
-        public const bool SEASON3_PATCH_3 = true;
+        public const bool SEASON3_DEFAULTS = false;
+        public const bool SEASON3_PATCH_1 = false;
+        public const bool SEASON3_PATCH_2 = false;
+        public const bool SEASON3_PATCH_3 = false;
+
+        public const bool SEASON4_DEFAULTS = true;
+        public const bool SEASON4_PATCH_1_6 = true;
+        public const bool SEASON4_PATCH_1_9 = true;
+        public const bool SEASON4_PATCH_1_10 = true;
+        public const bool SEASON4_PATCH_1_16 = true;
+        public const bool SEASON4_PATCH_1_17 = true;
+        public const bool SEASON4_PATCH_1_18 = true;
+        public const bool SEASON4_PATCH_1_19 = true;
+        public const bool SEASON4_PATCH_1_20 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -579,6 +589,7 @@ namespace ACE.Server.Managers
                 PropertyManager.ModifyBool("pathfinding", true);
 
                 PropertyManager.ModifyBool("useable_gems", false);
+                PropertyManager.ModifyBool("recall_warden", false);
 
                 if (SEASON3_DEFAULTS)
                 {
@@ -647,6 +658,8 @@ namespace ACE.Server.Managers
                     PropertyManager.ModifyBool("pk_server", true);
                     PropertyManager.ModifyLong("pk_timer", 60);
                     PropertyManager.ModifyDouble("pk_cast_radius", 8.0);
+                    PropertyManager.ModifyBool("pve_death_respite", true);
+                    PropertyManager.ModifyDouble("pve_death_respite_timer", 60);
 
                     // Scalars: At level 30 (pvp_dmg_mod_low_level), you have low mod for the given weapon
                     //          At level 40 (pvp_dmg_mod_high_level), you have high mod for the given weapon
@@ -750,6 +763,257 @@ namespace ACE.Server.Managers
                         PropertyManager.ModifyDouble("extra_vitae_penalty_pvp", 0.15);
                         PropertyManager.ModifyDouble("vitae_penalty_max", 0.30);
                         PropertyManager.ModifyLong("pk_timer", 37);
+                    }
+                }
+
+                if (SEASON4_DEFAULTS)
+                {
+                    // Hard Mode - Progression
+                    // Caps on player progression
+                    PropertyManager.ModifyLong("max_level", 20);
+                    PropertyManager.ModifyBool("allow_xp_at_max_level", false);
+                    PropertyManager.ModifyBool("allow_skill_specialization", true);
+
+                    // Rates affecting XP, loot, and quests
+                    PropertyManager.ModifyDouble("quest_xp_modifier", 1.0);
+                    PropertyManager.ModifyDouble("xp_modifier", 1.0);
+                    PropertyManager.ModifyDouble("surface_bonus_xp", 0.0);
+                    PropertyManager.ModifyDouble("cantrip_drop_rate", 0.25);
+                    PropertyManager.ModifyBool("vendor_allow_special_mutations", false);
+                    PropertyManager.ModifyDouble("salvage_amount_multiplier", 0.4);
+                    PropertyManager.ModifyBool("gateway_ties_summonable", false); // No easy portal bots. People won't be able to evade PvP as easily
+                    PropertyManager.ModifyDouble("hot_dungeon_chance", 0.1); // Mitigate lucky gains from relying on hot dungeons being uncontested
+                    PropertyManager.ModifyLong("quest_mindelta_rate_longest", 600000); // Just under 1 week for longest quest timers
+                    PropertyManager.ModifyBool("allow_allegiance_passup", false);
+                    PropertyManager.ModifyDouble("spell_extraction_scroll_base_chance", 0.25);
+                    PropertyManager.ModifyDouble("spell_extraction_scroll_chance_per_extra_spell", 0.05);
+                    PropertyManager.ModifyDouble("coin_stack_multiplier", 0.5);
+                    PropertyManager.ModifyBool("neuter_trade_note_rewards", true);
+
+                    // Hard Mode - PvE Combat
+                    PropertyManager.ModifyDouble("customdm_mob_damage_scale", 0.5);
+                    PropertyManager.ModifyDouble("customdm_mob_war_damage_scale", 0.5); // Normally 0.5
+                    PropertyManager.ModifyDouble("customdm_player_war_damage_scale_pve", 1.0);
+                    PropertyManager.ModifyDouble("bleed_pve_dmg_mod", 0.5);
+
+                    // Hard Mode - Death Penalty
+                    PropertyManager.ModifyDouble("vitae_penalty", 0.15);
+                    PropertyManager.ModifyDouble("vitae_penalty_max", 0.30);
+                    PropertyManager.ModifyLong("min_level_drop_wielded_on_death", 20);
+                    PropertyManager.ModifyLong("min_level_eligible_to_drop_items_on_death", 1);
+                    PropertyManager.ModifyBool("use_fixed_death_item_formula", true);
+                    PropertyManager.ModifyLong("max_items_dropped_per_death", 18);
+                    PropertyManager.ModifyBool("drop_all_coins_on_death", true); // Moved from Grandfathered, fits death mechanics
+
+                    // Gameplay Adjustments
+                    // Disabled Features
+                    PropertyManager.ModifyDouble("elite_mob_spawn_rate", 0.02);
+                    PropertyManager.ModifyBool("customdm_mutate_quest_items", false);
+
+                    // Outdoor Nerfs
+                    PropertyManager.ModifyBool("override_encounter_spawn_rates", true);
+                    PropertyManager.ModifyLong("encounter_regen_interval", 1800);
+                    PropertyManager.ModifyDouble("mob_awareness_range", 1.25);
+
+                    // Quality of Life (QoL)
+                    // Player Experience
+                    PropertyManager.ModifyBool("fellow_busy_no_recruit", false);
+                    PropertyManager.ModifyBool("container_opener_name", true);
+                    PropertyManager.ModifyBool("permit_corpse_all", true);
+                    PropertyManager.ModifyBool("usable_gems_generated_with_1_mana_cost", true);
+
+                    // Housing
+                    PropertyManager.ModifyBool("house_15day_account", false);
+                    PropertyManager.ModifyBool("house_30day_cooldown", false); // Doesn't matter for apartments but decided to change it
+                    PropertyManager.ModifyBool("house_per_char", true); // Allow multiple houses per account, moved from Grandfathered
+
+                    // Server Configs
+                    // Non-Gameplay
+                    PropertyManager.ModifyBool("world_closed", true); // Require /world open to open server after start
+                    PropertyManager.ModifyBool("block_vpn_connections", true);
+                    PropertyManager.ModifyBool("player_receive_immediate_save", true);
+                    PropertyManager.ModifyLong("player_save_interval", 60); // Less rollback for players on crash
+                    PropertyManager.ModifyBool("cmd_pop_last_24_hours", true); // Moved from Grandfathered, fits server monitoring
+
+                    // Cosmetic
+                    PropertyManager.ModifyBool("npc_hairstyle_fullrange", true);
+
+                    // PvP
+                    // General PvP Settings
+                    PropertyManager.ModifyBool("pk_server", true);
+                    PropertyManager.ModifyLong("pk_timer", 37);
+                    PropertyManager.ModifyDouble("pk_cast_radius", 8.0);
+                    PropertyManager.ModifyLong("pk_escape_max_level_difference", 20); // Moved from Grandfathered, PvP-related
+                    PropertyManager.ModifyDouble("extra_vitae_penalty_pvp", 0.15); // Moved from Grandfathered, fits PvP death mechanics
+
+                    // PvP Damage Scalars
+                    // At level 30 (pvp_dmg_mod_low_level), you have low mod for the given weapon
+                    // At level 40 (pvp_dmg_mod_high_level), you have high mod for the given weapon
+                    // Mod scales proportionally between levels (e.g., Axe: 1.0 at 30, 1.25 at 35, 1.4 at 40)
+                    PropertyManager.ModifyLong("pvp_dmg_mod_low_level", 30); // 30-40, from 10-80
+                    PropertyManager.ModifyLong("pvp_dmg_mod_high_level", 40);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_axe", 1.0); // 1.0-1.4, from 0.85-1.5
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_axe", 1.4); // From 1.5, -6.7%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_mace", 1.2); // 1.0-1.2, from 1.0-1.0
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_spear", 1.15); // 1.15-1.4, from 1.15-1.8
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_spear", 1.4); // From 1.5, -6.7%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_staff", 1.5); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_staff", 1.5);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_sword", 1.65); // From 1.5, +10%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_dagger", 1.25); // From 1.2, +4%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_unarmed", 1.3);
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_unarmed", 1.65); // From 1.5, +10%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_unarmed_war", 0.65); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_unarmed_war", 0.85);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_bow", 1.0); // 1.0-1.7, from 1.45-1.9
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_bow", 1.7);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_crossbow", 1.0); // 1.0-1.7, from 1.5-1.5
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_crossbow", 1.7); // From 1.5, +13%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_thrown", 0.90); // 0.90-1.4, from 0.75-1.3
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_thrown", 1.4); // From 1.3, +7%
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_dot", 0.75); // Same
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_dot", 0.75);
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_low_void_dot", 0.75); // Same, possibly unused
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_void_dot", 0.75);
+
+                    PropertyManager.ModifyDouble("pvp_dmg_mod_high_war", 1.0); // Was 1.2
+
+                    // Grandfathered Configs from Previous Seasons
+                    // Combat & Animation
+                    PropertyManager.ModifyBool("dekaru_dual_wield_speed_mod", false);
+                    PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_1h", 1.6);
+                    PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_dualwield", 1.7);
+                    PropertyManager.ModifyDouble("dekaru_dagger_ms_animation_speed_shielded", 1.8);
+                    PropertyManager.ModifyDouble("dekaru_sword_ms_animation_speed_1h", 1.6);
+                    PropertyManager.ModifyDouble("dekaru_sword_ms_animation_speed_dualwield", 1.6);
+                    PropertyManager.ModifyDouble("dekaru_sword_ms_animation_speed_shielded", 1.8);
+                    PropertyManager.ModifyDouble("dekaru_tw_animation_speed", 3.0);
+                    PropertyManager.ModifyDouble("fast_missile_modifier", 3.0);
+
+                    // Loot & Crafting
+                    PropertyManager.ModifyBool("craft_exact_msg", true); // QoL crafting success chance, mitigates plugin advantages
+                    PropertyManager.ModifyBool("stackable_trophy_rewards_use_tar", true);
+                    PropertyManager.ModifyBool("useable_gems", true); // Typo? Should it match "usable_gems_generated..."?
+                    PropertyManager.ModifyDouble("spelltransfer_over_tier_success_chance", 0.5);
+                    PropertyManager.ModifyBool("dekarutide_season3_alternate_weapon_wield_reqs", true);
+                    PropertyManager.ModifyBool("dekarutide_season3_alternate_loot_valuations", true);
+
+                    // Miscellaneous
+                    PropertyManager.ModifyBool("assess_creature_pve_always_succeed", true); // Fixes loot delays with vtank in some situations
+                    PropertyManager.ModifyBool("show_discord_chat_ingame", true);
+                    PropertyManager.ModifyBool("spellcast_recoil_queue", true);
+                    PropertyManager.ModifyDouble("spellcast_max_angle", 40.0);
+                    PropertyManager.ModifyBool("ai_anti_perch", false);
+                    PropertyManager.ModifyBool("ai_custom_pathfind", false);
+                    PropertyManager.ModifyBool("die_command_enabled", false);
+
+                    if (SEASON4_PATCH_1_6)
+                    {
+                        PropertyManager.ModifyLong("arenas_min_level", 5);
+                        PropertyManager.ModifyLong("arenas_reward_min_level", 1);
+                        PropertyManager.ModifyLong("arenas_reward_min_age", 1);
+                        PropertyManager.ModifyDouble("arena_corpse_rot_seconds", 900);
+                        PropertyManager.ModifyString("arenas_blacklist", "");
+                        PropertyManager.ModifyString("arena_globals_webhook", "");
+                        PropertyManager.ModifyBool("disable_arenas", false);
+                        PropertyManager.ModifyBool("arena_allow_same_ip_match", false);
+                        PropertyManager.ModifyBool("arena_allow_observers", true);
+                    }
+
+                    if (SEASON4_PATCH_1_9)
+                    {
+                        PropertyManager.ModifyLong("player_corpse_permissible_age", 7200);
+
+                        // Reason: Economy is too hard
+                        PropertyManager.ModifyDouble("coin_stack_multiplier", 1.0);
+                        PropertyManager.ModifyDouble("spell_extraction_scroll_base_chance", 0.5);
+                        PropertyManager.ModifyDouble("spell_extraction_scroll_chance_per_extra_spell", 0.1);
+                        // Reason: Dekaru's Arcane Lore changes make this unnecessary to penalize people for
+                        PropertyManager.ModifyDouble("spelltransfer_over_tier_success_chance", 1.0);
+                        // Reason: More hot dungeons is good for the morale of the people
+                        PropertyManager.ModifyDouble("hot_dungeon_interval", 3600.0);
+                        PropertyManager.ModifyDouble("hot_dungeon_chance", 0.33);
+                        // Reason: Item loss is bad enough
+                        PropertyManager.ModifyDouble("extra_vitae_penalty_pvp", 0.0);
+                        // Reason: Global xp is already reduced by 25%, no need to keep quest xp reduced on top of it
+                        PropertyManager.ModifyDouble("quest_xp_modifier", 1.0);
+
+
+                        PropertyManager.ModifyDouble("mob_awareness_range_indoors", 1.0);
+
+                        // Reason: Death penalty is too harsh for newer players
+                        PropertyManager.ModifyLong("min_level_drop_wielded_on_death", 30); // previously was 20
+                        PropertyManager.ModifyLong("max_items_dropped_per_death", 10); // previously was 18
+
+                        // Reason: Voted by the majority of the playerbase
+                        PropertyManager.ModifyBool("require_spell_comps", true); // previously was false
+                    }
+
+                    if (SEASON4_PATCH_1_10)
+                    {
+                        // Reason: Aggro is too difficult outdoors
+                        PropertyManager.ModifyDouble("mob_awareness_range", 1.0); // previously 1.25
+                        // Reason: Value was relevent for the previous season, but not for this one
+                        PropertyManager.ModifyDouble("salvage_amount_multiplier", 1.0); // previously 0.4
+                    }
+
+                    if (SEASON4_PATCH_1_16)
+                    {
+                        // Reason: Reaching exploration contract location still uses this modifier and it needs to be increased
+                        PropertyManager.ModifyDouble("exploration_bonus_xp", 0.5); // previously 0
+                        // Reason: New property for exploration contract treasure
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_treasure", 0.5);
+                    }
+
+                    if (SEASON4_PATCH_1_17)
+                    {
+                        // Reason: New property for exploration contract location discovery
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 0.5);
+                    }
+
+                    if (SEASON4_PATCH_1_18)
+                    {
+                        // Reason: Boost xp for discovering a contract dungeon  
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 0.5125); // was 0.5
+
+                        // Reason: Boost xp for treasure maps, making them more rewarding 
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_treasure", 0.55);  // was 0.5
+
+                        // Reason: Broadcast player life actions such as creation/deletion/restoration
+                        PropertyManager.ModifyBool("broadcast_player_life", true);
+                        PropertyManager.ModifyBool("broadcast_player_delete", true);
+                        PropertyManager.ModifyBool("broadcast_player_create", false);
+                        PropertyManager.ModifyBool("broadcast_player_restore", true);
+                    }
+
+                    if (SEASON4_PATCH_1_19)
+                    {
+                        // Reason: Give unlimited respecs to all players
+                        PropertyManager.ModifyLong("unlimited_respec_max_level", 126);  // was 20
+
+                        // Reason: Fixed bug for exploration bonus xp
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_treasure", 5.0);  // was 0.55
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_markers", 5.0);  // was 0.55
+                        PropertyManager.ModifyDouble("exploration_bonus_xp_contract_location", 5.0);  // was 0.5125
+                    }
+
+                    if (SEASON4_PATCH_1_20)
+                    {
+                        PropertyManager.ModifyLong("max_level", 60);  // was 40
+                        PropertyManager.ModifyLong("previous_max_level", 40);
+                        PropertyManager.ModifyDouble("catchup_xp_modifier", 2.0);
                     }
                 }
             }
@@ -920,6 +1184,16 @@ namespace ACE.Server.Managers
                 ("cmd_pop_show_30_days", new Property<bool>(true, "Allow the pop command to show the 30 days unique IPs count")),
                 ("recall_in_dungeon", new Property<bool>(true, "Allow players to recall in dungeon")),
                 ("unlimited_respec", new Property<bool>(false, "Allow players to respec their skills/attributes without a quest timer")),
+                ("recall_warden", new Property<bool>(false, "Toggles the Anti-Recall_Warden")),
+                ("pve_death_respite", new Property<bool>(false, "Toggles pk respite even for pve deaths (players become npk even from pve deaths)")),
+                ("disable_arenas", new Property<bool>(false, "set to true to disable arena events")),
+                ("arena_allow_same_ip_match", new Property<bool>(false, "enable this allow two characters connected from the same IP to be matched in an arena event")),
+                ("arena_allow_observers", new Property<bool>(true, "enable this to allow players to watch arena matches as invisible observers")),
+                ("broadcast_player_life", new Property<bool>(false, "enable this to braodcast player life messages such as player creation/deletion/restoration")),
+                ("broadcast_player_delete", new Property<bool>(false, "enable this to braodcast player deletion actions")),
+                ("broadcast_player_create", new Property<bool>(false, "enable this to braodcast player creation actions")),
+                ("broadcast_player_restore", new Property<bool>(false, "enable this to braodcast player restoration actions")),
+                ("bz_whispers_enabled", new Property<bool>(true, "CustomDM: Enables/Disables whispers from Bael'Zharon revealing the location of other PK players")),
 
                 // Do not edit below this line
                 ("null_bool", new(false, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
@@ -955,6 +1229,16 @@ namespace ACE.Server.Managers
                 ("pk_escape_max_level_difference", new(10, "The maximum level difference, in either direction, where a player may fast escape from another player in pvp. This includes logouts, portals, and recalls.")),
                 ("bz_snitch_level_difference", new(10, "The maximum level difference, in either direction, where a player may receive a bz snitch (location reveal). Doesn't affect hardcore mode.")),
                 ("max_items_dropped_per_death", new(Player.MaxItemsDropped, "The maximum number of items dropped on death. This is not a simple cap on death items. If changed from the default, the number of actual items dropped per death will be scaled lower or higher depending on the proportion of this versus the default.")),
+                ("unlimited_respec_max_level", new(20, "The maximum level you can be to qualify for unlimited respec skills/attributes without a quest timer.")),
+                ("arenas_min_level", new Property<long>(25, "the minimum level required to join an arena queue")),
+                ("arenas_reward_min_level", new Property<long>(25, "the minimum level required to get arena rewards")),
+                ("arenas_reward_min_age", new Property<long>(864000, "the minimum in-game age in seconds required to get arena rewards")),
+                ("player_corpse_permissible_age", new Property<long>(7200, "the amount of time in milliseconds before a player's corpse becomes lootable by anyone. Default is 2 hours")),
+                ("previous_max_level", new Property<long>(0, "Set the previously set max character level.")),
+                ("bz_whispers_min_pop", new Property<long>(5, "CustomDM: Minimum required online PK players for bz whispers to be sent")),
+                ("bz_whispers_login_delay", new Property<long>(3600, "CustomDM: How long a player must remain online before being able to receive a bz whisper")),
+                ("bz_whispers_interval", new Property<long>(600, "CustomDM: How often a player can receive a bz whisper")),
+
 
                 // Do not edit below this line
                 ("null_long", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
@@ -985,6 +1269,7 @@ namespace ACE.Server.Managers
                 ("luminance_modifier", new Property<double>(1.0, "Scales the amount of luminance received by players")),
                 ("melee_max_angle", new Property<double>(0.0, "for melee players, the maximum angle before a TurnTo is required. retail appeared to have required a TurnTo even for the smallest of angle offsets.")),
                 ("mob_awareness_range", new Property<double>(1.0, "Scales the distance the monsters become alerted and aggro the players")),
+                ("mob_awareness_range_indoors", new Property<double>(1.0, "Scales the distance the monsters become alerted and aggro the players inside dungeons")),
                 ("pk_new_character_grace_period", new Property<double>(300, "the number of seconds, in addition to pk_respite_timer, that a player killer is set to non-player killer status after first exiting training academy")),
                 ("pk_respite_timer", new Property<double>(300, "the number of seconds that a player killer is set to non-player killer status after dying to another player killer")),
                 ("quest_lum_modifier", new Property<double>(1.0, "Scale multiplier for amount of quest luminance received by players.  Quest lum is also modified by 'luminance_modifier'.")),
@@ -1017,6 +1302,11 @@ namespace ACE.Server.Managers
                 ("dekaru_dagger_ms_animation_speed_1h", new(1.8, "Multiplier for dagger attack animation speed, if one handed with no shield (with a shield is hard-coded to 1.0).")),
                 ("dekaru_dagger_ms_animation_speed_dualwield", new(1.8, "Multiplier for dagger attack animation speed, if dual wielding.")),
                 ("dekaru_dagger_ms_animation_speed_shielded", new(1.8, "Multiplier for dagger attack animation speed, if using a shield.")),
+
+                // Sword Attack Speed Modifiers (PvE and PvP)
+                ("dekaru_sword_ms_animation_speed_1h", new(1.8, "Multiplier for sword attack animation speed, if one handed with no shield (with a shield is hard-coded to 1.0).")),
+                ("dekaru_sword_ms_animation_speed_dualwield", new(1.8, "Multiplier for sword attack animation speed, if dual wielding.")),
+                ("dekaru_sword_ms_animation_speed_shielded", new(1.8, "Multiplier for sword attack animation speed, if using a shield.")),
 
                 // Dagger bleed mod in pve
                 ("bleed_pve_dmg_mod", new Property<double>(1.0, "Damage mod for dagger bleed in PvE")),
@@ -1287,7 +1577,9 @@ namespace ACE.Server.Managers
                 ("surface_bonus_xp", new(0.25, "Extra xp earned for kills when hunting outside dungeons. 1.0 means 100% more xp.")),
                 ("hot_dungeon_bonus_xp", new(1.0, "Extra xp earned for kills when inside hot dungeons. 1.0 means 100% more xp.")),
                 ("exploration_bonus_xp_markers", new(1.0, "Extra xp earned while completing exploration assignment's marker objectives. 1.0 means 100% more xp.")),
-                ("exploration_bonus_xp_kills", new(2.0, "Extra xp earned while completing exploration assignment's kill objectives. 1.0 means 100% more xp.")),
+                ("exploration_bonus_xp_kills", new(0.5, "Extra xp earned while completing exploration assignment's kill objectives. 1.0 means 100% more xp.")),
+                ("exploration_bonus_xp_treasure", new(0.5, "Extra xp earned while completing exploration treasure map hunting. 1.0 means 100% more xp.")),
+                ("exploration_bonus_xp_contract_location", new(0.5, "Extra xp earned while completing exploration treasure map hunting. 1.0 means 100% more xp.")),
 
                 ("elite_mob_spawn_rate", new(0.00, "Probability of a creature spawning as an elite mob. 1.0 means 100%")),
                 ("elite_mob_loot_quality", new(0.5, "Loot quality mod of elite mob (For reference, normal is 1.0, chests are 1.2, Awareness chests are 1.4")),
@@ -1304,6 +1596,10 @@ namespace ACE.Server.Managers
                 ("bz_snitch_chance", new(0.3, "The chance to proc a bz snitch per tick (PvP player location reveal).")),
                 ("spelltransfer_over_tier_success_chance", new(1.0, "The chance to successfully transfer a spell that is higher than the tier of the target item without destroying the target")),
                 ("extra_vitae_penalty_pvp", new(0.0, "The extra vitae penalty for a PvP death. A value of 0.05 means an extra 5% vitae on top of the usual 5%, for 10% total")),
+                ("pve_death_respite_timer", new Property<double>(60, "Respite timer for pve deaths (players become npk even from pve deaths)")),
+                ("arena_corpse_rot_seconds", new Property<double>(900, "the number of seconds a corpse that is generated in an arena landblock takes to rot. Default 15 mins.")),
+                ("catchup_xp_modifier", new Property<double>(2.0, "Globally scales the amount of xp received by players who are below the previous_max_level threshold, note that this possibly multiplies the other xp_modifier options.")),
+                ("bz_whispers_chance", new Property<double>(0.2, "CustomDM: The chance a player will receive a bz whisper every bz_whispers_interval")),
 
                 // Do not edit below this line
                 ("null_double", new(0, "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
@@ -1327,10 +1623,13 @@ namespace ACE.Server.Managers
                 ("proxycheck_api_key", new Property<string>("", "API key for proxycheck.io service for VPN detection")),
                 ("vpn_account_whitelist", new Property<string>("", "A comma separated list of account names for which VPN detection is bypassed")),
                 ("discord_login_token", new Property<string>("", "Login Token used for Discord chat integration")),
+                ("arenas_blacklist", new Property<string>("", "A comma separated list of CharacterID values that cannot participate in Arenas")),
+                ("arena_globals_webhook", new Property<string>("", "Webhook to be send Arena global messages.")),
 
                 // Do not edit below this line
                 ("null_string", new("", "No effect, just included here as a last item on the list to prevent related lines from being changed in git upon new property additions."))
                 );
+
     }
 }
 
