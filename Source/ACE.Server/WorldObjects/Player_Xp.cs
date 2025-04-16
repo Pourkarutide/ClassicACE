@@ -316,7 +316,7 @@ namespace ACE.Server.WorldObjects
                     Exploration1KillProgressTracker--;
                     long explorationXP = (long)(m_amount_before_extra * bonusMod);
                     xpMessage = $"{Exploration1KillProgressTracker:N0} kill{(Exploration1KillProgressTracker != 1 ? "s" : "")} remaining.";
-                    GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
+                    GrantXP(explorationXP, XpType.Exploration, ShareType.Fellowship, xpMessage);
 
                     if (Exploration1KillProgressTracker == 0)
                     {
@@ -330,7 +330,7 @@ namespace ACE.Server.WorldObjects
                     Exploration2KillProgressTracker--;
                     long explorationXP = (long)(m_amount_before_extra * bonusMod);
                     xpMessage = $"{Exploration2KillProgressTracker:N0} kill{(Exploration2KillProgressTracker != 1 ? "s" : "")} remaining.";
-                    GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
+                    GrantXP(explorationXP, XpType.Exploration, ShareType.Fellowship, xpMessage);
 
                     if (Exploration2KillProgressTracker == 0)
                     {
@@ -344,7 +344,7 @@ namespace ACE.Server.WorldObjects
                     Exploration3KillProgressTracker--;
                     long explorationXP = (long)(m_amount_before_extra * bonusMod);
                     xpMessage = $"{Exploration3KillProgressTracker:N0} kill{(Exploration3KillProgressTracker != 1 ? "s" : "")} remaining.";
-                    GrantXP(explorationXP, XpType.Exploration, ShareType.None, xpMessage);
+                    GrantXP(explorationXP, XpType.Exploration, ShareType.Fellowship, xpMessage);
 
                     if (Exploration3KillProgressTracker == 0)
                     {

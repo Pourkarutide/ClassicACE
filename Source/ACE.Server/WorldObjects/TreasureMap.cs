@@ -350,7 +350,7 @@ namespace ACE.Server.WorldObjects
                             player.EnqueueBroadcastMotion(new Motion(player.CurrentMotionState.Stance));
 
                             var level = Math.Min(player.Level ?? 1, Level ?? 1);
-                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, msg, bonusMod);
+                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.Fellowship, msg, bonusMod);
 
                             var visibleCreatures = player.PhysicsObj.ObjMaint.GetVisibleObjectsValuesOfTypeCreature();
                             foreach (var creature in visibleCreatures)
@@ -373,7 +373,7 @@ namespace ACE.Server.WorldObjects
                             player.EnqueueBroadcastMotion(new Motion(player.CurrentMotionState.Stance));
 
                             var level = Math.Min(player.Level ?? 1, Level ?? 1);
-                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.None, "You unearth a treasure chest!", bonusMod * 3);
+                            player.EarnXP(-level - 1000, XpType.Exploration, null, null, 0, null, ShareType.Fellowship, "You unearth a treasure chest!", bonusMod * 3);
 
                             var tier = RollTier(Tier ?? 1);
                             var treasureChest = WorldObjectFactory.CreateNewWorldObject(TreasureChests[tier - 1]);

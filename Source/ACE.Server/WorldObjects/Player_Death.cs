@@ -368,6 +368,8 @@ namespace ACE.Server.WorldObjects
                 Session.Network.EnqueueSend(msgPurgeBadEnchantments, new GameMessageSystemChat("Your augmentation prevents the tides of death from ripping away your current enchantments!", ChatMessageType.Broadcast));
             }
 
+            ClearAllDoTsAndHoTs();
+
             //Handle arena deaths and logging PK kills
             bool isArenaDeath = false;
             if (topDamager != null)
