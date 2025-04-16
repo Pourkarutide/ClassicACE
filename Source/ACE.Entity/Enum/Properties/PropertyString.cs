@@ -111,8 +111,10 @@ namespace ACE.Entity.Enum.Properties
         ChargenSkillsSecondary          = 9019,
         ArcaneLoreRollLog               = 9020,
 
+        DamageOverTimeLog               = 9021,
+        HealOverTimeLog                 = 9022,
+
         // Arena Props
         ArenaRewardsByOpponent = 9300,
-
     }
 }

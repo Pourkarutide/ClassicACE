@@ -398,7 +398,7 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
-            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM || target.PKTimerActive)
+            if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.CustomDM && !target.PKTimerActive)
             {
                 var vital = target.GetCreatureVital(BoosterEnum);
                 missingVital = vital.Missing;

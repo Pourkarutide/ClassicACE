@@ -2257,6 +2257,12 @@ namespace ACE.Server.WorldObjects
             set { if (!value.HasValue) RemoveProperty(PropertyInt.FoeType); else SetProperty(PropertyInt.FoeType, (int)value.Value); }
         }
 
+        public string ShortDesc
+        {
+            get => GetProperty(PropertyString.ShortDesc);
+            set { if (value == null) RemoveProperty(PropertyString.ShortDesc); else SetProperty(PropertyString.ShortDesc, value); }
+        }
+
         public string LongDesc
         {
             get => GetProperty(PropertyString.LongDesc);
