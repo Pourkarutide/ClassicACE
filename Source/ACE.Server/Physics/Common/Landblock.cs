@@ -300,101 +300,108 @@ namespace ACE.Server.Physics.Common
 
         public bool OnRoad(Vector3 obj)
         {
-            int x = (int)(obj.X / TileLength);
-            int y = (int)(obj.Y / TileLength);
+            try
+            {
+                int x = (int)(obj.X / TileLength);
+                int y = (int)(obj.Y / TileLength);
 
-            float rMin = RoadWidth;
-            float rMax = TileLength - RoadWidth;
+                float rMin = RoadWidth;
+                float rMax = TileLength - RoadWidth;
 
-            int x0 = x;
-            int x1 = x0 + 1;
-            int y0 = y;
-            int y1 = y0 + 1;
+                int x0 = x;
+                int x1 = x0 + 1;
+                int y0 = y;
+                int y1 = y0 + 1;
 
-            uint r0 = GetRoad(x0, y0);
-            uint r1 = GetRoad(x0, y1);
-            uint r2 = GetRoad(x1, y0);
-            uint r3 = GetRoad(x1, y1);
+                uint r0 = GetRoad(x0, y0);
+                uint r1 = GetRoad(x0, y1);
+                uint r2 = GetRoad(x1, y0);
+                uint r3 = GetRoad(x1, y1);
 
-            if (r0 == 0 && r1 == 0 && r2 == 0 && r3 == 0)
+                if (r0 == 0 && r1 == 0 && r2 == 0 && r3 == 0)
+                    return false;
+
+                float dx = obj.X - x * TileLength;
+                float dy = obj.Y - y * TileLength;
+
+                if (r0 > 0)
+                {
+                    if (r1 > 0)
+                    {
+                        if (r2 > 0)
+                        {
+                            if (r3 > 0)
+                                return true;
+                            else
+                                return (dx < rMin || dy < rMin);
+                        }
+                        else
+                        {
+                            if (r3 > 0)
+                                return (dx < rMin || dy > rMax);
+                            else
+                                return (dx < rMin);
+                        }
+                    }
+                    else
+                    {
+                        if (r2 > 0)
+                        {
+                            if (r3 > 0)
+                                return (dx > rMax || dy < rMin);
+                            else
+                                return (dy < rMin);
+                        }
+                        else
+                        {
+                            if (r3 > 0)
+                                return (Math.Abs(dx - dy) < rMin);
+                            else
+                                return (dx + dy < rMin);
+                        }
+                    }
+                }
+                else
+                {
+                    if (r1 > 0)
+                    {
+                        if (r2 > 0)
+                        {
+                            if (r3 > 0)
+                                return (dx > rMax || dy > rMax);
+                            else
+                                return (Math.Abs(dx + dy - TileLength) < rMin);
+                        }
+                        else
+                        {
+                            if (r3 > 0)
+                                return (dy > rMax);
+                            else
+                                return (TileLength + dx - dy < rMin);
+                        }
+                    }
+                    else
+                    {
+                        if (r2 > 0)
+                        {
+                            if (r3 > 0)
+                                return (dx > rMax);
+                            else
+                                return (TileLength - dx + dy < rMin);
+                        }
+                        else
+                        {
+                            if (r3 > 0)
+                                return (TileLength * 2f - dx - dy < rMin);
+                            else
+                                return false;
+                        }
+                    }
+                }
+            } catch (Exception e)
+            {
+                Console.WriteLine($"Error checking if OnRoad landblock: {e}");
                 return false;
-
-            float dx = obj.X - x * TileLength;
-            float dy = obj.Y - y * TileLength;
-
-            if (r0 > 0)
-            {
-                if (r1 > 0)
-                {
-                    if (r2 > 0)
-                    {
-                        if (r3 > 0)
-                            return true;
-                        else
-                            return (dx < rMin || dy < rMin);
-                    }
-                    else
-                    {
-                        if (r3 > 0)
-                            return (dx < rMin || dy > rMax);
-                        else
-                            return (dx < rMin);
-                    }
-                }
-                else
-                {
-                    if (r2 > 0)
-                    {
-                        if (r3 > 0)
-                            return (dx > rMax || dy < rMin);
-                        else
-                            return (dy < rMin);
-                    }
-                    else
-                    {
-                        if (r3 > 0)
-                            return (Math.Abs(dx - dy) < rMin);
-                        else
-                            return (dx + dy < rMin);
-                    }
-                }
-            }
-            else
-            {
-                if (r1 > 0)
-                {
-                    if (r2 > 0)
-                    {
-                        if (r3 > 0)
-                            return (dx > rMax || dy > rMax);
-                        else
-                            return (Math.Abs(dx + dy - TileLength) < rMin);
-                    }
-                    else
-                    {
-                        if (r3 > 0)
-                            return (dy > rMax);
-                        else
-                            return (TileLength + dx - dy < rMin);
-                    }
-                }
-                else
-                {
-                    if (r2 > 0)
-                    {
-                        if (r3 > 0)
-                            return (dx > rMax);
-                        else
-                            return (TileLength - dx + dy < rMin);
-                    }
-                    else
-                    {
-                        if (r3 > 0)
-                            return (TileLength * 2f - dx - dy < rMin);
-                        else
-                            return false;
-                    }
-                }
             }
         }
 
