@@ -1319,12 +1319,12 @@ namespace ACE.Server.Factories
             return result;
         }
 
-        public static WorldObject CreateRandomLootObjects(int tier, TreasureItemCategory category, TreasureItemType_Orig treasureItemType = TreasureItemType_Orig.Undef, TreasureArmorType armorType = TreasureArmorType.Undef, TreasureWeaponType weaponType = TreasureWeaponType.Undef, bool allowSpecialMutations = true)
+        public static WorldObject CreateRandomLootObjects(int tier, TreasureItemCategory category, TreasureItemType_Orig treasureItemType = TreasureItemType_Orig.Undef, TreasureArmorType armorType = TreasureArmorType.Undef, TreasureWeaponType weaponType = TreasureWeaponType.Undef)
         {
             return CreateRandomLootObjects(tier, 0.0f, category, treasureItemType, armorType, weaponType);
         }
 
-        public static WorldObject CreateRandomLootObjects(int tier, float lootQualityMod, TreasureItemCategory category, TreasureItemType_Orig treasureItemType = TreasureItemType_Orig.Undef, TreasureArmorType armorType = TreasureArmorType.Undef, TreasureWeaponType weaponType = TreasureWeaponType.Undef, TreasureHeritageGroup heritageGroup = TreasureHeritageGroup.Invalid, bool allowSpecialMutations = true)
+        public static WorldObject CreateRandomLootObjects(int tier, float lootQualityMod, TreasureItemCategory category, TreasureItemType_Orig treasureItemType = TreasureItemType_Orig.Undef, TreasureArmorType armorType = TreasureArmorType.Undef, TreasureWeaponType weaponType = TreasureWeaponType.Undef, TreasureHeritageGroup heritageGroup = TreasureHeritageGroup.Invalid, bool allowSpecialProperties = true)
         {
             var treasureDeath = new TreasureDeathExtended()
             {
@@ -1350,10 +1350,12 @@ namespace ACE.Server.Factories
                 MundaneItemMaxAmount = 1,
                 MundaneItemTypeSelectionChances = 7,
 
-                UnknownChances = 21
+                UnknownChances = 21,
+
+                AllowSpecialProperties = allowSpecialProperties
             };
 
-            return CreateRandomLootObjects(treasureDeath, category, allowSpecialMutations);
+            return CreateRandomLootObjects(treasureDeath, category);
         }
 
         public static WorldObject CreateRandomLootObjects(TreasureDeath treasureDeath, TreasureItemCategory category, bool allowSpecialMutations = true)

@@ -207,6 +207,8 @@ namespace ACE.Entity.Enum.Properties
         UsesWeightAsGeneratorProbabilities = 9025,
         AiOmnidirectional = 9026,
         AiIncapableOfAnyMotion = 9027,
+        IsVendorGeneratedItem = 9028,
+        BlockSpellExtraction = 9029,
 
         /* Elite implementation */
         EliteTrigger = 9107,
