@@ -15,7 +15,7 @@ namespace ACE.Server.Factories
         /// <summary>
         /// Creates and optionally mutates a new MissileWeapon
         /// </summary>
-        public static WorldObject CreateMissileWeapon(TreasureDeath profile, bool isMagical, MissileWeaponSkill weaponSkill = MissileWeaponSkill.Undef, bool mutate = true, bool allowSpecialMutations = true)
+        public static WorldObject CreateMissileWeapon(TreasureDeath profile, bool isMagical, MissileWeaponSkill weaponSkill = MissileWeaponSkill.Undef, bool mutate = true)
         {
             int wcid;
 
@@ -55,13 +55,13 @@ namespace ACE.Server.Factories
             WorldObject wo = WorldObjectFactory.CreateNewWorldObject((uint)wcid);
 
             if (wo != null && mutate)
-                MutateMissileWeapon(wo, profile, isMagical, wieldDifficulty, allowSpecialMutations: allowSpecialMutations);
+                MutateMissileWeapon(wo, profile, isMagical, wieldDifficulty);
             
             return wo;
         }
 
         private static void MutateMissileWeapon(WorldObject wo, TreasureDeath profile, bool isMagical, int? wieldDifficulty = null,
-            TreasureRoll roll = null, bool allowSpecialMutations = true)
+            TreasureRoll roll = null)
         {
             // new method / mutation scripts
             var isElemental = wo.W_DamageType != DamageType.Undef;

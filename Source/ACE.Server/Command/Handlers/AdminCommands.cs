@@ -5219,7 +5219,7 @@ public static class AdminCommands
             return;
 
         var town = string.Join(" ", parameters);
-        if (!EventManager.PossibleFireSaleTowns.Contains(town))
+        if(EventManager.PossibleFireSaleTowns.Where(t => t.Name == town).Count() == 0)
         {
             session.Network.EnqueueSend(new GameMessageSystemChat($"Invalid town name.", ChatMessageType.Help));
             return;
