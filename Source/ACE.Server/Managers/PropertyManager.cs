@@ -526,6 +526,7 @@ namespace ACE.Server.Managers
         public const bool SEASON4_PATCH_1_19 = true;
         public const bool SEASON4_PATCH_1_20 = true;
         public const bool SEASON4_PATCH_1_24 = true;
+        public const bool SEASON4_PATCH_1_26 = true;
 
         public static void LoadDefaultProperties()
         {
@@ -1021,6 +1022,12 @@ namespace ACE.Server.Managers
                     {
                         // Reason: Small catchup xp boost
                         PropertyManager.ModifyDouble("catchup_xp_modifier", 3.0); // was 2.0
+                    }
+
+                    if (SEASON4_PATCH_1_26)
+                    {
+                        PropertyManager.ModifyLong("max_level", 80);  // was 60
+                        PropertyManager.ModifyLong("previous_max_level", 60);  // was 40
                     }
                 }
             }
