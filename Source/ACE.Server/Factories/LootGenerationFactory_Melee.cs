@@ -16,7 +16,7 @@ namespace ACE.Server.Factories
         /// Creates and optionally mutates a new MeleeWeapon
         /// </summary>
         public static WorldObject CreateMeleeWeapon(TreasureDeath profile, bool isMagical, MeleeWeaponSkill weaponSkill = MeleeWeaponSkill.Undef,
-            bool mutate = true, bool allowSpecialMutations = true)
+            bool mutate = true)
         {
             var wcid = 0;
 
@@ -110,7 +110,7 @@ namespace ACE.Server.Factories
 
             if (wo != null && mutate)
             {
-                if (!MutateMeleeWeapon(wo, profile, isMagical, allowSpecialMutations: allowSpecialMutations))
+                if (!MutateMeleeWeapon(wo, profile, isMagical))
                 {
                     log.Warn($"[LOOT] {wo.WeenieClassId} - {wo.Name} is not a MeleeWeapon");
                     return null;
@@ -119,7 +119,7 @@ namespace ACE.Server.Factories
             return wo;
         }
 
-        private static bool MutateMeleeWeapon(WorldObject wo, TreasureDeath profile, bool isMagical, TreasureRoll roll = null, bool allowSpecialMutations = true)
+        private static bool MutateMeleeWeapon(WorldObject wo, TreasureDeath profile, bool isMagical, TreasureRoll roll = null)
         {
             if (!(wo is MeleeWeapon || wo.IsThrownWeapon))
                 return false;

@@ -34,7 +34,7 @@ namespace ACE.Server.Factories
         }
 
         private static void MutateCaster(WorldObject wo, TreasureDeath profile, bool isMagical, int? wieldDifficulty = null,
-            TreasureRoll roll = null, bool allowSpecialMutations = true)
+            TreasureRoll roll = null)
         {
             if (wieldDifficulty != null)
             {

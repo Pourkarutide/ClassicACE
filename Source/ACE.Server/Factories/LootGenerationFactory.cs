@@ -599,7 +599,7 @@ namespace ACE.Server.Factories
         }
 
 
-        public static bool MutateItem(WorldObject item, TreasureDeath profile, bool isMagical, bool allowSpecialMutations = true)
+        public static bool MutateItem(WorldObject item, TreasureDeath profile, bool isMagical)
         {
             // should ideally be split up between getting the item type,
             // and getting the specific mutate function parameters
@@ -654,8 +654,11 @@ namespace ACE.Server.Factories
                 TwoHandedWeaponWcids.TryGetValue(roll.Wcid, out weaponType))
             {
                 roll.ItemType = TreasureItemType_Orig.Weapon;
-                roll.WeaponType = weaponType;
-                MutateMeleeWeapon(item, profile, isMagical, roll, allowSpecialMutations: allowSpecialMutations);
+                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR)
+                    roll.WeaponType = weaponType;
+                else
+                    roll.WeaponType = TreasureRoll.GetWeaponTypeFromWeapon(item);
+                MutateMeleeWeapon(item, profile, isMagical, roll);
             }
             else if (BowWcids_Aluvian.TryGetValue(roll.Wcid, out weaponType) ||
                 BowWcids_Gharundim.TryGetValue(roll.Wcid, out weaponType) ||
@@ -664,14 +667,17 @@ namespace ACE.Server.Factories
                 AtlatlWcids.TryGetValue(roll.Wcid, out weaponType))
             {
                 roll.ItemType = TreasureItemType_Orig.Weapon;
-                roll.WeaponType = weaponType;
-                MutateMissileWeapon(item, profile, isMagical, null, roll, allowSpecialMutations: allowSpecialMutations);
+                if (Common.ConfigManager.Config.Server.WorldRuleset == Common.Ruleset.EoR)
+                    roll.WeaponType = weaponType;
+                else
+                    roll.WeaponType = TreasureRoll.GetWeaponTypeFromWeapon(item);
+                MutateMissileWeapon(item, profile, isMagical, null, roll);
             }
             else if (CasterWcids.Contains(roll.Wcid))
             {
                 roll.ItemType = TreasureItemType_Orig.Weapon;
                 roll.WeaponType = TreasureWeaponType.Caster;
-                MutateCaster(item, profile, isMagical, null, roll, allowSpecialMutations: allowSpecialMutations);
+                MutateCaster(item, profile, isMagical, null, roll);
             }
             else if (ArmorWcids.TryGetValue(roll.Wcid, out var armorType))
             {
@@ -1358,18 +1364,18 @@ namespace ACE.Server.Factories
             return CreateRandomLootObjects(treasureDeath, category);
         }
 
-        public static WorldObject CreateRandomLootObjects(TreasureDeath treasureDeath, TreasureItemCategory category, bool allowSpecialMutations = true)
+        public static WorldObject CreateRandomLootObjects(TreasureDeath treasureDeath, TreasureItemCategory category)
         {
             var treasureRoll = RollWcid(treasureDeath, category);
 
             if (treasureRoll == null) return null;
 
-            var wo = CreateAndMutateWcid(treasureDeath, treasureRoll, category == TreasureItemCategory.MagicItem, allowSpecialMutations: allowSpecialMutations);
+            var wo = CreateAndMutateWcid(treasureDeath, treasureRoll, category == TreasureItemCategory.MagicItem);
 
             return wo;
         }
 
-        public static WorldObject CreateAndMutateWcid(TreasureDeath treasureDeath, TreasureRoll treasureRoll, bool isMagical, bool allowSpecialMutations = true)
+        public static WorldObject CreateAndMutateWcid(TreasureDeath treasureDeath, TreasureRoll treasureRoll, bool isMagical)
         {
             WorldObject wo = WorldObjectFactory.CreateNewWorldObject((uint)treasureRoll.Wcid);
 
@@ -1453,12 +1459,12 @@ namespace ACE.Server.Factories
                         case TreasureWeaponType.TwoHandedSpear:
                         case TreasureWeaponType.TwoHandedSword:
 
-                            MutateMeleeWeapon(wo, treasureDeath, isMagical, treasureRoll, allowSpecialMutations: allowSpecialMutations);
+                            MutateMeleeWeapon(wo, treasureDeath, isMagical, treasureRoll);
                             break;
 
                         case TreasureWeaponType.Caster:
 
-                            MutateCaster(wo, treasureDeath, isMagical, null, treasureRoll, allowSpecialMutations: allowSpecialMutations);
+                            MutateCaster(wo, treasureDeath, isMagical, null, treasureRoll);
                             break;
 
                         case TreasureWeaponType.Bow:
@@ -1468,7 +1474,7 @@ namespace ACE.Server.Factories
                         case TreasureWeaponType.Atlatl:
                         case TreasureWeaponType.AtlatlRegular:
 
-                            MutateMissileWeapon(wo, treasureDeath, isMagical, null, treasureRoll, allowSpecialMutations: allowSpecialMutations);
+                            MutateMissileWeapon(wo, treasureDeath, isMagical, null, treasureRoll);
                             break;
 
                         default:
@@ -1480,7 +1486,7 @@ namespace ACE.Server.Factories
                 case TreasureItemType_Orig.Caster:
 
                     // alternate path -- only called if TreasureItemType.Caster was specified directly
-                    MutateCaster(wo, treasureDeath, isMagical, null, treasureRoll, allowSpecialMutations: allowSpecialMutations);
+                    MutateCaster(wo, treasureDeath, isMagical, null, treasureRoll);
                     break;
 
                 case TreasureItemType_Orig.Armor:
