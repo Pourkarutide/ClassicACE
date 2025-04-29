@@ -1241,7 +1241,7 @@ namespace ACE.Server.Managers
                 ("arenas_reward_min_level", new Property<long>(25, "the minimum level required to get arena rewards")),
                 ("arenas_reward_min_age", new Property<long>(864000, "the minimum in-game age in seconds required to get arena rewards")),
                 ("player_corpse_permissible_age", new Property<long>(7200, "the amount of time in milliseconds before a player's corpse becomes lootable by anyone. Default is 2 hours")),
-                ("previous_max_level", new Property<long>(0, "Set the previously set max character level.")),
+                ("previous_max_level", new Property<long>(1, "Set the previously set max character level.")),
                 ("bz_whispers_min_pop", new Property<long>(5, "CustomDM: Minimum required online PK players for bz whispers to be sent")),
                 ("bz_whispers_login_delay", new Property<long>(3600, "CustomDM: How long a player must remain online before being able to receive a bz whisper")),
                 ("bz_whispers_interval", new Property<long>(600, "CustomDM: How often a player can receive a bz whisper")),

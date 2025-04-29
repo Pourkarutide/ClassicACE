@@ -129,9 +129,9 @@ namespace ACE.Server.WorldObjects
             else if (GameplayMode == GameplayModes.HardcoreNPK)
                 modifier *= PropertyManager.GetDouble("hardcore_npk_xp_modifier").Item;
 
-            var previousMaxLevel = PropertyManager.GetLong("previous_max_level").Item;
-            if (Level < previousMaxLevel) 
-                modifier *= PropertyManager.GetDouble("catchup_xp_modifier").Item;
+            var catchupModifier = GetCatchupXp(Level ?? 1);
+
+            modifier *= catchupModifier;
 
             if (xpType == XpType.Kill)
             {
@@ -354,6 +354,17 @@ namespace ACE.Server.WorldObjects
                     }
                 }
             }
+        }
+
+        public double GetCatchupXp(int playerLevel)
+        {
+            var catchupXpModifier = PropertyManager.GetDouble("catchup_xp_modifier").Item;
+            var previousMaxLevel = PropertyManager.GetLong("previous_max_level").Item;
+
+            if (catchupXpModifier <= 1 || playerLevel >= previousMaxLevel || previousMaxLevel <= 1)
+                return 1;
+            else
+                return catchupXpModifier - (catchupXpModifier - 1) * (playerLevel - 1) / (previousMaxLevel - 1);
         }
 
         /// <summary>
