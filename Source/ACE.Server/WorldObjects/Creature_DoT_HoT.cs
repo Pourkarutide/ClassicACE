@@ -482,8 +482,8 @@ namespace ACE.Server.WorldObjects
                         sourcePlayer.SendMessage($"Hemorrhage! You {verb} {targetName} with {damage:N0} points of {damageTypeString} damage!", messageType);
                     }
 
-                    if (targetPlayer != null && sourcePlayer != null && targetPlayer != sourcePlayer)
-                        targetPlayer.SendMessage($"Hemorrhage! {sourcePlayer.Name} {plural} you with {damage:N0} points of {damageTypeString} damage.", messageType);
+                    if (targetPlayer != null && targetPlayer != sourcePlayer)
+                        targetPlayer.SendMessage($"Hemorrhage! {source.Name} {plural} you with {damage:N0} points of {damageTypeString} damage.", messageType);
                 }
             }
 
