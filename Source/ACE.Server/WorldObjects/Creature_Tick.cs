@@ -39,8 +39,6 @@ namespace ACE.Server.WorldObjects
 
             VitalHeartBeat();
 
-            DoTHotHeartbeat();
-
             EmoteManager.HeartBeat();
 
             DamageHistory.TryPrune();
