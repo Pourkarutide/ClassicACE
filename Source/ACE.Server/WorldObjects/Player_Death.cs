@@ -429,6 +429,8 @@ namespace ACE.Server.WorldObjects
             dieChain.AddDelaySeconds(animLength);
 
             var nearbyPlayers = PhysicsObj.ObjMaint.GetKnownPlayersValuesAsPlayer();
+            var isGhost = !isPkDeath && !Location.Indoors && !IsGhost;
+
             dieChain.AddAction(this, () =>
             {
                 // Remove this player from other players' tracked list so the dead do not stand back up briefly before being teleported away.
@@ -463,12 +465,11 @@ namespace ACE.Server.WorldObjects
             dieChain.AddDelaySeconds((IsHardcore && !IsOnArenaLandblock) ? 30 : 1);
             dieChain.AddAction(this, () =>
             {
-                ThreadSafeTeleportOnDeath(topDamager); // enter portal space
+                ThreadSafeTeleportOnDeath(topDamager, isGhost); // enter portal space
 
                 var isArenaLandblock = IsOnArenaLandblock || isArenaDeath;
-                var isPkDeath = IsPKDeath(topDamager);
 
-                if (IsPK && PropertyManager.GetBool("pve_death_respite").Item || (isPkDeath || IsPKLiteDeath(topDamager)) && !IsHardcore)
+                if (!IsGhost && IsPK && PropertyManager.GetBool("pve_death_respite").Item || (isPkDeath || IsPKLiteDeath(topDamager)) && !IsHardcore)
                     SetMinimumTimeSincePK(isPkDeath, isArenaLandblock);
 
                 IsBusy = false;
@@ -486,19 +487,30 @@ namespace ACE.Server.WorldObjects
         /// <summary>
         /// Called when the player enters portal space after dying
         /// </summary>
-        public void ThreadSafeTeleportOnDeath(DamageHistoryInfo topDamager)
+        public void ThreadSafeTeleportOnDeath(DamageHistoryInfo topDamager, bool isGhost = false)
         {
             if (!IsHardcore || IsOnArenaLandblock)
             {
                 // teleport to sanctuary or best location
                 var newPosition = Sanctuary ?? Instantiation ?? Location;
 
+                if (isGhost && PropertyManager.GetBool("ghosting_enabled").Item)
+                {
+                    BeginGhost();
+
+                    var ghostPosition = CurrentLandblock?.FindGhostPosition(Location);
+
+                    if (ghostPosition != Location)
+                        newPosition = ghostPosition;
+                }
+
                 WorldManager.ThreadSafeTeleport(this, newPosition, new ActionEventDelegate(() =>
                 {
                     // Stand back up
                     SetCombatMode(CombatMode.NonCombat);
 
-                    SetLifestoneProtection();
+                    if (!IsGhost)
+                        SetLifestoneProtection();
 
                     var teleportChain = new ActionChain();
                     if (!IsLoggingOut) // If we're in the process of logging out, we skip the delay

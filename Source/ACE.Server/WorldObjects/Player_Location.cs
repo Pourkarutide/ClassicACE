@@ -814,6 +814,9 @@ namespace ACE.Server.WorldObjects
             if (UnderLifestoneProtection)
                 LifestoneProtectionDispel();
 
+            if (!IsInDeathProcess && IsGhost)
+                EndGhost();
+
             HandlePreTeleportVisibility(newPosition);
 
             UpdatePlayerPosition(new Position(newPosition), true);
@@ -887,6 +890,12 @@ namespace ACE.Server.WorldObjects
             CheckHouse();
 
             EnqueueBroadcastPhysicsState();
+
+            if (IsGhost)
+            {
+                SetGhostAnimation();
+                SetBeginGhostProperties();
+            }
 
             // hijacking this for both start/end on portal teleport
             if (LastTeleportStartTimestamp == LastPortalTeleportTimestamp)
@@ -1047,6 +1056,9 @@ namespace ACE.Server.WorldObjects
 
                 if (UnderLifestoneProtection)
                     LifestoneProtectionDispel();
+
+                if (IsGhost)
+                    EndGhost();
 
                 CheckMonsters();
                 CheckHouse();

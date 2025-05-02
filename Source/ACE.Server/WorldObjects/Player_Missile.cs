@@ -333,6 +333,9 @@ namespace ACE.Server.WorldObjects
 
             if (UnderLifestoneProtection)
                 LifestoneProtectionDispel();
+
+            if (IsGhost)
+                EndGhost();
         }
 
         // TODO: the damage pipeline currently uses the creature ammo instead of the projectile
