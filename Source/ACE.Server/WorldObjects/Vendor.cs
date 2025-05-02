@@ -1378,10 +1378,6 @@ namespace ACE.Server.WorldObjects
 
             if (!isFireSaleItem && !IsWildernessVendor)
             {
-                if (item.CanHaveExtraSpells)
-                    item.ExtraSpellsMaxOverride = 0;
-                if (item.CanBeTinkered)
-                    item.TinkerMaxCountOverride = 0;
                 if (item.HasSpells)
                     item.BlockSpellExtraction = true;
             }

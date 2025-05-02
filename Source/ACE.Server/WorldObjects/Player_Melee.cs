@@ -383,6 +383,7 @@ namespace ACE.Server.WorldObjects
             bool targetProc = false;
             var dotBaseDamage = 0f;
             var dotDamageType = DamageType.Undef;
+            var dotIsCritical = false;
 
             for (var i = 0; i < numStrikes; i++)
             {
@@ -414,9 +415,10 @@ namespace ACE.Server.WorldObjects
 
                     if (damageEvent != null && damageEvent.HasDamage)
                     {
-                        var dotBaseDamageCandidate = (damageEvent.BaseDamage * damageEvent.AttributeMod * damageEvent.PowerMod * damageEvent.ArmorMod) - damageEvent.DamageBlocked;
-                        if (dotBaseDamageCandidate > dotBaseDamage)
-                            dotBaseDamage = dotBaseDamageCandidate;
+                        dotBaseDamage += damageEvent.Damage;
+
+                        if (damageEvent.IsCritical)
+                            dotIsCritical = true;
 
                         if (dotDamageType == DamageType.Undef)
                             dotDamageType = damageEvent.DamageType;
@@ -458,7 +460,7 @@ namespace ACE.Server.WorldObjects
                 //actionChain.AddDelaySeconds(swingTime);
             }
 
-            actionChain.AddAction(this, () => creature.ApplySkillAndInnateDoTs(this, weapon, dotBaseDamage, dotDamageType, GetCurrentWeaponSkill()));
+            actionChain.AddAction(this, () => creature.ApplySkillAndInnateDoTs(this, weapon, dotBaseDamage, dotDamageType, dotIsCritical, GetCurrentWeaponSkill()));
 
             //actionChain.AddDelaySeconds(animLength - swingTime * numStrikes);
             actionChain.AddDelaySeconds(animLength - prevTime);
