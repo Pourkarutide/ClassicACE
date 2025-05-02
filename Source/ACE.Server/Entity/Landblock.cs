@@ -277,7 +277,7 @@ namespace ACE.Server.Entity
                         float distance;
                         if (Pathfinder.PathfindingEnabled && player.Location.Indoors)
                         {
-                            if(!Pathfinder.GetRouteDistance(player.Location, marker.Location, AgentWidth.Narrow, out distance))
+                            if (!Pathfinder.GetRouteDistance(player.Location, marker.Location, AgentWidth.Narrow, out distance))
                                 distance = player.Location.DistanceTo(marker.Location);
                         }
                         else
@@ -339,7 +339,7 @@ namespace ACE.Server.Entity
                     float distance;
                     if (Pathfinder.PathfindingEnabled && entryPos.Indoors)
                     {
-                        if(!Pathfinder.GetRouteDistance(entryPos, markerOrPortal.Location, AgentWidth.Narrow, out distance))
+                        if (!Pathfinder.GetRouteDistance(entryPos, markerOrPortal.Location, AgentWidth.Narrow, out distance))
                             distance = entryPos.DistanceTo(markerOrPortal.Location);
                     }
                     else
@@ -371,7 +371,7 @@ namespace ACE.Server.Entity
                 {
                     attempts++;
                     explorationMarker.Destroy();
-                    if(attempts < 10)
+                    if (attempts < 10)
                         SpawnExplorationMarker(attempts);
                     else
                         log.Warn($"Landblock 0x{Id} failed to spawn exploration marker.");
@@ -494,7 +494,7 @@ namespace ACE.Server.Entity
 
             if (PropertyManager.GetBool("increase_minimum_encounter_spawn_density").Item)
             {
-                if(!wasCached)
+                if (!wasCached)
                 {
                     if (encounters.Count > 0)
                     {
@@ -576,7 +576,7 @@ namespace ACE.Server.Entity
                 landblockInstances = GetLandblockInstances(true);
                 portalDrops = DatabaseManager.World.GetPortalDestinationsByLandblock(GetAdjacents());
 
-                foreach(var destination in portalDrops)
+                foreach (var destination in portalDrops)
                 {
                     if (!destination.Location.Indoors)
                         destination.Location.AdjustMapCoords();
@@ -618,7 +618,7 @@ namespace ACE.Server.Entity
                     {
                         wo.Destroy();
                         return;
-					}
+                    }
 
                     if (PropertyManager.GetBool("increase_minimum_encounter_spawn_density").Item)
                     {
@@ -1526,7 +1526,7 @@ namespace ACE.Server.Entity
             }
 
             var closest = float.MaxValue;
-            foreach(var entry in RoadList)
+            foreach (var entry in RoadList)
             {
                 if (avoidPosition != null && entry.DistanceTo(avoidPosition) < 2)
                     continue;
@@ -1825,7 +1825,7 @@ namespace ACE.Server.Entity
                 foreach (var lb in Adjacents)
                     lb.FogColor = environChangeType;
 
-                foreach(var player in players)
+                foreach (var player in players)
                 {
                     player.SetFogColor(FogColor);
                 }
@@ -1911,6 +1911,34 @@ namespace ACE.Server.Entity
             return playerList;
         }
 
+        internal Position FindGhostPosition(Position position)
+        {
+            var distSq = 0.0f;          
+            var furthestPos = position;  
+
+            foreach (var adjacent in Adjacents)
+            {
+                foreach (var creature in adjacent.worldObjects.Values.OfType<Creature>())
+                {
+                    var pos = creature.Location;
+                    var objDist = position.SquaredDistanceTo(pos);
+
+                    if (objDist > distSq)
+                    {
+                        distSq = objDist;
+                        furthestPos = pos.InFrontOf(2.0); 
+
+                        if (distSq >= 200000)
+                        {
+                            return furthestPos;
+                        }
+                    }
+                }
+            }
+
+            return furthestPos;
+        }
+
         private bool? _isArenaLandblock = null;
         public bool IsArenaLandblock
         {
@@ -1926,3 +1954,4 @@ namespace ACE.Server.Entity
         }
     }
 }
+

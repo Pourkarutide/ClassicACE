@@ -2540,5 +2540,24 @@ namespace ACE.Server.Command.Handlers
 
             session.Player.FixStuckEquippedItemIcon(EquipMask.Shield);
         }
+
+        [CommandHandler("ghost", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Displays the remaining time a player has left as a ghost.")]
+        public static void HandleGhostInfo(Session session, params string[] parameters)
+        {
+
+            var player = session.Player;
+            var respite = PropertyManager.GetDouble("ghost_respite_timer").Item;
+            if (player.IsGhost)
+            {
+                var seconds = respite - player.MinimumTimeSinceGhost;
+                var minutes = (int)(seconds / 60);
+                var remainingSeconds = (int)(seconds % 60);
+                var message = $"You have about {(minutes < 1 ? "" : minutes > 1 ? $"{minutes} minutes and " : $"{minutes} minute and " )} {remainingSeconds:D2}second{(remainingSeconds > 1 ? "s" : "")} remaining as a ghost.";
+                session.Network.EnqueueSend(new GameMessageSystemChat(message, ChatMessageType.Broadcast));
+            } else
+            {
+                session.Network.EnqueueSend(new GameMessageSystemChat($"You are not a ghost.", ChatMessageType.Broadcast));
+            }
+        }
     }
 }

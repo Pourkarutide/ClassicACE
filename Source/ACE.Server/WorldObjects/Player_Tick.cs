@@ -200,6 +200,8 @@ namespace ACE.Server.WorldObjects
 
             PK_DeathTick();
 
+            GhostTick();
+
             GagsTick();
 
             if (IsArenaObserver)
@@ -253,6 +255,21 @@ namespace ACE.Server.WorldObjects
             }
 
             base.Heartbeat(currentUnixTime);
+        }
+
+        private void GhostTick()
+        {
+            if (MinimumTimeSinceGhost == null)
+                return;
+
+            MinimumTimeSinceGhost += CachedHeartbeatInterval;
+
+            var respiteTimer = PropertyManager.GetDouble("ghost_respite_timer").Item;
+
+            if (MinimumTimeSinceGhost < respiteTimer)
+                return;
+
+            EndGhost();
         }
 
         public static float MaxSpeed = 50;

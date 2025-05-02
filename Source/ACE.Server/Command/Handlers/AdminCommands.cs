@@ -35,6 +35,7 @@ using ACE.Server.Network.Handlers;
 using Position = ACE.Entity.Position;
 using ACE.Database.Models.Shard;
 using System.Text;
+using ACE.Server.WorldObjects.Managers;
 
 namespace ACE.Server.Command.Handlers;
 
@@ -5699,6 +5700,45 @@ public static class AdminCommands
         var position = new Position((float)(treasureMap.NSCoordinates ?? 0), (float)(treasureMap.EWCoordinates ?? 0f));
 
         session.Player.Teleport(position);
+    }
+
+    [CommandHandler("testghost", AccessLevel.Admin, CommandHandlerFlag.RequiresWorld, "toggle ghosting for testing.")]
+    public static void HandleTestGhost(Session session, params string[] parameters)
+    {
+        var player = session.Player;
+        if (parameters.Count() > 0)
+        {
+            var name = string.Join(" ", parameters);
+            var target = PlayerManager.GetAllOnline().FirstOrDefault(p => p.Name.ToLower() == name.ToLower());
+            if (target != null)
+                player = target;
+            else
+            {
+                session.Network.EnqueueSend(new GameMessageSystemChat($"Couldn't find player with name {name.ToLower()}.", ChatMessageType.Help));
+                return;
+            }
+        }
+
+        if (player.IsGhost)
+            player.EndGhost();
+        else
+            player.BeginGhost();
+    }
+    
+    [CommandHandler("endghost", AccessLevel.Admin, CommandHandlerFlag.RequiresWorld, 1, "end ghosting for a player.", "name of player to end ghosting")]
+    public static void HandlEndGhost(Session session, params string[] parameters)
+    {
+        if (parameters.Count() < 1)
+            session.Network.EnqueueSend(new GameMessageSystemChat($"Invalid player name parameter.", ChatMessageType.Help));
+
+        var name = string.Join(" ", parameters);
+
+        var player = PlayerManager.GetAllOnline().FirstOrDefault(p => p.Name.ToLower() == name.ToLower());
+
+        if (player != null)
+            player.EndGhost();
+        else
+            session.Network.EnqueueSend(new GameMessageSystemChat($"Couldn't find player with name {name.ToLower()}.", ChatMessageType.Help));
     }
 }
 
