@@ -636,6 +636,12 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            if (IsGhost)
+            {
+                Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.ActionCancelled));
+                return;
+            }
+
             if (suicideInProgress)
                 return;
 
