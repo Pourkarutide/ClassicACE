@@ -261,6 +261,9 @@ namespace ACE.Entity.Enum.Properties
         ArenaDailyRewardCount = 9303,
         ArenaSameClanDailyRewardCount = 9304,
         LastArenaCommandTimestamp = 9305,
+
+        // Other
+        MinimumTimeSinceGhost = 9401,
     }
 
     public static class PropertyFloatExtensions

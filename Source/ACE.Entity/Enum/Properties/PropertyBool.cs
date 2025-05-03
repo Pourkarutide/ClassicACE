@@ -236,6 +236,8 @@ namespace ACE.Entity.Enum.Properties
         HasArenaRareDmgBuff = 9302,
         HasArenaRareDmgReductionBuff = 9303,
 
+        /* other */
+        IsGhost = 9401,
     }
 
     public static class PropertyBoolExtensions

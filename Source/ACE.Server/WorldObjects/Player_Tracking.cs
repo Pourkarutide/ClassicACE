@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
-using ACE.Entity;
 using ACE.Entity.Enum;
+using ACE.Entity.Enum.Properties;
 using ACE.Server.Entity;
 using ACE.Server.Entity.Actions;
 using ACE.Server.Managers;
+using ACE.Server.Network;
 using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.Physics.Common;
 
@@ -218,6 +218,64 @@ namespace ACE.Server.WorldObjects
             });
 
             actionChain.EnqueueChain();
+        }
+        public void BeginGhost()
+        {
+            if (IsGhost)
+                return;
+
+            SetBeginGhostProperties();
+            MinimumTimeSinceGhost = 0;
+            Session.Network.EnqueueSend(new GameMessageSystemChat("You are now a ghost.", ChatMessageType.Broadcast));
+            SetGhostAnimation();
+        }
+
+        public void SetBeginGhostProperties()
+        {
+            IsGhost = true;
+            Ethereal = true;
+            ReportCollisions = false;
+            Attackable = false;
+            EnqueueBroadcastPhysicsState();
+        }
+
+        public void SetGhostAnimation()
+        {
+            if (IsGhost)
+            {
+                EnqueueBroadcast(new GameMessageScript(Guid, PlayScript.SneakingBegin));
+
+                RadarColor = ACE.Entity.Enum.RadarColor.Creature;
+                EnqueueBroadcast(true, new GameMessagePublicUpdatePropertyInt(this, PropertyInt.RadarBlipColor, (int)RadarColor));
+            } else
+            {
+                var actionChain = new ActionChain();
+                actionChain.AddDelaySeconds(0.5);
+                actionChain.AddAction(this, () =>
+                {
+                    EnqueueBroadcast(new GameMessageScript(Guid, PlayScript.SneakingEnd));
+                    RadarColor = null;
+                    EnqueueBroadcast(true, new GameMessagePublicUpdatePropertyInt(this, PropertyInt.RadarBlipColor, 0));
+                });
+                actionChain.EnqueueChain();
+            }
+        }
+
+        public void EndGhost()
+        {
+            SetEndGhostProperties();
+            MinimumTimeSinceGhost = null;
+            Session.Network.EnqueueSend(new GameMessageSystemChat("You are no longer a ghost.", ChatMessageType.Broadcast));
+            SetGhostAnimation();
+        }
+
+        public void SetEndGhostProperties()
+        {
+            IsGhost = false;
+            Ethereal = false;
+            ReportCollisions = true;
+            Attackable = true;
+            EnqueueBroadcastPhysicsState();
         }
 
         public void HandlePreTeleportVisibility(ACE.Entity.Position newPosition)

@@ -144,6 +144,9 @@ namespace ACE.Server.Entity
             if (Player.UnderLifestoneProtection)
                 Player.LifestoneProtectionDispel();
 
+            if (Player.IsGhost)
+                Player.EndGhost();
+
             CastNum++;
 
             if (Player.RecordCast.Enabled)

@@ -1752,6 +1752,17 @@ namespace ACE.Server.WorldObjects
             set { if (!value.HasValue) RemoveProperty(PropertyFloat.LastArenaCommandTimestamp); else SetProperty(PropertyFloat.LastArenaCommandTimestamp, value.Value); }
         }
 
+        public bool IsGhost
+        {
+            get => GetProperty(PropertyBool.IsGhost) ?? false;
+            set { if (!value) RemoveProperty(PropertyBool.IsGhost); else SetProperty(PropertyBool.IsGhost, value); }
+        }
+
+        public double? MinimumTimeSinceGhost
+        {
+            get => GetProperty(PropertyFloat.MinimumTimeSinceGhost);
+            set { if (!value.HasValue) RemoveProperty(PropertyFloat.MinimumTimeSinceGhost); else SetProperty(PropertyFloat.MinimumTimeSinceGhost, value.Value); }
+        }
 
     }
 }
