@@ -319,6 +319,9 @@ namespace ACE.Server.WorldObjects
                 }
                 else
                 {
+                    if (player.IsGhost)
+                        player.EndGhost();
+
                     if (player.attacksReceivedPerSecond > 0)
                     {
                         player.Session.Network.EnqueueSend(new GameMessageSystemChat($"You cannot dig for treasure while in combat!", ChatMessageType.Broadcast));

@@ -360,6 +360,9 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
+            if (player.IsGhost)
+                player.EndGhost();
+
             var rotateTime = Rotate(player);    // vendor rotates towards player
 
             // TODO: remove this when DelayManager is not forward propagating current tick time

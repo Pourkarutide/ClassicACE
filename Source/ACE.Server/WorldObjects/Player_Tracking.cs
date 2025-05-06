@@ -267,6 +267,7 @@ namespace ACE.Server.WorldObjects
             MinimumTimeSinceGhost = null;
             Session.Network.EnqueueSend(new GameMessageSystemChat("You are no longer a ghost.", ChatMessageType.Broadcast));
             SetGhostAnimation();
+            CheckMonsters();
         }
 
         public void SetEndGhostProperties()
