@@ -250,7 +250,7 @@ namespace ACE.Server.WorldObjects
             } else
             {
                 var actionChain = new ActionChain();
-                actionChain.AddDelaySeconds(0.5);
+                actionChain.AddDelaySeconds(0.25);
                 actionChain.AddAction(this, () =>
                 {
                     EnqueueBroadcast(new GameMessageScript(Guid, PlayScript.SneakingEnd));
@@ -261,8 +261,11 @@ namespace ACE.Server.WorldObjects
             }
         }
 
-        public void EndGhost()
+        public void EndGhost(bool force = false)
         {
+            if (!IsGhost && !force)
+                return;
+
             SetEndGhostProperties();
             MinimumTimeSinceGhost = null;
             Session.Network.EnqueueSend(new GameMessageSystemChat("You are no longer a ghost.", ChatMessageType.Broadcast));

@@ -5736,7 +5736,7 @@ public static class AdminCommands
         var player = PlayerManager.GetAllOnline().FirstOrDefault(p => p.Name.ToLower() == name.ToLower());
 
         if (player != null)
-            player.EndGhost();
+            player.EndGhost(true);
         else
             session.Network.EnqueueSend(new GameMessageSystemChat($"Couldn't find player with name {name.ToLower()}.", ChatMessageType.Help));
 

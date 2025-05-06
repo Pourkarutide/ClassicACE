@@ -319,8 +319,7 @@ namespace ACE.Server.WorldObjects
                 }
                 else
                 {
-                    if (player.IsGhost)
-                        player.EndGhost();
+                    player.EndGhost();
 
                     if (player.attacksReceivedPerSecond > 0)
                     {

@@ -814,7 +814,7 @@ namespace ACE.Server.WorldObjects
             if (UnderLifestoneProtection)
                 LifestoneProtectionDispel();
 
-            if (!IsInDeathProcess && IsGhost)
+            if (!IsInDeathProcess)
                 EndGhost();
 
             HandlePreTeleportVisibility(newPosition);
@@ -1057,9 +1057,7 @@ namespace ACE.Server.WorldObjects
                 if (UnderLifestoneProtection)
                     LifestoneProtectionDispel();
 
-                if (IsGhost)
-                    EndGhost();
-
+                EndGhost();
                 CheckMonsters();
                 CheckHouse();
 

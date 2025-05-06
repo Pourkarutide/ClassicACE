@@ -360,8 +360,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            if (player.IsGhost)
-                player.EndGhost();
+            player.EndGhost();
 
             var rotateTime = Rotate(player);    // vendor rotates towards player
 
