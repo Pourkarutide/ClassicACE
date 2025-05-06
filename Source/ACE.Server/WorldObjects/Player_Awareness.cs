@@ -20,7 +20,7 @@ namespace ACE.Server.WorldObjects
 
         public void BeginSneaking()
         {
-            if (IsSneaking)
+            if (IsSneaking || IsGhost)
                 return;
 
             var result = TestSneakingInternal(EnterSneakingDifficulty);
@@ -53,7 +53,7 @@ namespace ACE.Server.WorldObjects
 
         public void EndSneaking(string message = null, bool isAttackFromSneaking = false)
         {
-            if (!IsSneaking)
+            if (!IsSneaking || IsGhost)
                 return;
 
             IsSneaking = false;

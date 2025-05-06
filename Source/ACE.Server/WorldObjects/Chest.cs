@@ -214,6 +214,8 @@ namespace ACE.Server.WorldObjects
         {
             base.Open(player);
 
+            player.EndGhost();
+
             if (!ResetMessagePending && !double.IsPositiveInfinity(ChestResetInterval))
             {
                 var resetTimestamp = ResetTimestamp;

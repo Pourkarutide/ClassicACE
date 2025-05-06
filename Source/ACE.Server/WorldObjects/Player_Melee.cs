@@ -530,8 +530,7 @@ namespace ACE.Server.WorldObjects
             if (UnderLifestoneProtection)
                 LifestoneProtectionDispel();
 
-            if (IsGhost)
-                EndGhost();
+            EndGhost();
         }
 
         /// <summary>
